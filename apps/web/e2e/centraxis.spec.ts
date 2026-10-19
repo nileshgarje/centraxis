@@ -18,14 +18,14 @@ test.describe("Centraxis Agile Platform E2E Flow", () => {
     await expect(page.locator("text=Centraxis")).toBeVisible();
     await expect(page.locator("text=Centvis")).toBeVisible();
     await expect(page.locator("text=Active Board")).toBeVisible();
-    await expect(page.locator("text=Backlog")).toBeVisible();
+    await expect(page.locator('[data-testid="tab-backlog"]')).toBeVisible();
     await expect(page.locator("text=Squads")).toBeVisible();
     await expect(page.locator("text=Analytics")).toBeVisible();
   });
 
   test("should navigate smoothly across views", async ({ page }) => {
     // 1. Backlog View
-    await page.click("text=Backlog");
+    await page.click('[data-testid="tab-backlog"]');
     await expect(page.locator("text=Backlog Planning")).toBeVisible();
 
     // 2. Squads

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  X,
   Plus,
   Bookmark,
   Layers,
@@ -210,7 +209,7 @@ export function CreateItemDialog({
         className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl h-full p-0 flex flex-col overflow-hidden bg-background border-border shadow-2xl"
       >
         {/* Sheet Header */}
-        <div className="border-b border-border bg-muted/20 px-6 py-4 shrink-0">
+        <div className="border-b border-border bg-muted/20 pl-6 pr-14 py-4 shrink-0">
           <SheetHeader className="flex flex-row items-center space-x-2.5 space-y-0 text-left">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold shadow-xs">
               <Plus className="h-4 w-4" />

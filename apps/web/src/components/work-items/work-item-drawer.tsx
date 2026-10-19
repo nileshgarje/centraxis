@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  X,
   Bookmark,
   CheckSquare,
   Bug,
@@ -213,7 +212,7 @@ export function WorkItemDrawer({
         </SheetHeader>
 
         {/* Header Bar */}
-        <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-background bg-white dark:bg-slate-950 shrink-0">
+        <div className="flex items-center justify-between border-b border-border pl-6 pr-14 py-3.5 bg-background bg-white dark:bg-slate-950 shrink-0 min-h-[57px]">
           <div className="flex items-center space-x-3">
               {item && (
                 <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
@@ -257,17 +256,6 @@ export function WorkItemDrawer({
                 )}
               </div>
             </div>
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              aria-label="Close drawer"
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </div>
 
           {/* Drawer Body */}
