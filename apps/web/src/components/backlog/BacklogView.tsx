@@ -30,6 +30,7 @@ import {
   CreateSprintDialog,
   type SprintData,
 } from "../sprints/create-sprint-dialog";
+import { WorkItemDrawer } from "../work-items/work-item-drawer";
 
 interface BacklogViewProps {
   projectId: string;
@@ -93,6 +94,7 @@ export function BacklogView({
   // Sprint Dialog state
   const [isSprintDialogOpen, setIsSprintDialogOpen] = useState(false);
   const [sprintToEdit, setSprintToEdit] = useState<SprintData | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -566,13 +568,19 @@ export function BacklogView({
                                           <div className="w-4" />
                                         )}
 
-                                        <span className="font-mono font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded text-[11px]">
-                                          {item.key}
-                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() => setSelectedItemId(item.id)}
+                                          className="flex items-center space-x-2 text-left truncate group/title hover:opacity-80 transition cursor-pointer"
+                                        >
+                                          <span className="font-mono font-bold text-blue-700 bg-blue-50 group-hover/title:bg-blue-100 px-1.5 py-0.5 rounded text-[11px]">
+                                            {item.key}
+                                          </span>
 
-                                        <span className="font-medium text-slate-900 truncate">
-                                          {item.title}
-                                        </span>
+                                          <span className="font-medium text-slate-900 group-hover/title:text-blue-600 truncate">
+                                            {item.title}
+                                          </span>
+                                        </button>
                                       </div>
 
                                       {/* Type & Priority */}
@@ -834,13 +842,19 @@ export function BacklogView({
                                     <div className="w-4" />
                                   )}
 
-                                  <span className="font-mono font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded text-[11px]">
-                                    {item.key}
-                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedItemId(item.id)}
+                                    className="flex items-center space-x-2 text-left truncate group/title hover:opacity-80 transition cursor-pointer"
+                                  >
+                                    <span className="font-mono font-bold text-blue-700 bg-blue-50 group-hover/title:bg-blue-100 px-1.5 py-0.5 rounded text-[11px]">
+                                      {item.key}
+                                    </span>
 
-                                  <span className="font-medium text-slate-900 truncate">
-                                    {item.title}
-                                  </span>
+                                    <span className="font-medium text-slate-900 group-hover/title:text-blue-600 truncate">
+                                      {item.title}
+                                    </span>
+                                  </button>
                                 </div>
 
                                 <div className="col-span-2 flex items-center space-x-1.5">
@@ -997,6 +1011,14 @@ export function BacklogView({
         }}
         projectId={projectId}
         sprintToEdit={sprintToEdit}
+      />
+
+      {/* Work Item Detail Drawer */}
+      <WorkItemDrawer
+        itemId={selectedItemId}
+        isOpen={!!selectedItemId}
+        onClose={() => setSelectedItemId(null)}
+        projectId={projectId}
       />
     </div>
   );

@@ -16,6 +16,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { api } from "~/trpc/react";
+import { MarkdownEditor } from "@centraxis/ui";
 
 interface CreateItemDialogProps {
   isOpen: boolean;
@@ -127,6 +128,16 @@ export function CreateItemDialog({
   const parentCandidates = (potentialParents ?? []).filter(
     (p) => p.type === "EPIC" || p.type === "FEATURE" || p.type === "STORY",
   );
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   // tRPC mutation with optimistic cache updates
   const createItemMutation = api.backlog.createItem.useMutation({
@@ -264,12 +275,11 @@ export function CreateItemDialog({
               <label className="block text-xs font-semibold text-slate-700">
                 Description / Context
               </label>
-              <textarea
-                rows={3}
+              <MarkdownEditor
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Provide details, rationale, or technical implementation notes..."
-                className="w-full rounded-xl border border-slate-300 bg-white p-3 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-y"
+                onChange={setDescription}
+                minHeight="120px"
+                placeholder="Provide details, rationale, or technical implementation notes in GFM..."
               />
             </div>
 
@@ -278,12 +288,11 @@ export function CreateItemDialog({
                 <label className="block text-xs font-semibold text-slate-700">
                   Acceptance Criteria (Gherkin format)
                 </label>
-                <textarea
-                  rows={2}
+                <MarkdownEditor
                   value={acceptanceCriteria}
-                  onChange={(e) => setAcceptanceCriteria(e.target.value)}
-                  placeholder="Given... When... Then..."
-                  className="w-full rounded-xl border border-slate-300 bg-white p-3 font-mono text-xs text-slate-800 shadow-sm placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-y"
+                  onChange={setAcceptanceCriteria}
+                  minHeight="100px"
+                  placeholder="Given [precondition]&#10;When [action]&#10;Then [expected result]"
                 />
               </div>
             )}

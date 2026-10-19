@@ -17,6 +17,7 @@ import {
   Zap,
 } from "lucide-react";
 import { api } from "~/trpc/react";
+import { WorkItemDrawer } from "../work-items/work-item-drawer";
 
 interface WorkItemCard {
   id: string;
@@ -104,6 +105,7 @@ export function KanbanBoard({
     DONE: [],
   });
 
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Synchronize query data into local state for optimistic drag & drop
@@ -338,7 +340,8 @@ export function KanbanBoard({
                                 ref={dragProvided.innerRef}
                                 {...dragProvided.draggableProps}
                                 {...dragProvided.dragHandleProps}
-                                className={`group rounded-lg border border-slate-200/90 bg-white p-4 shadow-sm transition hover:border-slate-300 hover:shadow-md ${
+                                onClick={() => setSelectedCardId(card.id)}
+                                className={`group rounded-lg border border-slate-200/90 bg-white p-4 shadow-sm transition hover:border-slate-300 hover:shadow-md cursor-pointer ${
                                   dragSnapshot.isDragging
                                     ? "rotate-1 shadow-xl ring-2 ring-blue-500 ring-offset-2"
                                     : ""
@@ -424,6 +427,13 @@ export function KanbanBoard({
           })}
         </div>
       </DragDropContext>
+
+      <WorkItemDrawer
+        itemId={selectedCardId}
+        isOpen={!!selectedCardId}
+        onClose={() => setSelectedCardId(null)}
+        projectId={projectId}
+      />
     </div>
   );
 }

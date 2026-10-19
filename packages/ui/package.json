@@ -13,8 +13,20 @@
     "lint": "eslint . --max-warnings 0"
   },
   "dependencies": {
+    "@tiptap/core": "^3.32.0",
+    "@tiptap/extension-code-block-lowlight": "^3.32.0",
+    "@tiptap/extension-link": "^3.32.0",
+    "@tiptap/extension-task-item": "^3.32.0",
+    "@tiptap/extension-task-list": "^3.32.0",
+    "@tiptap/pm": "^3.32.0",
+    "@tiptap/react": "^3.32.0",
+    "@tiptap/starter-kit": "^3.32.0",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^3.0.2"
+    "lowlight": "^3.3.0",
+    "lucide-react": "^0.475.0",
+    "marked": "^18.1.1",
+    "tailwind-merge": "^3.0.2",
+    "tiptap-markdown": "^0.9.0"
   },
   "devDependencies": {
     "@centraxis/eslint-config": "workspace:*",

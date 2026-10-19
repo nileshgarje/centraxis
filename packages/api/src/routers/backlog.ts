@@ -13,6 +13,52 @@ import {
 
 export const backlogRouter = createTRPCRouter({
   /**
+   * Fetch single work item by ID with full relations
+   */
+  getItem: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const item = await ctx.db.workItem.findUnique({
+        where: { id: input.id },
+        include: {
+          assignee: {
+            select: { id: true, name: true, email: true, image: true },
+          },
+          reporter: {
+            select: { id: true, name: true, email: true, image: true },
+          },
+          sprint: {
+            select: { id: true, name: true, status: true },
+          },
+          parent: {
+            select: { id: true, key: true, title: true, type: true },
+          },
+          children: {
+            select: {
+              id: true,
+              key: true,
+              title: true,
+              type: true,
+              status: true,
+              priority: true,
+              storyPoints: true,
+            },
+            orderBy: { rankOrder: "asc" },
+          },
+        },
+      });
+
+      if (!item) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Work item not found",
+        });
+      }
+
+      return item;
+    }),
+
+  /**
    * Fetch flat list of work items with optional filtering
    */
   getItems: protectedProcedure
