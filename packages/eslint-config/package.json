@@ -1,0 +1,10 @@
+{
+  "name": "@centraxis/eslint-config",
+  "version": "0.1.0",
+  "private": true,
+  "files": [
+    "base.js",
+    "nextjs.js",
+    "react.js"
+  ]
+}
