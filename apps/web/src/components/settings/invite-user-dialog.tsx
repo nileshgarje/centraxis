@@ -13,6 +13,17 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { api } from "~/trpc/react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  Button,
+  Textarea,
+  Label,
+} from "@centraxis/ui";
 
 interface InviteUserDialogProps {
   isOpen: boolean;
@@ -142,87 +153,74 @@ export function InviteUserDialog({
     });
   };
 
-  if (!isOpen) return null;
-
   const currentRole = ROLES.find((r) => r.id === role) ?? ROLES[0]!;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Modal Dialog */}
-      <div className="relative w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-150">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50">
-          <div className="flex items-center space-x-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
+        <div className="border-b border-border px-6 py-4 bg-muted/20">
+          <DialogHeader className="flex flex-row items-center space-x-3 space-y-0 text-left">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
               <Mail className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <DialogTitle className="text-base font-bold text-foreground">
                 Invite Team Members
-              </h2>
-              <p className="text-xs text-slate-500">
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
                 Grant access to Centvis organization and allocate to squads
-              </p>
+              </DialogDescription>
             </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          </DialogHeader>
         </div>
 
         {/* Error Alert */}
         {errorMessage && (
-          <div className="mx-6 mt-4 flex items-center space-x-2 rounded-xl bg-red-50 border border-red-200 px-3.5 py-2.5 text-xs text-red-700 font-medium">
-            <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
+          <div className="mx-6 mt-4 flex items-center space-x-2 rounded-lg bg-destructive/10 border border-destructive/20 px-3.5 py-2.5 text-xs text-destructive font-medium">
+            <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 pt-4 max-h-[75vh] overflow-y-auto">
           {/* Email Input (Single or Bulk comma-separated) */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-semibold text-slate-700">
-                Email Address(es) <span className="text-red-500">*</span>
-              </label>
-              <span className="text-[10px] text-slate-400">
+              <Label htmlFor="invite-emails" className="text-xs font-semibold text-foreground">
+                Email Address(es) <span className="text-destructive">*</span>
+              </Label>
+              <span className="text-[10px] text-muted-foreground">
                 Single email or comma-separated
               </span>
             </div>
-            <textarea
+            <Textarea
+              id="invite-emails"
               rows={2}
               value={rawEmails}
               onChange={(e) => setRawEmails(e.target.value)}
               placeholder="e.g. alex@centvis.com, rachel.green@centvis.com"
               required
               autoFocus
-              className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs font-medium text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="text-xs resize-none"
             />
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-muted-foreground">
               Paste multiple emails separated by commas or line breaks for bulk onboarding.
             </p>
           </div>
 
           {/* Organization Role Selector */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-700">
-              Organization Role <span className="text-red-500">*</span>
-            </label>
+            <Label htmlFor="invite-role" className="text-xs font-semibold text-foreground">
+              Organization Role <span className="text-destructive">*</span>
+            </Label>
             <div className="relative">
               <select
+                id="invite-role"
                 value={role}
                 onChange={(e) => setRole(e.target.value as RoleType)}
-                className="w-full appearance-none rounded-xl border border-slate-300 bg-white py-2.5 pl-3.5 pr-8 text-xs font-semibold text-slate-900 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full appearance-none rounded-md border border-input bg-background py-2 pl-3 pr-8 text-xs font-semibold text-foreground transition focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 {ROLES.map((r) => (
                   <option key={r.id} value={r.id}>
@@ -230,11 +228,11 @@ export function InviteUserDialog({
                   </option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             </div>
 
             {/* Role Permission Guidance Banner */}
-            <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-2.5 text-xs">
+            <div className="rounded-lg border border-border bg-muted/30 p-2.5 text-xs">
               <div className="flex items-center space-x-2">
                 <span
                   className={`rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${currentRole.badgeColor}`}
@@ -242,7 +240,7 @@ export function InviteUserDialog({
                   {currentRole.label}
                 </span>
               </div>
-              <p className="mt-1 text-slate-600 text-[11px]">
+              <p className="mt-1 text-muted-foreground text-[11px]">
                 {currentRole.description}
               </p>
             </div>
@@ -251,20 +249,20 @@ export function InviteUserDialog({
           {/* Initial Squad / Team Assignment Multi-Select */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-semibold text-slate-700">
+              <Label className="text-xs font-semibold text-foreground">
                 Initial Squad Allocation
-              </label>
-              <span className="text-[10px] text-slate-400">
+              </Label>
+              <span className="text-[10px] text-muted-foreground">
                 {selectedTeamIds.length} squads selected
               </span>
             </div>
 
             {teamsLoading ? (
-              <div className="flex items-center justify-center p-3 border border-slate-200 rounded-xl bg-slate-50">
-                <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+              <div className="flex items-center justify-center p-3 border border-border rounded-lg bg-muted/20">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               </div>
             ) : teams && teams.length > 0 ? (
-              <div className="max-h-28 overflow-y-auto rounded-xl border border-slate-200 p-1.5 space-y-1 bg-slate-50/50">
+              <div className="max-h-28 overflow-y-auto rounded-lg border border-border p-1.5 space-y-1 bg-muted/20">
                 {teams.map((team) => {
                   const isSelected = selectedTeamIds.includes(team.id);
                   return (
@@ -272,25 +270,25 @@ export function InviteUserDialog({
                       type="button"
                       key={team.id}
                       onClick={() => toggleTeam(team.id)}
-                      className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs transition ${
+                      className={`flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left text-xs transition ${
                         isSelected
-                          ? "bg-blue-50 border border-blue-200 text-blue-900"
-                          : "bg-white border border-slate-200/70 text-slate-700 hover:bg-slate-100/70"
+                          ? "bg-primary/10 border border-primary/30 text-primary"
+                          : "bg-card border border-border text-foreground hover:bg-muted"
                       }`}
                     >
                       <div className="flex items-center space-x-2">
                         <div
                           className={`flex h-4 w-4 items-center justify-center rounded border ${
                             isSelected
-                              ? "bg-blue-600 border-blue-600 text-white"
-                              : "border-slate-300 bg-white"
+                              ? "bg-primary border-primary text-primary-foreground"
+                              : "border-border bg-background"
                           }`}
                         >
                           {isSelected && <CheckCircle2 className="h-3 w-3" />}
                         </div>
                         <span className="font-medium">{team.name}</span>
                       </div>
-                      <span className="text-[10px] text-slate-400">
+                      <span className="text-[10px] text-muted-foreground">
                         {team._count?.memberships ?? 0} engineers
                       </span>
                     </button>
@@ -298,13 +296,13 @@ export function InviteUserDialog({
                 })}
               </div>
             ) : (
-              <p className="text-xs text-slate-400 italic">No squads created yet.</p>
+              <p className="text-xs text-muted-foreground italic">No squads created yet.</p>
             )}
           </div>
 
           {/* Auth Mode Note Requirement */}
-          <div className="flex items-start space-x-2.5 rounded-xl border border-blue-200 bg-blue-50/70 p-3 text-xs text-blue-900">
-            <Info className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+          <div className="flex items-start space-x-2.5 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-foreground">
+            <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
             <p className="leading-relaxed">
               <span className="font-semibold">Authentication Notice:</span> Users
               with <span className="font-mono font-semibold">@centvis.com</span>{" "}
@@ -314,28 +312,30 @@ export function InviteUserDialog({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end space-x-2.5 pt-3 border-t border-slate-100">
-            <button
+          <DialogFooter className="pt-3 border-t border-border flex items-center justify-end space-x-2">
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={onClose}
               disabled={inviteMutation.isPending}
-              className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              size="sm"
               disabled={inviteMutation.isPending || !rawEmails.trim()}
-              className="flex items-center space-x-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-blue-500/20 hover:bg-blue-700 disabled:opacity-50 transition active:scale-95"
+              className="gap-1.5"
             >
               {inviteMutation.isPending && (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               )}
               <span>Send Invitation</span>
-            </button>
-          </div>
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

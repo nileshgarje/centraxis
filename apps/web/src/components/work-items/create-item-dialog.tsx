@@ -16,7 +16,18 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { api } from "~/trpc/react";
-import { MarkdownEditor } from "@centraxis/ui";
+import {
+  MarkdownEditor,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  Button,
+  Input,
+  Label,
+} from "@centraxis/ui";
 
 interface CreateItemDialogProps {
   isOpen: boolean;
@@ -188,43 +199,34 @@ export function CreateItemDialog({
     });
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl border border-slate-200">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="sm:max-w-2xl p-0 overflow-hidden">
         {/* Dialog Header */}
-        <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/80 px-6 py-4">
-          <div className="flex items-center space-x-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white font-bold shadow-md shadow-blue-500/20">
+        <div className="border-b border-border bg-muted/20 px-6 py-4">
+          <DialogHeader className="flex flex-row items-center space-x-2.5 space-y-0 text-left">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold shadow-sm">
               <Plus className="h-4 w-4" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 text-base">
+              <DialogTitle className="font-bold text-foreground text-base">
                 Create Work Item
-              </h3>
-              <p className="text-xs text-slate-500">
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
                 Add an Epic, Feature, Story, Task, or Bug to the project backlog
-              </p>
+              </DialogDescription>
             </div>
-          </div>
-
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-200/70 hover:text-slate-700 transition"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          </DialogHeader>
         </div>
 
         {/* Dialog Body */}
         <form onSubmit={handleSubmit}>
-          <div className="max-h-[75vh] overflow-y-auto p-6 space-y-5">
+          <div className="max-h-[70vh] overflow-y-auto p-6 space-y-5">
             {/* 1. Item Type Selector */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+              <Label className="block text-xs font-semibold text-foreground uppercase tracking-wider">
                 Work Item Type
-              </label>
+              </Label>
               <div className="flex flex-wrap gap-2">
                 {ITEM_TYPES.map((t) => {
                   const Icon = t.icon;
@@ -248,33 +250,34 @@ export function CreateItemDialog({
 
             {/* Error Banner */}
             {errorMessage && (
-              <div className="flex items-center space-x-2 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-800">
-                <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
+              <div className="flex items-center space-x-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-xs text-destructive">
+                <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
                 <span>{errorMessage}</span>
               </div>
             )}
 
             {/* 2. Title */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-700">
-                Title <span className="text-red-500">*</span>
-              </label>
-              <input
+              <Label htmlFor="item-title" className="block text-xs font-semibold text-foreground">
+                Title <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="item-title"
                 type="text"
                 required
                 autoFocus
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. As a team member, I want to filter board cards by squad..."
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="h-10 text-sm"
               />
             </div>
 
             {/* 3. Description & Acceptance Criteria */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-700">
+              <Label className="block text-xs font-semibold text-foreground">
                 Description / Context
-              </label>
+              </Label>
               <MarkdownEditor
                 value={description}
                 onChange={setDescription}
@@ -285,9 +288,9 @@ export function CreateItemDialog({
 
             {type === "STORY" && (
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-700">
+                <Label className="block text-xs font-semibold text-foreground">
                   Acceptance Criteria (Gherkin format)
-                </label>
+                </Label>
                 <MarkdownEditor
                   value={acceptanceCriteria}
                   onChange={setAcceptanceCriteria}
@@ -300,14 +303,14 @@ export function CreateItemDialog({
             {/* 4. Sizing & Fibonacci Story Points */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="block text-xs font-semibold text-slate-700">
+                <Label className="block text-xs font-semibold text-foreground">
                   Story Points (Fibonacci Complexity)
-                </label>
+                </Label>
                 {storyPoints !== null && (
                   <button
                     type="button"
                     onClick={() => setStoryPoints(null)}
-                    className="text-[11px] text-slate-400 hover:text-slate-600 underline"
+                    className="text-[11px] text-muted-foreground hover:text-foreground underline"
                   >
                     Clear Points
                   </button>
@@ -323,8 +326,8 @@ export function CreateItemDialog({
                       onClick={() => setStoryPoints(pts)}
                       className={`h-9 w-9 rounded-lg font-bold text-xs border transition ${
                         isSelected
-                          ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                          : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                          ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                          : "bg-muted text-foreground border-border hover:bg-muted/80"
                       }`}
                     >
                       {pts}
@@ -338,9 +341,9 @@ export function CreateItemDialog({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 pt-1">
               {/* Priority */}
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-700">
+                <Label className="block text-xs font-semibold text-foreground">
                   Priority
-                </label>
+                </Label>
                 <div className="grid grid-cols-4 gap-1.5">
                   {PRIORITIES.map((p) => (
                     <button
@@ -353,8 +356,8 @@ export function CreateItemDialog({
                             ? "bg-red-600 text-white border-red-600"
                             : p.level === "HIGH"
                               ? "bg-orange-500 text-white border-orange-500"
-                              : "bg-blue-600 text-white border-blue-600"
-                          : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                              : "bg-primary text-primary-foreground border-primary"
+                          : "bg-muted text-foreground border-border hover:bg-muted/80"
                       }`}
                     >
                       {p.label}
@@ -365,14 +368,15 @@ export function CreateItemDialog({
 
               {/* Target Sprint */}
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-700">
+                <Label htmlFor="item-sprint" className="block text-xs font-semibold text-foreground">
                   Sprint Allocation
-                </label>
+                </Label>
                 <div className="relative">
                   <select
+                    id="item-sprint"
                     value={sprintId}
                     onChange={(e) => setSprintId(e.target.value)}
-                    className="w-full appearance-none rounded-xl border border-slate-300 bg-white py-2 pl-3 pr-8 text-xs font-medium text-slate-800 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full appearance-none rounded-md border border-input bg-background py-2 pl-3 pr-8 text-xs font-medium text-foreground transition focus:outline-none focus:ring-1 focus:ring-ring"
                   >
                     <option value="">Backlog Pool (Unscheduled)</option>
                     {sprints?.map((s) => (
@@ -381,20 +385,21 @@ export function CreateItemDialog({
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 </div>
               </div>
 
               {/* Assignee */}
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-700">
+                <Label htmlFor="item-assignee" className="block text-xs font-semibold text-foreground">
                   Assignee
-                </label>
+                </Label>
                 <div className="relative">
                   <select
+                    id="item-assignee"
                     value={assigneeId}
                     onChange={(e) => setAssigneeId(e.target.value)}
-                    className="w-full appearance-none rounded-xl border border-slate-300 bg-white py-2 pl-3 pr-8 text-xs font-medium text-slate-800 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full appearance-none rounded-md border border-input bg-background py-2 pl-3 pr-8 text-xs font-medium text-foreground transition focus:outline-none focus:ring-1 focus:ring-ring"
                   >
                     <option value="">Unassigned</option>
                     {members?.map((m) => (
@@ -403,20 +408,21 @@ export function CreateItemDialog({
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 </div>
               </div>
 
               {/* Parent Work Item */}
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-700">
+                <Label htmlFor="item-parent" className="block text-xs font-semibold text-foreground">
                   Parent Hierarchy (Optional)
-                </label>
+                </Label>
                 <div className="relative">
                   <select
+                    id="item-parent"
                     value={parentId}
                     onChange={(e) => setParentId(e.target.value)}
-                    className="w-full appearance-none rounded-xl border border-slate-300 bg-white py-2 pl-3 pr-8 text-xs font-medium text-slate-800 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full appearance-none rounded-md border border-input bg-background py-2 pl-3 pr-8 text-xs font-medium text-foreground transition focus:outline-none focus:ring-1 focus:ring-ring"
                   >
                     <option value="">No Parent (Root Item)</option>
                     {parentCandidates.map((p) => (
@@ -425,25 +431,27 @@ export function CreateItemDialog({
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 </div>
               </div>
             </div>
           </div>
 
           {/* Dialog Footer */}
-          <div className="flex items-center justify-end space-x-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
-            <button
+          <DialogFooter className="flex items-center justify-end space-x-2 border-t border-border bg-muted/20 px-6 py-3">
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={onClose}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              size="sm"
               disabled={createItemMutation.isPending || !title.trim()}
-              className="flex items-center space-x-2 rounded-xl bg-blue-600 px-5 py-2 text-xs font-semibold text-white shadow-md shadow-blue-500/20 transition hover:bg-blue-700 disabled:opacity-50"
+              className="gap-1.5"
             >
               {createItemMutation.isPending ? (
                 <>
@@ -456,10 +464,10 @@ export function CreateItemDialog({
                   <span>Create Item</span>
                 </>
               )}
-            </button>
-          </div>
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

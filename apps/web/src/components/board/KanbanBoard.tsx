@@ -19,6 +19,7 @@ import {
 import { api } from "~/trpc/react";
 import { WorkItemDrawer } from "../work-items/work-item-drawer";
 import { CompleteSprintDialog } from "../sprints/complete-sprint-dialog";
+import { Button, Badge } from "@centraxis/ui";
 
 interface WorkItemCard {
   id: string;
@@ -251,24 +252,27 @@ export function KanbanBoard({
             </div>
 
             {sprint && (
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => setIsCompleteDialogOpen(true)}
-                className="flex items-center space-x-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground shadow-xs transition hover:bg-muted active:scale-95"
+                className="gap-1.5 text-xs h-8"
               >
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>Complete Sprint</span>
-              </button>
+              </Button>
             )}
 
             {onCreateItem && (
-              <button
+              <Button
+                size="sm"
                 onClick={() => onCreateItem({ sprintId: sprint?.id })}
-                className="flex items-center space-x-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-xs transition hover:bg-primary/90 active:scale-95"
+                className="gap-1 text-xs h-8"
               >
                 <span className="text-sm font-bold leading-none">+</span>
                 <span>Add Card</span>
-              </button>
+              </Button>
             )}
           </div>
         )}

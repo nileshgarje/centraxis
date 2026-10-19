@@ -16,6 +16,9 @@ import {
 } from "lucide-react";
 import {
   Button,
+  Input,
+  Label,
+  Switch,
   Avatar,
   AvatarFallback,
   AvatarImage,
@@ -93,26 +96,28 @@ export default function ProfileSettingsPage() {
 
         <form onSubmit={handleSave} className="space-y-4 max-w-md pt-2">
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-foreground">
+            <Label htmlFor="display-name" className="text-xs font-semibold text-foreground">
               Display Name
-            </label>
-            <input
+            </Label>
+            <Input
+              id="display-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="h-9 text-xs"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-foreground">
+            <Label htmlFor="email-address" className="text-xs font-semibold text-foreground">
               Email Address
-            </label>
-            <input
+            </Label>
+            <Input
+              id="email-address"
               type="email"
               value={email}
               disabled
-              className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-xs font-medium text-muted-foreground cursor-not-allowed"
+              className="h-9 text-xs bg-muted/50 text-muted-foreground cursor-not-allowed"
             />
             <p className="text-[11px] text-muted-foreground">
               Enterprise email is managed by your organization's directory.
@@ -197,53 +202,50 @@ export default function ProfileSettingsPage() {
 
         <div className="divide-y divide-border/60 pt-2">
           <div className="flex items-center justify-between py-3">
-            <div>
-              <div className="text-xs font-semibold text-foreground">
+            <div className="space-y-0.5">
+              <Label htmlFor="sprint-kickoff-switch" className="text-xs font-semibold text-foreground cursor-pointer">
                 Sprint Kickoff Notifications
-              </div>
+              </Label>
               <div className="text-[11px] text-muted-foreground">
                 Receive an email summary when a planned sprint is started by Scrum Master
               </div>
             </div>
-            <input
-              type="checkbox"
+            <Switch
+              id="sprint-kickoff-switch"
               checked={sprintKickoffEmail}
-              onChange={(e) => setSprintKickoffEmail(e.target.checked)}
-              className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+              onCheckedChange={setSprintKickoffEmail}
             />
           </div>
 
           <div className="flex items-center justify-between py-3">
-            <div>
-              <div className="text-xs font-semibold text-foreground">
+            <div className="space-y-0.5">
+              <Label htmlFor="task-assignment-switch" className="text-xs font-semibold text-foreground cursor-pointer">
                 Task Assignment Alerts
-              </div>
+              </Label>
               <div className="text-[11px] text-muted-foreground">
                 Receive real-time alerts when a work item or bug is assigned to you
               </div>
             </div>
-            <input
-              type="checkbox"
+            <Switch
+              id="task-assignment-switch"
               checked={taskAssignmentEmail}
-              onChange={(e) => setTaskAssignmentEmail(e.target.checked)}
-              className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+              onCheckedChange={setTaskAssignmentEmail}
             />
           </div>
 
           <div className="flex items-center justify-between py-3">
-            <div>
-              <div className="text-xs font-semibold text-foreground">
+            <div className="space-y-0.5">
+              <Label htmlFor="rollover-digest-switch" className="text-xs font-semibold text-foreground cursor-pointer">
                 Sprint Closeout & Rollover Digest
-              </div>
+              </Label>
               <div className="text-[11px] text-muted-foreground">
                 Get velocity metrics and incomplete item rollover summaries on sprint completion
               </div>
             </div>
-            <input
-              type="checkbox"
+            <Switch
+              id="rollover-digest-switch"
               checked={rolloverDigestEmail}
-              onChange={(e) => setRolloverDigestEmail(e.target.checked)}
-              className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+              onCheckedChange={setRolloverDigestEmail}
             />
           </div>
         </div>

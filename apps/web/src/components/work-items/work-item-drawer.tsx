@@ -21,7 +21,14 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { api } from "~/trpc/react";
-import { MarkdownEditor, MarkdownRenderer } from "@centraxis/ui";
+import {
+  MarkdownEditor,
+  MarkdownRenderer,
+  Button,
+  Input,
+  Label,
+  Badge,
+} from "@centraxis/ui";
 
 interface WorkItemDrawerProps {
   itemId: string | null;
@@ -234,14 +241,16 @@ export function WorkItemDrawer({
               </div>
             </div>
 
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={onClose}
-              className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
               aria-label="Close drawer"
             >
-              <X className="h-5 w-5" />
-            </button>
+              <X className="h-4 w-4" />
+            </Button>
           </div>
 
           {/* Drawer Body */}
@@ -364,9 +373,9 @@ export function WorkItemDrawer({
               {/* 1. Description (Developer Markdown Editor) */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                  <Label className="text-xs font-semibold text-foreground uppercase tracking-wider">
                     Description
-                  </label>
+                  </Label>
                   <span className="text-[11px] text-muted-foreground">
                     Supports GFM, syntax code blocks & checklists
                   </span>
@@ -385,9 +394,9 @@ export function WorkItemDrawer({
               {/* 2. Acceptance Criteria (Gherkin & Checklists) */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                  <Label className="text-xs font-semibold text-foreground uppercase tracking-wider">
                     Acceptance Criteria (Gherkin / Scenarios)
-                  </label>
+                  </Label>
                   <span className="text-[11px] text-muted-foreground">
                     Auto-highlights Given/When/Then scenarios
                   </span>
@@ -406,10 +415,10 @@ export function WorkItemDrawer({
               {/* Subtasks (if any) */}
               {item.children && item.children.length > 0 && (
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                  <Label className="text-xs font-semibold text-foreground uppercase tracking-wider">
                     Subtasks ({item.children.filter((c) => c.status === "DONE").length}/
                     {item.children.length})
-                  </label>
+                  </Label>
                   <div className="divide-y divide-border rounded-lg border border-border bg-card">
                     {item.children.map((child) => (
                       <div
@@ -463,15 +472,16 @@ export function WorkItemDrawer({
                     placeholder="Write a comment with code snippets (```ts ...) or checklist items..."
                   />
                   <div className="flex justify-end pt-1">
-                    <button
+                    <Button
                       type="button"
+                      size="sm"
                       disabled={!newComment.trim()}
                       onClick={handleAddComment}
-                      className="flex items-center space-x-1.5 rounded-md bg-primary px-3.5 py-1.5 text-xs font-medium text-primary-foreground shadow-xs transition hover:bg-primary/90 disabled:opacity-40 active:scale-95"
+                      className="gap-1.5 text-xs"
                     >
                       <Send className="h-3 w-3" />
                       <span>Post Comment</span>
-                    </button>
+                    </Button>
                   </div>
                 </div>
 

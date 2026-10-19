@@ -12,6 +12,18 @@ import {
 } from "lucide-react";
 import { api } from "~/trpc/react";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  Button,
+  Input,
+  Label,
+} from "@centraxis/ui";
+
 interface CreateClientDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -92,147 +104,136 @@ export function CreateClientDialog({
     });
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Modal Dialog */}
-      <div className="relative w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-150 dark:border-slate-800 dark:bg-slate-950">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50">
-          <div className="flex items-center space-x-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-500/20">
+        <div className="border-b border-border px-6 py-4 bg-muted/20">
+          <DialogHeader className="flex flex-row items-center space-x-3 space-y-0 text-left">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
               <Building2 className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-slate-50">
+              <DialogTitle className="text-base font-bold text-foreground">
                 Add Client Tenant
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
                 Segment enterprise projects into dedicated client spaces
-              </p>
+              </DialogDescription>
             </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 transition"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          </DialogHeader>
         </div>
 
         {/* Error Alert */}
         {errorMessage && (
-          <div className="mx-6 mt-4 flex items-center space-x-2 rounded-xl bg-red-50 border border-red-200 px-3.5 py-2.5 text-xs text-red-700 font-medium dark:bg-red-950/40 dark:border-red-800 dark:text-red-300">
-            <AlertCircle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
+          <div className="mx-6 mt-4 flex items-center space-x-2 rounded-lg bg-destructive/10 border border-destructive/20 px-3.5 py-2.5 text-xs text-destructive font-medium">
+            <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 pt-4">
           {/* Client Name */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Client / Account Name <span className="text-red-500">*</span>
-            </label>
-            <input
+            <Label htmlFor="client-name" className="text-xs font-semibold text-foreground">
+              Client / Account Name <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="client-name"
               type="text"
               value={name}
               onChange={(e) => handleNameChange(e.target.value)}
               placeholder="e.g. Acme Corporation"
               required
               autoFocus
-              className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-sm font-medium text-slate-900 dark:text-slate-50 placeholder:text-slate-400 transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="h-9 text-xs"
             />
           </div>
 
           {/* Client Slug */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Client Slug <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={slug}
-                onChange={(e) => {
-                  setIsSlugManuallyEdited(true);
-                  setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
-                }}
-                placeholder="e.g. acme-corporation"
-                required
-                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 font-mono text-xs font-medium text-slate-900 dark:text-slate-50 placeholder:text-slate-400 transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-              />
-            </div>
-            <p className="text-[11px] text-slate-400 dark:text-slate-500">
+            <Label htmlFor="client-slug" className="text-xs font-semibold text-foreground">
+              Client Slug <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="client-slug"
+              type="text"
+              value={slug}
+              onChange={(e) => {
+                setIsSlugManuallyEdited(true);
+                setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
+              }}
+              placeholder="e.g. acme-corporation"
+              required
+              className="h-9 font-mono text-xs"
+            />
+            <p className="text-[11px] text-muted-foreground">
               Unique URL identifier for this client tenant (lowercase letters, numbers, and hyphens).
             </p>
           </div>
 
           {/* Contact Email */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <Label htmlFor="client-email" className="text-xs font-semibold text-foreground">
               Primary Client Contact Email
-            </label>
+            </Label>
             <div className="relative">
-              <input
+              <Input
+                id="client-email"
                 type="email"
                 value={contactEmail}
                 onChange={(e) => setContactEmail(e.target.value)}
                 placeholder="e.g. stakeholder@acme.com"
-                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 pl-9 text-xs font-medium text-slate-900 dark:text-slate-50 placeholder:text-slate-400 transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="h-9 pl-9 text-xs"
               />
-              <Mail className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+              <Mail className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             </div>
           </div>
 
           {/* Logo URL */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <Label htmlFor="client-logo" className="text-xs font-semibold text-foreground">
               Client Logo URL
-            </label>
+            </Label>
             <div className="relative">
-              <input
+              <Input
+                id="client-logo"
                 type="text"
                 value={logo}
                 onChange={(e) => setLogo(e.target.value)}
                 placeholder="https://example.com/logo.png"
-                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 pl-9 text-xs font-medium text-slate-900 dark:text-slate-50 placeholder:text-slate-400 transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="h-9 pl-9 text-xs"
               />
-              <Link2 className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+              <Link2 className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end space-x-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
-            <button
+          <DialogFooter className="pt-3 border-t border-border flex items-center justify-end space-x-2">
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={onClose}
               disabled={createMutation.isPending}
-              className="rounded-xl border border-slate-200 dark:border-slate-800 px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              size="sm"
               disabled={createMutation.isPending || !name.trim() || slug.trim().length < 2}
-              className="flex items-center space-x-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-indigo-500/20 hover:bg-indigo-700 disabled:opacity-50 transition active:scale-95"
+              className="gap-1.5"
             >
               {createMutation.isPending && (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               )}
               <span>Create Client</span>
-            </button>
-          </div>
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
