@@ -41,15 +41,13 @@ export function AiStoryModal({
   const [modelUsed, setModelUsed] = useState<string>("gpt-4o");
   const [commitSuccess, setCommitSuccess] = useState(false);
 
-  // Keyboard shortcut listener (Cmd+K / Ctrl+K)
+  // Keyboard shortcut listener (Cmd+J / Ctrl+J)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "j") {
         e.preventDefault();
         if (isOpen) {
           onClose();
-        } else {
-          // Trigger open
         }
       } else if (e.key === "Escape" && isOpen) {
         onClose();

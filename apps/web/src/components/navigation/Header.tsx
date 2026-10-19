@@ -11,6 +11,9 @@ import {
   CheckCircle2,
   Briefcase,
   Plus,
+  Search,
+  Calendar,
+  UserPlus,
 } from "lucide-react";
 
 interface HeaderProps {
@@ -23,6 +26,9 @@ interface HeaderProps {
   onOpenAiModal: () => void;
   onCreateItem: () => void;
   onCreateProject?: () => void;
+  onCreateSprint?: () => void;
+  onOpenInvite?: () => void;
+  onOpenCommandMenu?: () => void;
 }
 
 export function Header({
@@ -35,14 +41,19 @@ export function Header({
   onOpenAiModal,
   onCreateItem,
   onCreateProject,
+  onCreateSprint,
+  onOpenInvite,
+  onOpenCommandMenu,
 }: HeaderProps) {
   const { data: session } = useSession();
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = React.useState(false);
+  const [isCreateDropdownOpen, setIsCreateDropdownOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const createDropdownRef = React.useRef<HTMLDivElement>(null);
 
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -51,12 +62,23 @@ export function Header({
       ) {
         setIsProjectDropdownOpen(false);
       }
+      if (
+        createDropdownRef.current &&
+        !createDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsCreateDropdownOpen(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const canCreateProject =
+    !session ||
+    session.user?.role === "ORG_ADMIN" ||
+    session.user?.role === "SCRUM_MASTER";
+
+  const canInviteMember =
     !session ||
     session.user?.role === "ORG_ADMIN" ||
     session.user?.role === "SCRUM_MASTER";
@@ -221,33 +243,124 @@ export function Header({
           </button>
         </nav>
 
-        {/* Create Item, AI Action & User Profile */}
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={onCreateItem}
-            className="flex items-center space-x-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 active:scale-95"
-          >
-            <span className="text-sm font-bold leading-none">+</span>
-            <span>Create</span>
-          </button>
+        {/* Right Section: Command Bar, Persistent + Dropdown, AI & Profile */}
+        <div className="flex items-center space-x-2.5">
+          {/* Global Command Bar Trigger */}
+          {onOpenCommandMenu && (
+            <button
+              type="button"
+              onClick={onOpenCommandMenu}
+              className="hidden xl:flex items-center space-x-2 rounded-xl border border-slate-200 bg-slate-50/80 px-2.5 py-1.5 text-xs text-slate-500 hover:bg-slate-100 hover:border-slate-300 transition"
+              title="Open Global Command Bar (Cmd+K)"
+            >
+              <Search className="h-3.5 w-3.5 text-slate-400" />
+              <span>Search or command...</span>
+              <kbd className="rounded border border-slate-200 bg-white px-1.5 py-0.2 text-[10px] font-mono font-semibold text-slate-500 shadow-xs">
+                ⌘K
+              </kbd>
+            </button>
+          )}
 
+          {/* Persistent '+' Creation Dropdown */}
+          <div className="relative" ref={createDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsCreateDropdownOpen((prev) => !prev)}
+              className="flex items-center space-x-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-md shadow-blue-500/20 hover:bg-blue-700 transition active:scale-95"
+            >
+              <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
+              <span>Create</span>
+              <ChevronDown className="h-3 w-3 opacity-80" />
+            </button>
+
+            {/* Quick Actions Dropdown Menu */}
+            {isCreateDropdownOpen && (
+              <div className="absolute right-0 mt-1.5 w-60 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCreateDropdownOpen(false);
+                    onCreateItem();
+                  }}
+                  className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-700 transition"
+                >
+                  <div className="flex items-center space-x-2">
+                    <Plus className="h-3.5 w-3.5 text-blue-600" />
+                    <span className="font-semibold">Create Work Item</span>
+                  </div>
+                  <kbd className="rounded bg-slate-100 border border-slate-200 px-1.5 py-0.2 text-[10px] font-mono text-slate-500">
+                    C
+                  </kbd>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCreateDropdownOpen(false);
+                    onOpenAiModal();
+                  }}
+                  className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-indigo-700 transition"
+                >
+                  <div className="flex items-center space-x-2">
+                    <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
+                    <span className="font-semibold">Generate with Centraxis AI</span>
+                  </div>
+                  <kbd className="rounded bg-slate-100 border border-slate-200 px-1.5 py-0.2 text-[10px] font-mono text-slate-500">
+                    ⌘J
+                  </kbd>
+                </button>
+
+                {onCreateSprint && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCreateDropdownOpen(false);
+                      onCreateSprint();
+                    }}
+                    className="flex w-full items-center space-x-2 rounded-lg px-2.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-emerald-700 transition"
+                  >
+                    <Calendar className="h-3.5 w-3.5 text-emerald-600" />
+                    <span className="font-semibold">Create Sprint</span>
+                  </button>
+                )}
+
+                {canInviteMember && onOpenInvite && (
+                  <div className="mt-1 border-t border-slate-100 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCreateDropdownOpen(false);
+                        onOpenInvite();
+                      }}
+                      className="flex w-full items-center space-x-2 rounded-lg px-2.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-purple-700 transition"
+                    >
+                      <UserPlus className="h-3.5 w-3.5 text-purple-600" />
+                      <span className="font-semibold">Invite Member</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* AI Story Agent Button */}
           <button
             onClick={onOpenAiModal}
-            className="group flex items-center space-x-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-md shadow-blue-500/20 transition hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg hover:shadow-blue-500/30 active:scale-95"
+            className="group hidden sm:flex items-center space-x-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-md shadow-blue-500/20 transition hover:from-blue-700 hover:to-indigo-700 active:scale-95"
           >
             <Sparkles className="h-3.5 w-3.5 transition group-hover:rotate-12" />
             <span>AI Story Agent</span>
-            <kbd className="ml-1.5 hidden rounded bg-blue-500/40 px-1.5 py-0.5 text-[10px] font-mono text-white sm:inline-block">
-              ⌘K
+            <kbd className="ml-1 hidden rounded bg-blue-500/40 px-1.5 py-0.2 text-[10px] font-mono text-white md:inline-block">
+              ⌘J
             </kbd>
           </button>
 
           {/* User Profile Pill */}
-          <div className="flex items-center space-x-2.5 rounded-full border border-slate-200 bg-slate-50 py-1 pl-1 pr-3">
+          <div className="flex items-center space-x-2 rounded-full border border-slate-200 bg-slate-50 py-1 pl-1 pr-2.5">
             <div className="h-7 w-7 overflow-hidden rounded-full bg-blue-100 flex items-center justify-center font-bold text-xs text-blue-700">
               AM
             </div>
-            <div className="text-left text-xs">
+            <div className="text-left text-xs hidden md:block">
               <p className="font-semibold text-slate-800 leading-tight">Alex Morgan</p>
               <p className="text-[10px] text-slate-500 leading-tight">ORG_ADMIN</p>
             </div>

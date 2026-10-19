@@ -9,6 +9,10 @@ import { SprintMetrics } from "~/components/metrics/SprintMetrics";
 import { AiStoryModal } from "~/components/ai-modal/AiStoryModal";
 import { CreateItemDialog } from "~/components/work-items/create-item-dialog";
 import { CreateProjectDialog } from "~/components/projects/create-project-dialog";
+import { CreateSprintDialog } from "~/components/sprints/create-sprint-dialog";
+import { InviteUserDialog } from "~/components/settings/invite-user-dialog";
+import { CommandMenu } from "~/components/command-menu";
+import { Plus, Command } from "lucide-react";
 import { api } from "~/trpc/react";
 
 export default function CentraxisApp() {
@@ -22,6 +26,10 @@ export default function CentraxisApp() {
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isCreateItemOpen, setIsCreateItemOpen] = useState(false);
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
+  const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
+  const [isInviteUserOpen, setIsInviteUserOpen] = useState(false);
+  const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
+
   const [createItemDefaults, setCreateItemDefaults] = useState<{
     sprintId?: string | null;
     parentId?: string | null;
@@ -44,6 +52,46 @@ export default function CentraxisApp() {
     setCreateItemDefaults(defaults ?? { sprintId: activeSprint?.id });
     setIsCreateItemOpen(true);
   };
+
+  // Global Keyboard Shortcuts (Cmd+K / Ctrl+K, Cmd+J / Ctrl+J, and C)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isInput =
+        ["INPUT", "TEXTAREA", "SELECT"].includes(
+          (e.target as HTMLElement)?.tagName,
+        ) || (e.target as HTMLElement)?.isContentEditable;
+
+      // Cmd+K / Ctrl+K: Global Command Bar
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsCommandMenuOpen((prev) => !prev);
+        return;
+      }
+
+      // Cmd+J / Ctrl+J: AI Story Agent
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "j") {
+        e.preventDefault();
+        setIsAiModalOpen((prev) => !prev);
+        return;
+      }
+
+      // C: Quick Create Item (when not typing in an input)
+      if (
+        !isInput &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        e.key.toLowerCase() === "c"
+      ) {
+        e.preventDefault();
+        handleOpenCreateItem();
+        return;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeSprint?.id]);
 
   if (projectsLoading) {
     return (
@@ -69,7 +117,7 @@ export default function CentraxisApp() {
     })) ?? [];
 
   return (
-    <div className="min-h-screen bg-slate-50/60 flex flex-col">
+    <div className="min-h-screen bg-slate-50/60 flex flex-col relative">
       {/* Shell Header */}
       <Header
         projects={projectList}
@@ -81,6 +129,9 @@ export default function CentraxisApp() {
         onOpenAiModal={() => setIsAiModalOpen(true)}
         onCreateItem={() => handleOpenCreateItem()}
         onCreateProject={() => setIsCreateProjectOpen(true)}
+        onCreateSprint={() => setIsCreateSprintOpen(true)}
+        onOpenInvite={() => setIsInviteUserOpen(true)}
+        onOpenCommandMenu={() => setIsCommandMenuOpen(true)}
       />
 
       {/* Main Workspace Body */}
@@ -97,6 +148,7 @@ export default function CentraxisApp() {
             projectId={selectedProjectId}
             onOpenAiModal={() => setIsAiModalOpen(true)}
             onCreateItem={handleOpenCreateItem}
+            onCreateSprint={() => setIsCreateSprintOpen(true)}
           />
         )}
 
@@ -108,6 +160,44 @@ export default function CentraxisApp() {
           <SprintMetrics projectId={selectedProjectId} />
         )}
       </main>
+
+      {/* Floating Action Button (FAB) for Instant Quick Access */}
+      <div className="fixed bottom-6 right-6 z-40 flex items-center space-x-2">
+        <button
+          onClick={() => setIsCommandMenuOpen(true)}
+          title="Open Quick Command Bar (Cmd+K)"
+          className="group flex items-center space-x-2 rounded-full bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white shadow-xl hover:bg-slate-800 transition active:scale-95"
+        >
+          <Command className="h-3.5 w-3.5 text-blue-400" />
+          <span>Quick Actions</span>
+          <kbd className="rounded bg-slate-800 px-1.5 py-0.2 font-mono text-[10px] text-slate-300">
+            ⌘K
+          </kbd>
+        </button>
+
+        <button
+          onClick={() => handleOpenCreateItem()}
+          title="Create New Item (Press C)"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition active:scale-95"
+        >
+          <Plus className="h-6 w-6 stroke-[2.5]" />
+        </button>
+      </div>
+
+      {/* Global Command Bar Dialog (Cmd+K / Ctrl+K) */}
+      <CommandMenu
+        isOpen={isCommandMenuOpen}
+        onClose={() => setIsCommandMenuOpen(false)}
+        projectId={selectedProjectId}
+        projects={projectList}
+        onSelectProject={setSelectedProjectId}
+        onOpenCreateItem={() => handleOpenCreateItem()}
+        onOpenCreateSprint={() => setIsCreateSprintOpen(true)}
+        onOpenCreateProject={() => setIsCreateProjectOpen(true)}
+        onOpenAiStory={() => setIsAiModalOpen(true)}
+        onOpenInviteMember={() => setIsInviteUserOpen(true)}
+        onNavigateTab={setActiveTab}
+      />
 
       {/* Create Work Item Modal Dialog */}
       <CreateItemDialog
@@ -129,7 +219,20 @@ export default function CentraxisApp() {
         }}
       />
 
-      {/* Global AI Story Agent Modal Dialog (Cmd+K) */}
+      {/* Create Sprint Modal Dialog */}
+      <CreateSprintDialog
+        isOpen={isCreateSprintOpen}
+        onClose={() => setIsCreateSprintOpen(false)}
+        projectId={selectedProjectId}
+      />
+
+      {/* Invite User Modal Dialog */}
+      <InviteUserDialog
+        isOpen={isInviteUserOpen}
+        onClose={() => setIsInviteUserOpen(false)}
+      />
+
+      {/* Centraxis AI Story Agent Modal Dialog (Cmd+J) */}
       <AiStoryModal
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
