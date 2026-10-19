@@ -205,6 +205,19 @@ export const projectRouter = createTRPCRouter({
     }),
 
   /**
+   * Check if a project key is unique/available
+   */
+  checkKey: protectedProcedure
+    .input(z.object({ key: z.string().min(2).max(10) }))
+    .query(async ({ ctx, input }) => {
+      const existing = await ctx.db.project.findUnique({
+        where: { key: input.key.toUpperCase() },
+        select: { id: true },
+      });
+      return { available: !existing };
+    }),
+
+  /**
    * Create a new project (Scrum Master or Admin)
    */
   create: scrumMasterProcedure
@@ -222,7 +235,77 @@ export const projectRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const orgId = ctx.session.user.organizationId;
+      let orgId = ctx.session.user.organizationId;
+      if (!orgId) {
+        const user = await ctx.db.user.findUnique({
+          where: { id: ctx.session.user.id },
+          select: { organizationId: true },
+        });
+        orgId = user?.organizationId ?? null;
+      }
+
+      if (!orgId) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "User must belong to an organization to create projects.",
+        });
+      }
+
+      const existing = await ctx.db.project.findUnique({
+        where: { key: input.key },
+      });
+      if (existing) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: `Project key ${input.key} is already in use.`,
+        });
+      }
+
+      return ctx.db.project.create({
+        data: {
+          name: input.name,
+          key: input.key,
+          description: input.description,
+          defaultSprintDurationDays: input.defaultSprintDurationDays,
+          organizationId: orgId,
+          projectTeams: input.teamIds
+            ? {
+                create: input.teamIds.map((teamId) => ({
+                  teamId,
+                })),
+              }
+            : undefined,
+        },
+      });
+    }),
+
+  /**
+   * Alias for create to support createProject callers
+   */
+  createProject: scrumMasterProcedure
+    .input(
+      z.object({
+        name: z.string().min(2, "Project name must be at least 2 characters"),
+        key: z
+          .string()
+          .min(2, "Project key must be at least 2 characters")
+          .max(10, "Project key must be at most 10 characters")
+          .toUpperCase(),
+        description: z.string().optional(),
+        defaultSprintDurationDays: z.number().int().min(7).max(30).default(14),
+        teamIds: z.array(z.string()).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      let orgId = ctx.session.user.organizationId;
+      if (!orgId) {
+        const user = await ctx.db.user.findUnique({
+          where: { id: ctx.session.user.id },
+          select: { organizationId: true },
+        });
+        orgId = user?.organizationId ?? null;
+      }
+
       if (!orgId) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",

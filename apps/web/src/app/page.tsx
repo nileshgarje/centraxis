@@ -8,6 +8,7 @@ import { TeamsView } from "~/components/teams/TeamsView";
 import { SprintMetrics } from "~/components/metrics/SprintMetrics";
 import { AiStoryModal } from "~/components/ai-modal/AiStoryModal";
 import { CreateItemDialog } from "~/components/work-items/create-item-dialog";
+import { CreateProjectDialog } from "~/components/projects/create-project-dialog";
 import { api } from "~/trpc/react";
 
 export default function CentraxisApp() {
@@ -20,6 +21,7 @@ export default function CentraxisApp() {
   >("board");
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isCreateItemOpen, setIsCreateItemOpen] = useState(false);
+  const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
   const [createItemDefaults, setCreateItemDefaults] = useState<{
     sprintId?: string | null;
     parentId?: string | null;
@@ -78,6 +80,7 @@ export default function CentraxisApp() {
         onTabChange={setActiveTab}
         onOpenAiModal={() => setIsAiModalOpen(true)}
         onCreateItem={() => handleOpenCreateItem()}
+        onCreateProject={() => setIsCreateProjectOpen(true)}
       />
 
       {/* Main Workspace Body */}
@@ -114,6 +117,16 @@ export default function CentraxisApp() {
         defaultSprintId={createItemDefaults.sprintId ?? activeSprint?.id}
         defaultParentId={createItemDefaults.parentId}
         defaultType={createItemDefaults.type}
+      />
+
+      {/* Create Project Modal Dialog */}
+      <CreateProjectDialog
+        isOpen={isCreateProjectOpen}
+        onClose={() => setIsCreateProjectOpen(false)}
+        onProjectCreated={(id) => {
+          setSelectedProjectId(id);
+          setIsCreateProjectOpen(false);
+        }}
       />
 
       {/* Global AI Story Agent Modal Dialog (Cmd+K) */}

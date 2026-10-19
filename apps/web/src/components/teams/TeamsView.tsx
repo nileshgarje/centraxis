@@ -1,10 +1,13 @@
 "use client";
 
-import React from "react";
-import { Users, Shield, UserCheck, Briefcase } from "lucide-react";
+import React, { useState } from "react";
+import { Users, Shield, UserCheck, Briefcase, Plus } from "lucide-react";
 import { api } from "~/trpc/react";
+import { CreateTeamDialog } from "./create-team-dialog";
 
 export function TeamsView({ projectId }: { projectId: string }) {
+  const [isCreateTeamOpen, setIsCreateTeamOpen] = useState(false);
+
   const { data: teams, isLoading: teamsLoading } =
     api.project.listTeams.useQuery({ projectId });
   const { data: members, isLoading: membersLoading } =
@@ -25,13 +28,23 @@ export function TeamsView({ projectId }: { projectId: string }) {
     <div className="space-y-8">
       {/* Squads Overview */}
       <div>
-        <div className="mb-4">
-          <h2 className="text-lg font-bold text-slate-900">
-            Assigned Squads & Engineering Teams
-          </h2>
-          <p className="text-xs text-slate-500">
-            Cross-functional squads allocated to this agile project
-          </p>
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">
+              Assigned Squads & Engineering Teams
+            </h2>
+            <p className="text-xs text-slate-500">
+              Cross-functional squads allocated to this agile project
+            </p>
+          </div>
+
+          <button
+            onClick={() => setIsCreateTeamOpen(true)}
+            className="flex items-center space-x-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition active:scale-95"
+          >
+            <Plus className="h-4 w-4" />
+            <span>+ New Squad</span>
+          </button>
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -111,6 +124,13 @@ export function TeamsView({ projectId }: { projectId: string }) {
           ))}
         </div>
       </div>
+
+      {/* Create Team / Squad Modal Dialog */}
+      <CreateTeamDialog
+        isOpen={isCreateTeamOpen}
+        onClose={() => setIsCreateTeamOpen(false)}
+        projectId={projectId}
+      />
     </div>
   );
 }

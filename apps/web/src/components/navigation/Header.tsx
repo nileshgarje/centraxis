@@ -1,7 +1,17 @@
 "use client";
 
 import React from "react";
-import { Sparkles, Layers, Kanban, Users, ChevronDown, CheckCircle2 } from "lucide-react";
+import { useSession } from "next-auth/react";
+import {
+  Sparkles,
+  Layers,
+  Kanban,
+  Users,
+  ChevronDown,
+  CheckCircle2,
+  Briefcase,
+  Plus,
+} from "lucide-react";
 
 interface HeaderProps {
   projects: Array<{ id: string; key: string; name: string }>;
@@ -12,6 +22,7 @@ interface HeaderProps {
   onTabChange: (tab: "board" | "backlog" | "teams" | "metrics") => void;
   onOpenAiModal: () => void;
   onCreateItem: () => void;
+  onCreateProject?: () => void;
 }
 
 export function Header({
@@ -23,8 +34,32 @@ export function Header({
   onTabChange,
   onOpenAiModal,
   onCreateItem,
+  onCreateProject,
 }: HeaderProps) {
+  const { data: session } = useSession();
+  const [isProjectDropdownOpen, setIsProjectDropdownOpen] = React.useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsProjectDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const canCreateProject =
+    !session ||
+    session.user?.role === "ORG_ADMIN" ||
+    session.user?.role === "SCRUM_MASTER";
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur shadow-sm">
@@ -52,20 +87,81 @@ export function Header({
 
           <div className="h-6 w-px bg-slate-200" />
 
-          {/* Project Switcher */}
-          <div className="relative">
-            <select
-              value={selectedProjectId}
-              onChange={(e) => onSelectProject(e.target.value)}
-              className="appearance-none rounded-lg border border-slate-200 bg-slate-50/80 py-1.5 pl-3 pr-8 text-sm font-medium text-slate-800 transition hover:bg-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+          {/* Interactive Project Switcher Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsProjectDropdownOpen((prev) => !prev)}
+              className="flex items-center space-x-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-1.5 text-xs font-semibold text-slate-800 transition hover:bg-slate-100 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             >
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name} ({project.key})
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+              <Briefcase className="h-3.5 w-3.5 text-blue-600" />
+              <span className="truncate max-w-[140px] md:max-w-[200px]">
+                {selectedProject?.name ?? "Select Project"}
+              </span>
+              {selectedProject?.key && (
+                <span className="rounded bg-slate-200/80 px-1.5 py-0.2 font-mono text-[10px] text-slate-600 font-bold">
+                  {selectedProject.key}
+                </span>
+              )}
+              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+            </button>
+
+            {/* Switcher Dropdown Menu */}
+            {isProjectDropdownOpen && (
+              <div className="absolute left-0 mt-1.5 w-64 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-100">
+                <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Projects ({projects.length})
+                </div>
+
+                <div className="max-h-56 overflow-y-auto space-y-0.5">
+                  {projects.map((project) => {
+                    const isSelected = project.id === selectedProjectId;
+                    return (
+                      <button
+                        key={project.id}
+                        type="button"
+                        onClick={() => {
+                          onSelectProject(project.id);
+                          setIsProjectDropdownOpen(false);
+                        }}
+                        className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs transition ${
+                          isSelected
+                            ? "bg-blue-50 font-semibold text-blue-700"
+                            : "text-slate-700 hover:bg-slate-50"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2 truncate">
+                          <span className="truncate">{project.name}</span>
+                          <span className="rounded bg-slate-100 px-1 py-0.2 font-mono text-[10px] text-slate-500">
+                            {project.key}
+                          </span>
+                        </div>
+                        {isSelected && (
+                          <CheckCircle2 className="h-3.5 w-3.5 text-blue-600 shrink-0 ml-1" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* + New Project Button (for ORG_ADMIN or SCRUM_MASTER) */}
+                {canCreateProject && onCreateProject && (
+                  <div className="mt-1 border-t border-slate-100 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsProjectDropdownOpen(false);
+                        onCreateProject();
+                      }}
+                      className="flex w-full items-center space-x-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50 transition"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>+ New Project</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Active Sprint Indicator */}
