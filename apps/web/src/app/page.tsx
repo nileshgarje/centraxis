@@ -15,14 +15,20 @@ import { CommandMenu } from "~/components/command-menu";
 import { Plus, Command } from "lucide-react";
 import { api } from "~/trpc/react";
 
-export default function CentraxisApp() {
+export default function CentraxisApp({
+  initialProjectKey,
+  initialTab = "board",
+}: {
+  initialProjectKey?: string;
+  initialTab?: "board" | "backlog" | "teams" | "metrics";
+}) {
   const { data: projects, isLoading: projectsLoading } =
     api.project.list.useQuery();
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [activeTab, setActiveTab] = useState<
     "board" | "backlog" | "teams" | "metrics"
-  >("board");
+  >(initialTab);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isCreateItemOpen, setIsCreateItemOpen] = useState(false);
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
@@ -36,12 +42,30 @@ export default function CentraxisApp() {
     type?: "EPIC" | "FEATURE" | "STORY" | "TASK" | "BUG";
   }>({});
 
-  // Automatically select the first project once loaded
+  // Synchronize initialTab if prop changes
   useEffect(() => {
-    if (projects && projects.length > 0 && !selectedProjectId) {
-      setSelectedProjectId(projects[0]?.id ?? "");
+    if (initialTab) {
+      setActiveTab(initialTab);
     }
-  }, [projects, selectedProjectId]);
+  }, [initialTab]);
+
+  // Automatically select target project or default first
+  useEffect(() => {
+    if (projects && projects.length > 0) {
+      if (initialProjectKey) {
+        const found = projects.find(
+          (p) => p.key.toLowerCase() === initialProjectKey.toLowerCase(),
+        );
+        if (found) {
+          setSelectedProjectId(found.id);
+          return;
+        }
+      }
+      if (!selectedProjectId) {
+        setSelectedProjectId(projects[0]?.id ?? "");
+      }
+    }
+  }, [projects, selectedProjectId, initialProjectKey]);
 
   const { data: activeSprint } = api.sprint.getActive.useQuery(
     { projectId: selectedProjectId },

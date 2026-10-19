@@ -366,6 +366,11 @@ export function BacklogView({
               return (
                 <div
                   key={sprint.id}
+                  data-testid={
+                    sprint.status === "ACTIVE"
+                      ? "active-sprint-container"
+                      : `sprint-container-${sprint.id}`
+                  }
                   className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden transition-all"
                 >
                   {/* Sprint Container Header */}
@@ -535,6 +540,9 @@ export function BacklogView({
                                   <div
                                     ref={dragProvided.innerRef}
                                     {...dragProvided.draggableProps}
+                                    data-testid="work-item-card"
+                                    data-item-id={item.id}
+                                    data-item-key={item.key}
                                     className={`transition ${
                                       dragSnapshot.isDragging
                                         ? "bg-white shadow-xl ring-2 ring-blue-500 rounded-lg z-30"
@@ -736,7 +744,10 @@ export function BacklogView({
           {/* ======================================================== */}
           {/* UNASSIGNED BACKLOG CONTAINER                             */}
           {/* ======================================================== */}
-          <div className="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <div
+            data-testid="unassigned-backlog-container"
+            className="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden"
+          >
             {/* Backlog Section Header */}
             <div className="border-b border-slate-200 bg-slate-50/80 px-4 py-3 flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -812,6 +823,9 @@ export function BacklogView({
                             <div
                               ref={dragProvided.innerRef}
                               {...dragProvided.draggableProps}
+                              data-testid="work-item-card"
+                              data-item-id={item.id}
+                              data-item-key={item.key}
                               className={`transition ${
                                 dragSnapshot.isDragging
                                   ? "bg-white shadow-xl ring-2 ring-blue-500 rounded-lg z-30"

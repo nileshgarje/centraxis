@@ -303,6 +303,8 @@ export function KanbanBoard({
             return (
               <div
                 key={col.id}
+                data-testid="kanban-column"
+                data-column-id={col.id}
                 className="flex flex-col rounded-xl border border-slate-200/90 bg-slate-100/60 p-4 min-h-[580px] shadow-sm"
               >
                 {/* Column Header */}
@@ -354,6 +356,9 @@ export function KanbanBoard({
                                 ref={dragProvided.innerRef}
                                 {...dragProvided.draggableProps}
                                 {...dragProvided.dragHandleProps}
+                                data-testid="work-item-card"
+                                data-item-id={card.id}
+                                data-item-key={card.key}
                                 onClick={() => setSelectedCardId(card.id)}
                                 className={`group rounded-lg border border-slate-200/90 bg-white p-4 shadow-sm transition hover:border-slate-300 hover:shadow-md cursor-pointer ${
                                   dragSnapshot.isDragging

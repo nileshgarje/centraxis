@@ -28,3 +28,10 @@ pnpm-debug.log*
 # system
 .DS_Store
 Thumbs.db
+
+# test results
+test-results/
+playwright-report/
+*.png
+
+

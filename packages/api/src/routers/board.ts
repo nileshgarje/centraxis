@@ -64,6 +64,7 @@ export const boardRouter = createTRPCRouter({
       const items = await ctx.db.workItem.findMany({
         where: {
           sprintId: targetSprintId,
+          parentId: null,
         },
         include: {
           assignee: {

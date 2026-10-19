@@ -199,6 +199,7 @@ export function Header({
         <nav className="flex items-center space-x-1 rounded-lg bg-slate-100/90 p-1">
           <button
             onClick={() => onTabChange("board")}
+            data-testid="tab-active-board"
             className={`flex items-center space-x-2 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
               activeTab === "board"
                 ? "bg-white text-blue-700 shadow-sm"
@@ -210,6 +211,7 @@ export function Header({
           </button>
           <button
             onClick={() => onTabChange("backlog")}
+            data-testid="tab-backlog"
             className={`flex items-center space-x-2 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
               activeTab === "backlog"
                 ? "bg-white text-blue-700 shadow-sm"

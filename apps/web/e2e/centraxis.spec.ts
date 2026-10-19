@@ -2,6 +2,13 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Centraxis Agile Platform E2E Flow", () => {
   test.beforeEach(async ({ page }) => {
+    await page.goto("/login");
+    if (page.url().includes("/login") || page.url().includes("/auth/signin")) {
+      await page.locator('input[type="email"]').fill("admin@centvis.com");
+      await page.locator('input[type="password"]').fill("AdminPassword123!");
+      await page.locator('button[type="submit"]').click();
+      await page.waitForURL((url) => !url.pathname.includes("/login") && !url.pathname.includes("/auth/signin"), { timeout: 15000 });
+    }
     await page.goto("/");
   });
 

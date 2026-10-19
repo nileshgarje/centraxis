@@ -72,6 +72,7 @@ export function InlineCreateRow({
     return (
       <button
         onClick={() => setIsExpanded(true)}
+        data-testid="inline-create-trigger"
         className="flex w-full items-center space-x-2 rounded-lg border border-dashed border-slate-300 bg-white/70 px-4 py-2 text-xs font-semibold text-slate-500 transition hover:border-blue-400 hover:bg-blue-50/50 hover:text-blue-600"
       >
         <Plus className="h-3.5 w-3.5" />
@@ -127,6 +128,7 @@ export function InlineCreateRow({
         <input
           ref={inputRef}
           type="text"
+          data-testid="inline-create-input"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -137,6 +139,7 @@ export function InlineCreateRow({
 
         {/* Action Controls */}
         <button
+          data-testid="inline-create-submit"
           onClick={() => {
             if (title.trim()) {
               createMutation.mutate({

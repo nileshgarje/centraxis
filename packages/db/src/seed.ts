@@ -100,7 +100,14 @@ async function main() {
   }
 
   const userSpecs: UserSeedSpec[] = [
-    // Org Admin (1)
+    // Org Admins
+    {
+      name: "System Administrator",
+      email: "admin@centvis.com",
+      orgRole: TeamRole.ORG_ADMIN,
+      teamId: platformAiTeam.id,
+      teamRole: TeamRole.ORG_ADMIN,
+    },
     {
       name: "Alex Morgan",
       email: "alex.morgan@centvis.com",
