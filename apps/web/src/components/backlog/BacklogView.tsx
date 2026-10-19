@@ -31,6 +31,7 @@ import {
   type SprintData,
 } from "../sprints/create-sprint-dialog";
 import { WorkItemDrawer } from "../work-items/work-item-drawer";
+import { CompleteSprintDialog } from "../sprints/complete-sprint-dialog";
 
 interface BacklogViewProps {
   projectId: string;
@@ -95,6 +96,8 @@ export function BacklogView({
   const [isSprintDialogOpen, setIsSprintDialogOpen] = useState(false);
   const [sprintToEdit, setSprintToEdit] = useState<SprintData | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [sprintToComplete, setSprintToComplete] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -480,10 +483,8 @@ export function BacklogView({
 
                       {sprint.status === "ACTIVE" && (
                         <button
-                          onClick={() =>
-                            completeSprintMutation.mutate({ sprintId: sprint.id })
-                          }
-                          disabled={completeSprintMutation.isPending}
+                          type="button"
+                          onClick={() => setSprintToComplete(sprint.id)}
                           className="flex items-center space-x-1 rounded-lg bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition active:scale-95"
                         >
                           <CheckCircle2 className="h-3.5 w-3.5" />
@@ -1020,6 +1021,28 @@ export function BacklogView({
         onClose={() => setSelectedItemId(null)}
         projectId={projectId}
       />
+
+      {/* Complete Sprint & Rollover Modal */}
+      <CompleteSprintDialog
+        sprintId={sprintToComplete}
+        isOpen={!!sprintToComplete}
+        onClose={() => setSprintToComplete(null)}
+        projectId={projectId}
+        onSprintCompleted={(res) => {
+          setToastMessage(
+            `Sprint "${res.sprintName}" completed. ${res.rolledOverCount} item(s) moved to ${res.targetDestination}.`
+          );
+          setTimeout(() => setToastMessage(null), 6000);
+        }}
+      />
+
+      {/* Toast Banner */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center space-x-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-900 shadow-xl animate-in slide-in-from-bottom-3 duration-200">
+          <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 }

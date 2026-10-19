@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { api } from "~/trpc/react";
 import { WorkItemDrawer } from "../work-items/work-item-drawer";
+import { CompleteSprintDialog } from "../sprints/complete-sprint-dialog";
 
 interface WorkItemCard {
   id: string;
@@ -106,6 +107,8 @@ export function KanbanBoard({
   });
 
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Synchronize query data into local state for optimistic drag & drop
@@ -246,6 +249,17 @@ export function KanbanBoard({
                 />
               </div>
             </div>
+
+            {sprint && (
+              <button
+                type="button"
+                onClick={() => setIsCompleteDialogOpen(true)}
+                className="flex items-center space-x-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 active:scale-95"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                <span>Complete Sprint</span>
+              </button>
+            )}
 
             {onCreateItem && (
               <button
@@ -434,6 +448,27 @@ export function KanbanBoard({
         onClose={() => setSelectedCardId(null)}
         projectId={projectId}
       />
+
+      <CompleteSprintDialog
+        sprintId={sprint?.id ?? null}
+        isOpen={isCompleteDialogOpen}
+        onClose={() => setIsCompleteDialogOpen(false)}
+        projectId={projectId}
+        onSprintCompleted={(res) => {
+          setToastMessage(
+            `Sprint "${res.sprintName}" completed. ${res.rolledOverCount} item(s) moved to ${res.targetDestination}.`
+          );
+          setTimeout(() => setToastMessage(null), 6000);
+        }}
+      />
+
+      {/* Rollover Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center space-x-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-900 shadow-xl animate-in slide-in-from-bottom-3 duration-200">
+          <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 }
