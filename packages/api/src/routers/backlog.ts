@@ -1,0 +1,276 @@
+import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import {
+  WorkItemType,
+  WorkItemStatus,
+  WorkItemPriority,
+} from "@centraxis/db";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  developerProcedure,
+} from "../trpc";
+
+export const backlogRouter = createTRPCRouter({
+  /**
+   * Fetch flat list of work items with optional filtering
+   */
+  getItems: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        sprintId: z.string().nullable().optional(),
+        type: z.nativeEnum(WorkItemType).optional(),
+        status: z.nativeEnum(WorkItemStatus).optional(),
+        assigneeId: z.string().optional(),
+        search: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const whereClause: Record<string, unknown> = {
+        projectId: input.projectId,
+      };
+
+      if (input.sprintId !== undefined) {
+        whereClause.sprintId = input.sprintId;
+      }
+      if (input.type) {
+        whereClause.type = input.type;
+      }
+      if (input.status) {
+        whereClause.status = input.status;
+      }
+      if (input.assigneeId) {
+        whereClause.assigneeId = input.assigneeId;
+      }
+      if (input.search) {
+        whereClause.OR = [
+          { title: { contains: input.search, mode: "insensitive" } },
+          { key: { contains: input.search, mode: "insensitive" } },
+          { description: { contains: input.search, mode: "insensitive" } },
+        ];
+      }
+
+      return ctx.db.workItem.findMany({
+        where: whereClause,
+        include: {
+          assignee: {
+            select: { id: true, name: true, email: true, image: true },
+          },
+          reporter: {
+            select: { id: true, name: true, email: true, image: true },
+          },
+          sprint: {
+            select: { id: true, name: true, status: true },
+          },
+          parent: {
+            select: { id: true, key: true, title: true, type: true },
+          },
+          _count: {
+            select: { children: true },
+          },
+        },
+        orderBy: { rankOrder: "asc" },
+      });
+    }),
+
+  /**
+   * Fetch hierarchical backlog tree (Epics -> Features -> Stories -> Tasks/Bugs)
+   */
+  getTree: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        sprintId: z.string().nullable().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const rootItems = await ctx.db.workItem.findMany({
+        where: {
+          projectId: input.projectId,
+          parentId: null,
+          ...(input.sprintId !== undefined
+            ? { sprintId: input.sprintId }
+            : {}),
+        },
+        include: {
+          assignee: {
+            select: { id: true, name: true, image: true },
+          },
+          children: {
+            include: {
+              assignee: {
+                select: { id: true, name: true, image: true },
+              },
+              children: {
+                include: {
+                  assignee: {
+                    select: { id: true, name: true, image: true },
+                  },
+                },
+                orderBy: { rankOrder: "asc" },
+              },
+            },
+            orderBy: { rankOrder: "asc" },
+          },
+        },
+        orderBy: { rankOrder: "asc" },
+      });
+
+      return rootItems;
+    }),
+
+  /**
+   * Create a new work item with automated key generation and initial rank
+   */
+  createItem: developerProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        title: z.string().min(1, "Title is required").max(200),
+        description: z.string().optional(),
+        acceptanceCriteria: z.string().optional(),
+        type: z.nativeEnum(WorkItemType).default(WorkItemType.STORY),
+        priority: z.nativeEnum(WorkItemPriority).default(WorkItemPriority.MEDIUM),
+        status: z.nativeEnum(WorkItemStatus).default(WorkItemStatus.BACKLOG),
+        storyPoints: z.number().nullable().optional(),
+        parentId: z.string().nullable().optional(),
+        sprintId: z.string().nullable().optional(),
+        assigneeId: z.string().nullable().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const project = await ctx.db.project.findUnique({
+        where: { id: input.projectId },
+        select: { key: true },
+      });
+
+      if (!project) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Target project does not exist.",
+        });
+      }
+
+      // Generate next project-scoped issue number
+      const highestItem = await ctx.db.workItem.findFirst({
+        where: { projectId: input.projectId },
+        orderBy: { createdAt: "desc" },
+        select: { key: true, rankOrder: true },
+      });
+
+      let nextIndex = 1;
+      if (highestItem?.key) {
+        const parts = highestItem.key.split("-");
+        const lastNum = parseInt(parts[1] ?? "0", 10);
+        if (!isNaN(lastNum)) {
+          nextIndex = lastNum + 1;
+        }
+      }
+
+      const generatedKey = `${project.key}-${nextIndex}`;
+      const nextRank = (highestItem?.rankOrder ?? 0) + 1000;
+
+      return ctx.db.workItem.create({
+        data: {
+          key: generatedKey,
+          title: input.title,
+          description: input.description,
+          acceptanceCriteria: input.acceptanceCriteria,
+          type: input.type,
+          priority: input.priority,
+          status: input.status,
+          storyPoints: input.storyPoints,
+          rankOrder: nextRank,
+          parentId: input.parentId,
+          projectId: input.projectId,
+          sprintId: input.sprintId,
+          assigneeId: input.assigneeId,
+          reporterId: ctx.session.user.id,
+        },
+      });
+    }),
+
+  /**
+   * Update work item fields
+   */
+  updateItem: developerProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        title: z.string().min(1).optional(),
+        description: z.string().nullable().optional(),
+        acceptanceCriteria: z.string().nullable().optional(),
+        type: z.nativeEnum(WorkItemType).optional(),
+        status: z.nativeEnum(WorkItemStatus).optional(),
+        priority: z.nativeEnum(WorkItemPriority).optional(),
+        storyPoints: z.number().nullable().optional(),
+        parentId: z.string().nullable().optional(),
+        sprintId: z.string().nullable().optional(),
+        assigneeId: z.string().nullable().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, ...data } = input;
+      return ctx.db.workItem.update({
+        where: { id },
+        data,
+      });
+    }),
+
+  /**
+   * Fractional rank reordering (supports midpoint calculations between cards)
+   */
+  reorder: developerProcedure
+    .input(
+      z.object({
+        itemId: z.string(),
+        prevRank: z.number().nullable(),
+        nextRank: z.number().nullable(),
+        targetSprintId: z.string().nullable().optional(),
+        targetStatus: z.nativeEnum(WorkItemStatus).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { itemId, prevRank, nextRank, targetSprintId, targetStatus } =
+        input;
+
+      let newRank: number;
+      if (prevRank === null && nextRank === null) {
+        newRank = 1000;
+      } else if (prevRank === null && nextRank !== null) {
+        newRank = nextRank / 2;
+      } else if (prevRank !== null && nextRank === null) {
+        newRank = prevRank + 1000;
+      } else {
+        newRank = (prevRank! + nextRank!) / 2;
+      }
+
+      const updateData: Record<string, unknown> = {
+        rankOrder: newRank,
+      };
+
+      if (targetSprintId !== undefined) {
+        updateData.sprintId = targetSprintId;
+      }
+      if (targetStatus !== undefined) {
+        updateData.status = targetStatus;
+      }
+
+      return ctx.db.workItem.update({
+        where: { id: itemId },
+        data: updateData,
+      });
+    }),
+
+  /**
+   * Delete work item
+   */
+  deleteItem: developerProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.workItem.delete({
+        where: { id: input.id },
+      });
+    }),
+});
