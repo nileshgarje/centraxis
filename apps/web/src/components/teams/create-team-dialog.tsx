@@ -2,17 +2,27 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  X,
   Users,
-  Shield,
   Zap,
-  Clock,
   CheckCircle2,
   AlertCircle,
   Loader2,
   Search,
-  UserCheck,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  Button,
+  Input,
+  Textarea,
+  Label,
+  Alert,
+  AlertDescription,
+} from "@centraxis/ui";
 import { api } from "~/trpc/react";
 
 interface CreateTeamDialogProps {
@@ -111,46 +121,33 @@ export function CreateTeamDialog({
     });
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Modal Dialog */}
-      <div className="relative w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-150">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-lg p-0 overflow-hidden sm:max-w-lg bg-background border-border">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50">
+        <DialogHeader className="border-b border-border bg-muted/40 px-6 py-4">
           <div className="flex items-center space-x-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs">
               <Users className="h-5 w-5" />
             </div>
-            <div>
-              <h2 className="text-base font-bold text-slate-900">
+            <div className="text-left">
+              <DialogTitle className="text-base font-bold text-foreground">
                 Create New Squad
-              </h2>
-              <p className="text-xs text-slate-500">
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
                 Form an agile engineering squad with cadence & target velocity
-              </p>
+              </DialogDescription>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+        </DialogHeader>
 
         {/* Error Alert */}
         {errorMessage && (
-          <div className="mx-6 mt-4 flex items-center space-x-2 rounded-xl bg-red-50 border border-red-200 px-3.5 py-2.5 text-xs text-red-700 font-medium">
-            <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
-            <span>{errorMessage}</span>
+          <div className="px-6 pt-4">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
           </div>
         )}
 
@@ -158,17 +155,18 @@ export function CreateTeamDialog({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Team Name */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-700">
-              Squad / Team Name <span className="text-red-500">*</span>
-            </label>
-            <input
+            <Label htmlFor="squad-name" className="text-xs font-semibold">
+              Squad / Team Name <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="squad-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Squad Platform or DevSecOps Squad"
               required
               autoFocus
-              className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="text-sm"
             />
           </div>
 
@@ -176,23 +174,21 @@ export function CreateTeamDialog({
           <div className="grid grid-cols-2 gap-3">
             {/* Default Sprint Cadence */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-700">
+              <Label className="text-xs font-semibold">
                 Default Sprint Cadence
-              </label>
+              </Label>
               <div className="grid grid-cols-3 gap-1.5">
                 {[1, 2, 4].map((weeks) => (
-                  <button
+                  <Button
                     key={weeks}
                     type="button"
+                    variant={cadenceWeeks === weeks ? "default" : "outline"}
+                    size="sm"
                     onClick={() => setCadenceWeeks(weeks)}
-                    className={`rounded-xl border py-2 text-xs font-semibold transition ${
-                      cadenceWeeks === weeks
-                        ? "border-blue-600 bg-blue-50 text-blue-700 shadow-xs"
-                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                    }`}
+                    className="h-8 text-xs font-semibold"
                   >
                     {weeks}w
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -200,21 +196,22 @@ export function CreateTeamDialog({
             {/* Target Velocity */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="block text-xs font-semibold text-slate-700">
+                <Label htmlFor="target-velocity" className="text-xs font-semibold">
                   Target Velocity
-                </label>
-                <span className="text-[10px] text-slate-400">pts / sprint</span>
+                </Label>
+                <span className="text-[10px] text-muted-foreground">pts / sprint</span>
               </div>
               <div className="relative">
-                <input
+                <Input
+                  id="target-velocity"
                   type="number"
                   min={1}
                   max={200}
                   value={targetVelocity}
                   onChange={(e) => setTargetVelocity(Number(e.target.value))}
-                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs font-semibold text-slate-900 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  className="h-8 pr-8 text-xs font-semibold"
                 />
-                <Zap className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                <Zap className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               </div>
             </div>
           </div>
@@ -222,32 +219,32 @@ export function CreateTeamDialog({
           {/* Member Multi-Select */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-semibold text-slate-700">
+              <Label className="text-xs font-semibold">
                 Squad Members ({selectedUserIds.length} Selected)
-              </label>
-              <span className="text-[10px] text-slate-400">
-                From Centvis Directory
+              </Label>
+              <span className="text-[10px] text-muted-foreground">
+                From Organization Directory
               </span>
             </div>
 
             {/* Search filter */}
             <div className="relative">
-              <input
+              <Input
                 type="text"
                 value={memberSearch}
                 onChange={(e) => setMemberSearch(e.target.value)}
                 placeholder="Filter members by name or role..."
-                className="w-full rounded-xl border border-slate-300 py-1.5 pl-8 pr-3 text-xs text-slate-800 placeholder:text-slate-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="h-8 pl-8 text-xs"
               />
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             </div>
 
             {membersLoading ? (
-              <div className="flex items-center justify-center p-4 border border-slate-200 rounded-xl bg-slate-50">
-                <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+              <div className="flex items-center justify-center p-4 border border-border rounded-lg bg-muted/20">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <div className="max-h-36 overflow-y-auto rounded-xl border border-slate-200 p-1.5 space-y-1 bg-slate-50/50">
+              <div className="max-h-36 overflow-y-auto rounded-lg border border-border p-1.5 space-y-1 bg-muted/20">
                 {filteredMembers.map((member) => {
                   const isSelected = selectedUserIds.includes(member.id);
                   return (
@@ -255,28 +252,28 @@ export function CreateTeamDialog({
                       type="button"
                       key={member.id}
                       onClick={() => toggleUser(member.id)}
-                      className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs transition ${
+                      className={`flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left text-xs transition ${
                         isSelected
-                          ? "bg-blue-50 border border-blue-200 text-blue-900 shadow-xs"
-                          : "bg-white border border-slate-200/70 text-slate-700 hover:bg-slate-100/70"
+                          ? "bg-primary/10 border border-primary/30 text-foreground"
+                          : "bg-background border border-border/70 text-muted-foreground hover:bg-muted"
                       }`}
                     >
                       <div className="flex items-center space-x-2">
                         <div
                           className={`flex h-4 w-4 items-center justify-center rounded border ${
                             isSelected
-                              ? "bg-blue-600 border-blue-600 text-white"
-                              : "border-slate-300 bg-white"
+                              ? "bg-primary border-primary text-primary-foreground"
+                              : "border-border bg-background"
                           }`}
                         >
                           {isSelected && <CheckCircle2 className="h-3 w-3" />}
                         </div>
-                        <div className="h-5 w-5 rounded-full bg-slate-200 text-[10px] font-bold flex items-center justify-center text-slate-700">
+                        <div className="h-5 w-5 rounded-full bg-secondary text-[10px] font-bold flex items-center justify-center text-secondary-foreground">
                           {member.name?.slice(0, 1) ?? "U"}
                         </div>
-                        <span className="font-semibold">{member.name}</span>
+                        <span className="font-semibold text-foreground">{member.name}</span>
                       </div>
-                      <span className="text-[10px] text-slate-400 uppercase font-medium">
+                      <span className="text-[10px] text-muted-foreground uppercase font-medium">
                         {member.role}
                       </span>
                     </button>
@@ -289,43 +286,46 @@ export function CreateTeamDialog({
           {/* Description */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-semibold text-slate-700">
+              <Label htmlFor="squad-desc" className="text-xs font-semibold">
                 Squad Mission & Description
-              </label>
-              <span className="text-[10px] text-slate-400">Optional</span>
+              </Label>
+              <span className="text-[10px] text-muted-foreground">Optional</span>
             </div>
-            <textarea
+            <Textarea
+              id="squad-desc"
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Primary functional responsibilities of this squad..."
-              className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-xs text-slate-800 placeholder:text-slate-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="text-xs resize-none"
             />
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end space-x-2.5 pt-3 border-t border-slate-100">
-            <button
+          <DialogFooter className="pt-3 border-t border-border flex items-center justify-end space-x-2">
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={onClose}
               disabled={createMutation.isPending}
-              className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              size="sm"
               disabled={createMutation.isPending || !name.trim()}
-              className="flex items-center space-x-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-blue-500/20 hover:bg-blue-700 disabled:opacity-50 transition active:scale-95"
+              className="gap-1.5"
             >
               {createMutation.isPending && (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               )}
               <span>Create Squad</span>
-            </button>
-          </div>
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -24,6 +24,13 @@ import {
   Input,
   Textarea,
   Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Alert,
+  AlertDescription,
 } from "@centraxis/ui";
 
 interface CreateProjectDialogProps {
@@ -159,7 +166,7 @@ export function CreateProjectDialog({
     createMutation.mutate({
       name: name.trim(),
       key: cleanKey,
-      clientId: selectedClientId || undefined,
+      clientId: selectedClientId && selectedClientId !== "none" ? selectedClientId : undefined,
       description: description.trim() || undefined,
       teamIds: selectedTeamIds.length > 0 ? selectedTeamIds : undefined,
     });
@@ -187,9 +194,11 @@ export function CreateProjectDialog({
 
         {/* Error Alert */}
         {errorMessage && (
-          <div className="mx-6 mt-4 flex items-center space-x-2 rounded-lg bg-destructive/10 border border-destructive/20 px-3.5 py-2.5 text-xs text-destructive font-medium">
-            <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
-            <span>{errorMessage}</span>
+          <div className="mx-6 mt-4">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
           </div>
         )}
 
@@ -220,19 +229,22 @@ export function CreateProjectDialog({
               </Label>
               <span className="text-[11px] text-muted-foreground">Optional</span>
             </div>
-            <select
-              id="project-client"
-              value={selectedClientId}
-              onChange={(e) => setSelectedClientId(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-medium text-foreground transition focus:outline-none focus:ring-1 focus:ring-ring"
+            <Select
+              value={selectedClientId || "none"}
+              onValueChange={(val) => setSelectedClientId(val === "none" ? "" : val)}
             >
-              <option value="">-- No Client (Internal Project) --</option>
-              {clients?.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} ({c.slug})
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="project-client" className="w-full h-9 text-xs font-medium">
+                <SelectValue placeholder="-- No Client (Internal Project) --" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">-- No Client (Internal Project) --</SelectItem>
+                {clients?.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name} ({c.slug})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Project Key */}

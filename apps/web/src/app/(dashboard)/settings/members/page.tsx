@@ -20,16 +20,37 @@ import {
   Briefcase,
   X,
 } from "lucide-react";
+import {
+  Button,
+  Badge,
+  Alert,
+  AlertTitle,
+  AlertDescription,
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+  toast,
+} from "@centraxis/ui";
 import { api } from "~/trpc/react";
 import { InviteUserDialog } from "~/components/settings/invite-user-dialog";
 
 type TabType = "active" | "pending";
 
 const ROLE_BADGES: Record<string, string> = {
-  ORG_ADMIN: "bg-purple-100 text-purple-800 border-purple-200",
-  SCRUM_MASTER: "bg-blue-100 text-blue-800 border-blue-200",
-  DEVELOPER: "bg-emerald-100 text-emerald-800 border-emerald-200",
-  VIEWER: "bg-slate-100 text-slate-700 border-slate-200",
+  ORG_ADMIN: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800",
+  SCRUM_MASTER: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800",
+  DEVELOPER: "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800",
+  VIEWER: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
 };
 
 export default function MembersSettingsPage() {
@@ -37,9 +58,10 @@ export default function MembersSettingsPage() {
 
   const [activeTab, setActiveTab] = useState<TabType>("active");
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
+  const [inviteToRevoke, setInviteToRevoke] = useState<{ id: string; email: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
-  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
   // Queries
   const { data: members, isLoading: membersLoading } =
@@ -50,45 +72,57 @@ export default function MembersSettingsPage() {
   // Mutations
   const updateRoleMutation = api.org.updateMemberRole.useMutation({
     onSuccess: async () => {
-      setActionSuccess("Member role updated successfully.");
+      toast.success("Member role updated successfully.");
       setActionError(null);
       await utils.org.listMembers.invalidate();
     },
     onError: (err) => {
-      setActionError(err.message || "Failed to update member role.");
+      const msg = err.message || "Failed to update member role.";
+      setActionError(msg);
+      toast.error(msg);
     },
   });
 
   const resendInviteMutation = api.org.resendInvite.useMutation({
     onSuccess: async () => {
-      setActionSuccess("Invitation resent successfully.");
+      toast.success("Invitation resent successfully.");
       setActionError(null);
       await utils.org.listInvitations.invalidate();
     },
     onError: (err) => {
-      setActionError(err.message || "Failed to resend invitation.");
+      const msg = err.message || "Failed to resend invitation.";
+      setActionError(msg);
+      toast.error(msg);
     },
   });
 
   const revokeInviteMutation = api.org.revokeInvite.useMutation({
     onSuccess: async () => {
-      setActionSuccess("Invitation revoked.");
+      toast.success("Invitation revoked.");
       setActionError(null);
+      setInviteToRevoke(null);
       await utils.org.listInvitations.invalidate();
     },
     onError: (err) => {
-      setActionError(err.message || "Failed to revoke invitation.");
+      const msg = err.message || "Failed to revoke invitation.";
+      setActionError(msg);
+      toast.error(msg);
+      setInviteToRevoke(null);
     },
   });
 
   const removeMemberMutation = api.org.removeMember.useMutation({
     onSuccess: async () => {
-      setActionSuccess("Member removed from organization.");
+      toast.success("Member removed from organization.");
       setActionError(null);
+      setMemberToRemove(null);
       await utils.org.listMembers.invalidate();
     },
     onError: (err) => {
-      setActionError(err.message || "Failed to remove member.");
+      const msg = err.message || "Failed to remove member.";
+      setActionError(msg);
+      toast.error(msg);
+      setMemberToRemove(null);
     },
   });
 
@@ -141,33 +175,21 @@ export default function MembersSettingsPage() {
 
         {/* Feedback Alerts */}
         {actionError && (
-          <div className="flex items-center justify-between rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-xs text-red-700 font-medium">
-            <div className="flex items-center space-x-2">
-              <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription className="flex items-center justify-between">
               <span>{actionError}</span>
-            </div>
-            <button
-              onClick={() => setActionError(null)}
-              className="text-red-500 hover:text-red-700 font-bold"
-            >
-              Dismiss
-            </button>
-          </div>
-        )}
-
-        {actionSuccess && (
-          <div className="flex items-center justify-between rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-xs text-emerald-800 font-medium">
-            <div className="flex items-center space-x-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-              <span>{actionSuccess}</span>
-            </div>
-            <button
-              onClick={() => setActionSuccess(null)}
-              className="text-emerald-600 hover:text-emerald-800 font-bold"
-            >
-              Dismiss
-            </button>
-          </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActionError(null)}
+                className="h-auto p-0 text-xs font-semibold hover:bg-transparent"
+              >
+                Dismiss
+              </Button>
+            </AlertDescription>
+          </Alert>
         )}
 
         {/* Toolbar & Tabs */}
@@ -282,30 +304,29 @@ export default function MembersSettingsPage() {
 
                     {/* Organization Role (Inline Selector) */}
                     <div className="col-span-2">
-                      <div className="relative inline-block">
-                        <select
-                          value={member.role}
-                          onChange={(e) =>
-                            updateRoleMutation.mutate({
-                              userId: member.id,
-                              role: e.target.value as any,
-                            })
-                          }
-                          className={`appearance-none rounded-lg border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider focus:outline-none cursor-pointer pr-6 ${
-                            ROLE_BADGES[member.role] ?? ROLE_BADGES.DEVELOPER
-                          }`}
-                        >
-                          <option value="DEVELOPER">Developer</option>
-                          <option value="SCRUM_MASTER">Scrum Master</option>
-                          <option value="ORG_ADMIN">Admin</option>
-                          <option value="VIEWER">Viewer</option>
-                        </select>
-                        <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 h-3 w-3 -translate-y-1/2 opacity-60" />
-                      </div>
+                      <Select
+                        value={member.role}
+                        onValueChange={(val) =>
+                          updateRoleMutation.mutate({
+                            userId: member.id,
+                            role: val as any,
+                          })
+                        }
+                      >
+                        <SelectTrigger className={`h-7 w-[120px] rounded-lg border px-2 text-[10px] font-bold uppercase tracking-wider ${ROLE_BADGES[member.role] ?? ROLE_BADGES.DEVELOPER}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="DEVELOPER">Developer</SelectItem>
+                          <SelectItem value="SCRUM_MASTER">Scrum Master</SelectItem>
+                          <SelectItem value="ORG_ADMIN">Admin</SelectItem>
+                          <SelectItem value="VIEWER">Viewer</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     {/* Member Since / Last Active */}
-                    <div className="col-span-2 text-xs text-slate-500 font-medium">
+                    <div className="col-span-2 text-xs text-muted-foreground font-medium">
                       {new Date(member.createdAt).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
@@ -315,21 +336,17 @@ export default function MembersSettingsPage() {
 
                     {/* Remove Action */}
                     <div className="col-span-1 flex justify-end">
-                      <button
-                        onClick={() => {
-                          if (
-                            confirm(
-                              `Are you sure you want to remove ${member.name} from the organization?`,
-                            )
-                          ) {
-                            removeMemberMutation.mutate({ userId: member.id });
-                          }
-                        }}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() =>
+                          setMemberToRemove({ id: member.id, name: member.name ?? member.email ?? "Member" })
+                        }
                         title="Remove member from organization"
-                        className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition"
+                        className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -404,27 +421,31 @@ export default function MembersSettingsPage() {
                     </div>
 
                     {/* Actions: Resend / Revoke */}
-                    <div className="col-span-2 flex items-center justify-end space-x-2">
-                      <button
+                    <div className="col-span-2 flex items-center justify-end space-x-1.5">
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() =>
                           resendInviteMutation.mutate({ invitationId: inv.id })
                         }
                         disabled={resendInviteMutation.isPending}
-                        className="flex items-center space-x-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                        className="h-7 px-2.5 text-xs gap-1"
                       >
-                        <RotateCw className="h-3 w-3 text-blue-600" />
+                        <RotateCw className="h-3 w-3 text-primary" />
                         <span>Resend</span>
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() =>
-                          revokeInviteMutation.mutate({ invitationId: inv.id })
+                          setInviteToRevoke({ id: inv.id, email: inv.email })
                         }
                         disabled={revokeInviteMutation.isPending}
-                        className="rounded-lg p-1 text-slate-400 hover:bg-red-50 hover:text-red-600 transition"
+                        className="h-7 w-7 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition"
                         title="Revoke invitation"
                       >
                         <X className="h-3.5 w-3.5" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -432,6 +453,75 @@ export default function MembersSettingsPage() {
             )}
           </div>
         )}
+
+      {/* Remove Member Confirmation Dialog */}
+      <AlertDialog
+        open={!!memberToRemove}
+        onOpenChange={(open) => {
+          if (!open) setMemberToRemove(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Member from Organization?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove{" "}
+              <strong className="text-foreground">"{memberToRemove?.name}"</strong> from
+              the organization? They will immediately lose access to all projects, squads, and boards.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={removeMemberMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={removeMemberMutation.isPending}
+              onClick={() => {
+                if (memberToRemove) {
+                  removeMemberMutation.mutate({ userId: memberToRemove.id });
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {removeMemberMutation.isPending ? "Removing..." : "Remove Member"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Revoke Invite Confirmation Dialog */}
+      <AlertDialog
+        open={!!inviteToRevoke}
+        onOpenChange={(open) => {
+          if (!open) setInviteToRevoke(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revoke Invitation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to revoke the pending invitation for{" "}
+              <strong className="text-foreground">"{inviteToRevoke?.email}"</strong>?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={revokeInviteMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={revokeInviteMutation.isPending}
+              onClick={() => {
+                if (inviteToRevoke) {
+                  revokeInviteMutation.mutate({ invitationId: inviteToRevoke.id });
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {revokeInviteMutation.isPending ? "Revoking..." : "Revoke Invitation"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Invite Member Modal Dialog */}
       <InviteUserDialog

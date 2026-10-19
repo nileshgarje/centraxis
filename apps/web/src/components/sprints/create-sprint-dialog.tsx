@@ -13,6 +13,25 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { api } from "~/trpc/react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  Button,
+  Input,
+  Textarea,
+  Label,
+  Alert,
+  AlertDescription,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@centraxis/ui";
 
 export interface SprintData {
   id: string;
@@ -260,99 +279,88 @@ export function CreateSprintDialog({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Modal Dialog */}
-      <div className="relative w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-150">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50">
-          <div className="flex items-center space-x-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
+        <div className="border-b border-border px-6 py-4 bg-muted/20">
+          <DialogHeader className="flex flex-row items-center space-x-3 space-y-0 text-left">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
               <Calendar className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <DialogTitle className="text-base font-bold text-foreground">
                 {isEditing ? "Edit Sprint" : "Create Planned Sprint"}
-              </h2>
-              <p className="text-xs text-slate-500">
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
                 {isEditing
                   ? "Update sprint iteration goals, dates, and squad alignment"
                   : "Plan and schedule a new agile sprint iteration"}
-              </p>
+              </DialogDescription>
             </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          </DialogHeader>
         </div>
 
         {/* Error Alert */}
         {errorMessage && (
-          <div className="mx-6 mt-4 flex items-center space-x-2 rounded-xl bg-red-50 border border-red-200 px-3.5 py-2.5 text-xs text-red-700 font-medium">
-            <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
-            <span>{errorMessage}</span>
+          <div className="mx-6 mt-4">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
           </div>
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 pt-4 max-h-[75vh] overflow-y-auto">
           {/* Sprint Name */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-700">
-              Sprint Name <span className="text-red-500">*</span>
-            </label>
-            <input
+            <Label htmlFor="sprint-name" className="text-xs font-semibold text-foreground">
+              Sprint Name <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="sprint-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Frontend Squad Sprint 2"
               required
               autoFocus
-              className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="h-9 text-xs"
             />
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-muted-foreground">
               Convention auto-populated from squad and past iteration numbers.
             </p>
           </div>
 
           {/* Team / Squad Selector */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-700">
+            <Label className="text-xs font-semibold text-foreground">
               Assigned Squad / Team
-            </label>
-            <div className="relative">
-              <select
-                value={teamId}
-                onChange={(e) => setTeamId(e.target.value)}
-                className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-medium text-slate-800 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              >
-                <option value="">Project Wide (All Squads)</option>
+            </Label>
+            <Select
+              value={teamId || "all"}
+              onValueChange={(val) => setTeamId(val === "all" ? "" : val)}
+            >
+              <SelectTrigger className="h-9 text-xs">
+                <SelectValue placeholder="Project Wide (All Squads)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Project Wide (All Squads)</SelectItem>
                 {teams?.map((team) => (
-                  <option key={team.id} value={team.id}>
+                  <SelectItem key={team.id} value={team.id}>
                     {team.name}
-                  </option>
+                  </SelectItem>
                 ))}
-              </select>
-              <Users className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            </div>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Duration Selector */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-700">
+            <Label className="text-xs font-semibold text-foreground">
               Sprint Duration
-            </label>
+            </Label>
             <div className="grid grid-cols-5 gap-2">
               {(
                 [
@@ -363,18 +371,16 @@ export function CreateSprintDialog({
                   { id: "CUSTOM", label: "Custom" },
                 ] as const
               ).map((opt) => (
-                <button
+                <Button
                   key={opt.id}
                   type="button"
+                  variant={duration === opt.id ? "default" : "outline"}
+                  size="sm"
                   onClick={() => handleDurationChange(opt.id)}
-                  className={`rounded-xl border py-2 text-xs font-semibold transition ${
-                    duration === opt.id
-                      ? "border-blue-600 bg-blue-50 text-blue-700 shadow-sm"
-                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                  }`}
+                  className="h-8 text-xs font-semibold"
                 >
                   {opt.label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -382,28 +388,30 @@ export function CreateSprintDialog({
           {/* Interactive Date Pickers */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-700">
+              <Label htmlFor="start-date" className="text-xs font-semibold text-foreground">
                 Start Date
-              </label>
-              <input
+              </Label>
+              <Input
+                id="start-date"
                 type="date"
                 value={startDateStr}
                 onChange={(e) => handleStartDateChange(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-medium text-slate-800 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="h-9 text-xs"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-700">
+              <Label htmlFor="end-date" className="text-xs font-semibold text-foreground">
                 End Date
-              </label>
-              <input
+              </Label>
+              <Input
+                id="end-date"
                 type="date"
                 value={endDateStr}
                 onChange={(e) => {
                   setEndDateStr(e.target.value);
                   setDuration("CUSTOM");
                 }}
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs font-medium text-slate-800 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="h-9 text-xs"
               />
             </div>
           </div>
@@ -411,41 +419,44 @@ export function CreateSprintDialog({
           {/* Sprint Goal */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-semibold text-slate-700">
+              <Label htmlFor="sprint-goal" className="text-xs font-semibold text-foreground">
                 Sprint Goal
-              </label>
-              <span className="text-[10px] text-slate-400">Optional</span>
+              </Label>
+              <span className="text-[10px] text-muted-foreground">Optional</span>
             </div>
-            <textarea
+            <Textarea
+              id="sprint-goal"
               rows={3}
               value={goal}
               onChange={(e) => setGoal(e.target.value)}
               placeholder="What is the primary deliverable or outcome of this iteration?"
-              className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="text-xs resize-none"
             />
           </div>
 
           {/* Dialog Action Buttons */}
-          <div className="flex items-center justify-end space-x-2.5 pt-3 border-t border-slate-100">
-            <button
+          <DialogFooter className="pt-3 border-t border-border flex items-center justify-end space-x-2">
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={onClose}
               disabled={isPending}
-              className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              size="sm"
               disabled={isPending || !name.trim()}
-              className="flex items-center space-x-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-blue-500/20 hover:bg-blue-700 disabled:opacity-50 transition active:scale-95"
+              className="gap-1.5"
             >
               {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               <span>{isEditing ? "Save Changes" : "Create Sprint"}</span>
-            </button>
-          </div>
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

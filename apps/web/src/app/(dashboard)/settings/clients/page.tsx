@@ -14,30 +14,48 @@ import {
   Loader2,
   ExternalLink,
 } from "lucide-react";
-import { Button } from "@centraxis/ui";
+import {
+  Button,
+  Alert,
+  AlertTitle,
+  AlertDescription,
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+  toast,
+} from "@centraxis/ui";
 import { api } from "~/trpc/react";
 import { CreateClientDialog } from "~/components/clients/create-client-dialog";
 
 export default function ClientsSettingsPage() {
   const utils = api.useUtils();
   const [isAddClientOpen, setIsAddClientOpen] = useState(false);
+  const [clientToDelete, setClientToDelete] = useState<{ id: string; name: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
-  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
   const { data: clients, isLoading } = api.clients.list.useQuery();
 
   const deleteMutation = api.clients.delete.useMutation({
     onSuccess: async () => {
-      setActionSuccess("Client deleted successfully.");
+      toast.success("Client deleted successfully.");
       setActionError(null);
+      setClientToDelete(null);
       await Promise.all([
         utils.clients.list.invalidate(),
         utils.project.list.invalidate(),
       ]);
     },
     onError: (err) => {
-      setActionError(err.message || "Failed to delete client.");
+      const msg = err.message || "Failed to delete client.";
+      setActionError(msg);
+      toast.error(msg);
+      setClientToDelete(null);
     },
   });
 
@@ -74,35 +92,23 @@ export default function ClientsSettingsPage() {
         </Button>
       </div>
 
-      {/* Action Alerts */}
+      {/* Action Error Alert */}
       {actionError && (
-        <div className="flex items-center justify-between rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 px-4 py-3 text-xs text-red-700 dark:text-red-300 font-medium">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0" />
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription className="flex items-center justify-between">
             <span>{actionError}</span>
-          </div>
-          <button
-            onClick={() => setActionError(null)}
-            className="text-red-500 hover:text-red-700 font-bold"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
-
-      {actionSuccess && (
-        <div className="flex items-center justify-between rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-4 py-3 text-xs text-emerald-800 dark:text-emerald-300 font-medium">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span>{actionSuccess}</span>
-          </div>
-          <button
-            onClick={() => setActionSuccess(null)}
-            className="text-emerald-600 hover:text-emerald-800 font-bold"
-          >
-            Dismiss
-          </button>
-        </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setActionError(null)}
+              className="h-auto p-0 text-xs font-semibold hover:bg-transparent"
+            >
+              Dismiss
+            </Button>
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* Search Toolbar */}
@@ -177,21 +183,15 @@ export default function ClientsSettingsPage() {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => {
-                      if (
-                        confirm(
-                          `Are you sure you want to delete client "${client.name}"? Projects assigned to this client will become unassigned.`,
-                        )
-                      ) {
-                        deleteMutation.mutate({ id: client.id });
-                      }
-                    }}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setClientToDelete({ id: client.id, name: client.name })}
                     title="Delete Client"
-                    className="rounded-lg p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 dark:hover:text-red-400 transition"
+                    className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition"
                   >
                     <Trash2 className="h-4 w-4" />
-                  </button>
+                  </Button>
                 </div>
 
                 {client.contactEmail && (
@@ -236,6 +236,41 @@ export default function ClientsSettingsPage() {
           })}
         </div>
       )}
+
+      {/* Delete Confirmation Alert Dialog */}
+      <AlertDialog
+        open={!!clientToDelete}
+        onOpenChange={(open) => {
+          if (!open) setClientToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Client Tenant?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete client{" "}
+              <strong className="text-foreground">"{clientToDelete?.name}"</strong>?
+              Projects assigned to this client will become unassigned internal projects.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteMutation.isPending}
+              onClick={() => {
+                if (clientToDelete) {
+                  deleteMutation.mutate({ id: clientToDelete.id });
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete Client"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Modal Dialog */}
       <CreateClientDialog

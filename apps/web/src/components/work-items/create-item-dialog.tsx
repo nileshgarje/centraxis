@@ -9,11 +9,8 @@ import {
   CheckSquare,
   Bug,
   Zap,
-  User,
-  Calendar,
   AlertCircle,
   Loader2,
-  ChevronDown,
 } from "lucide-react";
 import { api } from "~/trpc/react";
 import {
@@ -27,6 +24,13 @@ import {
   Button,
   Input,
   Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Alert,
+  AlertDescription,
 } from "@centraxis/ui";
 
 interface CreateItemDialogProps {
@@ -250,10 +254,10 @@ export function CreateItemDialog({
 
             {/* Error Banner */}
             {errorMessage && (
-              <div className="flex items-center space-x-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-xs text-destructive">
-                <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
-                <span>{errorMessage}</span>
-              </div>
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{errorMessage}</AlertDescription>
+              </Alert>
             )}
 
             {/* 2. Title */}
@@ -371,22 +375,22 @@ export function CreateItemDialog({
                 <Label htmlFor="item-sprint" className="block text-xs font-semibold text-foreground">
                   Sprint Allocation
                 </Label>
-                <div className="relative">
-                  <select
-                    id="item-sprint"
-                    value={sprintId}
-                    onChange={(e) => setSprintId(e.target.value)}
-                    className="w-full appearance-none rounded-md border border-input bg-background py-2 pl-3 pr-8 text-xs font-medium text-foreground transition focus:outline-none focus:ring-1 focus:ring-ring"
-                  >
-                    <option value="">Backlog Pool (Unscheduled)</option>
+                <Select
+                  value={sprintId || "backlog"}
+                  onValueChange={(val) => setSprintId(val === "backlog" ? "" : val)}
+                >
+                  <SelectTrigger id="item-sprint" className="w-full h-9 text-xs font-medium">
+                    <SelectValue placeholder="Backlog Pool (Unscheduled)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="backlog">Backlog Pool (Unscheduled)</SelectItem>
                     {sprints?.map((s) => (
-                      <option key={s.id} value={s.id}>
+                      <SelectItem key={s.id} value={s.id}>
                         {s.name} ({s.status})
-                      </option>
+                      </SelectItem>
                     ))}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                </div>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Assignee */}
@@ -394,22 +398,22 @@ export function CreateItemDialog({
                 <Label htmlFor="item-assignee" className="block text-xs font-semibold text-foreground">
                   Assignee
                 </Label>
-                <div className="relative">
-                  <select
-                    id="item-assignee"
-                    value={assigneeId}
-                    onChange={(e) => setAssigneeId(e.target.value)}
-                    className="w-full appearance-none rounded-md border border-input bg-background py-2 pl-3 pr-8 text-xs font-medium text-foreground transition focus:outline-none focus:ring-1 focus:ring-ring"
-                  >
-                    <option value="">Unassigned</option>
+                <Select
+                  value={assigneeId || "unassigned"}
+                  onValueChange={(val) => setAssigneeId(val === "unassigned" ? "" : val)}
+                >
+                  <SelectTrigger id="item-assignee" className="w-full h-9 text-xs font-medium">
+                    <SelectValue placeholder="Unassigned" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
                     {members?.map((m) => (
-                      <option key={m.id} value={m.id}>
+                      <SelectItem key={m.id} value={m.id}>
                         {m.name} ({m.role})
-                      </option>
+                      </SelectItem>
                     ))}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                </div>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Parent Work Item */}
@@ -417,22 +421,22 @@ export function CreateItemDialog({
                 <Label htmlFor="item-parent" className="block text-xs font-semibold text-foreground">
                   Parent Hierarchy (Optional)
                 </Label>
-                <div className="relative">
-                  <select
-                    id="item-parent"
-                    value={parentId}
-                    onChange={(e) => setParentId(e.target.value)}
-                    className="w-full appearance-none rounded-md border border-input bg-background py-2 pl-3 pr-8 text-xs font-medium text-foreground transition focus:outline-none focus:ring-1 focus:ring-ring"
-                  >
-                    <option value="">No Parent (Root Item)</option>
+                <Select
+                  value={parentId || "none"}
+                  onValueChange={(val) => setParentId(val === "none" ? "" : val)}
+                >
+                  <SelectTrigger id="item-parent" className="w-full h-9 text-xs font-medium">
+                    <SelectValue placeholder="No Parent (Root Item)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Parent (Root Item)</SelectItem>
                     {parentCandidates.map((p) => (
-                      <option key={p.id} value={p.id}>
+                      <SelectItem key={p.id} value={p.id}>
                         [{p.key}] {p.title.slice(0, 36)}...
-                      </option>
+                      </SelectItem>
                     ))}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                </div>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>

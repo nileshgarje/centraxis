@@ -2,15 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  X,
   Mail,
-  Shield,
-  Users,
   CheckCircle2,
   AlertCircle,
   Loader2,
   Info,
-  ChevronDown,
 } from "lucide-react";
 import { api } from "~/trpc/react";
 import {
@@ -23,6 +19,13 @@ import {
   Button,
   Textarea,
   Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Alert,
+  AlertDescription,
 } from "@centraxis/ui";
 
 interface InviteUserDialogProps {
@@ -177,9 +180,11 @@ export function InviteUserDialog({
 
         {/* Error Alert */}
         {errorMessage && (
-          <div className="mx-6 mt-4 flex items-center space-x-2 rounded-lg bg-destructive/10 border border-destructive/20 px-3.5 py-2.5 text-xs text-destructive font-medium">
-            <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
-            <span>{errorMessage}</span>
+          <div className="mx-6 mt-4">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
           </div>
         )}
 
@@ -215,21 +220,18 @@ export function InviteUserDialog({
             <Label htmlFor="invite-role" className="text-xs font-semibold text-foreground">
               Organization Role <span className="text-destructive">*</span>
             </Label>
-            <div className="relative">
-              <select
-                id="invite-role"
-                value={role}
-                onChange={(e) => setRole(e.target.value as RoleType)}
-                className="w-full appearance-none rounded-md border border-input bg-background py-2 pl-3 pr-8 text-xs font-semibold text-foreground transition focus:outline-none focus:ring-1 focus:ring-ring"
-              >
+            <Select value={role} onValueChange={(val) => setRole(val as RoleType)}>
+              <SelectTrigger id="invite-role" className="w-full h-9 text-xs font-semibold">
+                <SelectValue placeholder="Select role" />
+              </SelectTrigger>
+              <SelectContent>
                 {ROLES.map((r) => (
-                  <option key={r.id} value={r.id}>
+                  <SelectItem key={r.id} value={r.id}>
                     {r.label} ({r.id})
-                  </option>
+                  </SelectItem>
                 ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            </div>
+              </SelectContent>
+            </Select>
 
             {/* Role Permission Guidance Banner */}
             <div className="rounded-lg border border-border bg-muted/30 p-2.5 text-xs">

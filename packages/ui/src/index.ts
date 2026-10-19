@@ -39,6 +39,7 @@ export * from "./components/ui/collapsible";
 export * from "./components/ui/accordion";
 
 // Feedback
+export * from "./components/ui/alert";
 export * from "./components/ui/sonner";
 
 // Brand & Theme

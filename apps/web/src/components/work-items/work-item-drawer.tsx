@@ -28,6 +28,11 @@ import {
   Input,
   Label,
   Badge,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@centraxis/ui";
 
 interface WorkItemDrawerProps {
@@ -207,22 +212,24 @@ export function WorkItemDrawer({
               )}
 
               {/* Status Selector Dropdown */}
-              <select
+              <Select
                 value={status}
-                onChange={(e) => {
-                  setStatus(e.target.value);
-                  handleSaveField({ status: e.target.value as any });
+                onValueChange={(val) => {
+                  setStatus(val);
+                  handleSaveField({ status: val as any });
                 }}
-                className={`rounded-md border border-input bg-background bg-white dark:bg-slate-900 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-foreground focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer shadow-xs ${
-                  STATUS_OPTIONS.find((s) => s.value === status)?.color ?? "border-border text-foreground"
-                }`}
               >
-                {STATUS_OPTIONS.map((st) => (
-                  <option key={st.value} value={st.value}>
-                    {st.label}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-7 w-auto min-w-[110px] text-xs font-semibold uppercase tracking-wider">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((st) => (
+                    <SelectItem key={st.value} value={st.value}>
+                      {st.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
               {/* Auto-save status indicator */}
               <div className="flex items-center space-x-1 text-xs text-muted-foreground">
@@ -284,22 +291,26 @@ export function WorkItemDrawer({
                   <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
                     Assignee
                   </span>
-                  <select
-                    value={assigneeId}
-                    onChange={(e) => {
-                      const val = e.target.value || null;
-                      setAssigneeId(e.target.value);
-                      handleSaveField({ assigneeId: val });
+                  <Select
+                    value={assigneeId || "unassigned"}
+                    onValueChange={(val) => {
+                      const newVal = val === "unassigned" ? null : val;
+                      setAssigneeId(newVal ?? "");
+                      handleSaveField({ assigneeId: newVal });
                     }}
-                    className="w-full text-xs font-medium rounded-md border border-input bg-background bg-white dark:bg-slate-900 px-2.5 py-1.5 text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
                   >
-                    <option value="">Unassigned</option>
-                    {members?.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name || m.email}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full h-8 text-xs font-medium">
+                      <SelectValue placeholder="Unassigned" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
+                      {members?.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.name || m.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Sprint */}
@@ -307,22 +318,26 @@ export function WorkItemDrawer({
                   <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
                     Sprint
                   </span>
-                  <select
-                    value={sprintId}
-                    onChange={(e) => {
-                      const val = e.target.value || null;
-                      setSprintId(e.target.value);
-                      handleSaveField({ sprintId: val });
+                  <Select
+                    value={sprintId || "backlog"}
+                    onValueChange={(val) => {
+                      const newVal = val === "backlog" ? null : val;
+                      setSprintId(newVal ?? "");
+                      handleSaveField({ sprintId: newVal });
                     }}
-                    className="w-full text-xs font-medium rounded-md border border-input bg-background bg-white dark:bg-slate-900 px-2.5 py-1.5 text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
                   >
-                    <option value="">Backlog (Unassigned)</option>
-                    {projectSprints?.map((sp) => (
-                      <option key={sp.id} value={sp.id}>
-                        {sp.name} ({sp.status})
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full h-8 text-xs font-medium">
+                      <SelectValue placeholder="Backlog (Unassigned)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="backlog">Backlog (Unassigned)</SelectItem>
+                      {projectSprints?.map((sp) => (
+                        <SelectItem key={sp.id} value={sp.id}>
+                          {sp.name} ({sp.status})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Priority */}
@@ -330,20 +345,24 @@ export function WorkItemDrawer({
                   <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
                     Priority
                   </span>
-                  <select
+                  <Select
                     value={priority}
-                    onChange={(e) => {
-                      setPriority(e.target.value);
-                      handleSaveField({ priority: e.target.value as any });
+                    onValueChange={(val) => {
+                      setPriority(val);
+                      handleSaveField({ priority: val as any });
                     }}
-                    className="w-full text-xs font-medium rounded-md border border-input bg-background bg-white dark:bg-slate-900 px-2.5 py-1.5 text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
                   >
-                    {PRIORITIES.map((p) => (
-                      <option key={p.value} value={p.value}>
-                        {p.label}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full h-8 text-xs font-medium">
+                      <SelectValue placeholder="Priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PRIORITIES.map((p) => (
+                        <SelectItem key={p.value} value={p.value}>
+                          {p.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Story Points */}
@@ -351,22 +370,26 @@ export function WorkItemDrawer({
                   <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
                     Story Points
                   </span>
-                  <select
-                    value={storyPoints ?? ""}
-                    onChange={(e) => {
-                      const val = e.target.value === "" ? null : Number(e.target.value);
-                      setStoryPoints(val);
-                      handleSaveField({ storyPoints: val });
+                  <Select
+                    value={storyPoints !== null ? String(storyPoints) : "none"}
+                    onValueChange={(val) => {
+                      const newVal = val === "none" ? null : Number(val);
+                      setStoryPoints(newVal);
+                      handleSaveField({ storyPoints: newVal });
                     }}
-                    className="w-full text-xs font-medium rounded-md border border-input bg-background bg-white dark:bg-slate-900 px-2.5 py-1.5 text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
                   >
-                    <option value="">None (Unestimated)</option>
-                    {FIBONACCI_POINTS.map((pts) => (
-                      <option key={pts} value={pts}>
-                        {pts} pts
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full h-8 text-xs font-medium">
+                      <SelectValue placeholder="None (Unestimated)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None (Unestimated)</SelectItem>
+                      {FIBONACCI_POINTS.map((pts) => (
+                        <SelectItem key={pts} value={String(pts)}>
+                          {pts} pts
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

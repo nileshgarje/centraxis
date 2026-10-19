@@ -320,10 +320,10 @@ export function CommandMenu({
       />
 
       {/* Command Menu Card */}
-      <div className="relative w-full max-w-xl rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-150">
+      <div className="relative w-full max-w-xl rounded-2xl border border-border bg-card text-card-foreground shadow-2xl overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-150">
         {/* Search Bar Input */}
-        <div className="flex items-center border-b border-slate-100 px-4 py-3 bg-slate-50/50">
-          <Search className="h-4 w-4 text-slate-400 shrink-0 mr-3" />
+        <div className="flex items-center border-b border-border px-4 py-3 bg-muted/30">
+          <Search className="h-4 w-4 text-muted-foreground shrink-0 mr-3" />
           <input
             ref={inputRef}
             type="text"
@@ -331,12 +331,12 @@ export function CommandMenu({
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a command, jump to a view, or search issues (e.g. CTX-1)..."
-            className="w-full bg-transparent text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none"
+            className="w-full bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
           {cleanSearch && (
             <button
               onClick={() => setSearch("")}
-              className="text-slate-400 hover:text-slate-600 p-1 rounded-md"
+              className="text-muted-foreground hover:text-foreground p-1 rounded-md"
             >
               <Command className="h-3.5 w-3.5" />
             </button>
@@ -344,15 +344,15 @@ export function CommandMenu({
         </div>
 
         {/* Results List */}
-        <div className="max-h-96 overflow-y-auto p-2 divide-y divide-slate-100">
+        <div className="max-h-96 overflow-y-auto p-2 divide-y divide-border">
           {allItems.length === 0 ? (
-            <div className="p-8 text-center text-xs text-slate-400">
+            <div className="p-8 text-center text-xs text-muted-foreground">
               No actions or issues found matching "{search}".
             </div>
           ) : (
             Object.entries(groups).map(([groupName, items]) => (
               <div key={groupName} className="py-1.5">
-                <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   {groupName}
                 </div>
                 <div className="space-y-0.5 mt-0.5">
@@ -369,16 +369,16 @@ export function CommandMenu({
                         onMouseEnter={() => setSelectedIndex(currentIndex)}
                         className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition ${
                           isSelected
-                            ? "bg-blue-600 text-white shadow-sm"
-                            : "text-slate-700 hover:bg-slate-100/70"
+                            ? "bg-primary text-primary-foreground shadow-xs"
+                            : "text-foreground hover:bg-muted"
                         }`}
                       >
                         <div className="flex items-center space-x-3 min-w-0">
                           <div
                             className={`flex h-7 w-7 items-center justify-center rounded-lg shrink-0 ${
                               isSelected
-                                ? "bg-white/20 text-white"
-                                : "bg-slate-100 text-slate-600"
+                                ? "bg-primary-foreground/20 text-primary-foreground"
+                                : "bg-muted text-muted-foreground"
                             }`}
                           >
                             <Icon className="h-3.5 w-3.5" />
@@ -386,7 +386,7 @@ export function CommandMenu({
                           <div className="truncate">
                             <p
                               className={`font-semibold truncate ${
-                                isSelected ? "text-white" : "text-slate-900"
+                                isSelected ? "text-primary-foreground" : "text-foreground"
                               }`}
                             >
                               {item.title}
@@ -394,7 +394,7 @@ export function CommandMenu({
                             {item.subtitle && (
                               <p
                                 className={`text-[11px] truncate ${
-                                  isSelected ? "text-blue-100" : "text-slate-500"
+                                  isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
                                 }`}
                               >
                                 {item.subtitle}
@@ -409,8 +409,8 @@ export function CommandMenu({
                             <span
                               className={`rounded px-1.5 py-0.5 text-[10px] font-mono font-bold ${
                                 isSelected
-                                  ? "bg-white/20 text-white"
-                                  : "bg-slate-100 text-slate-600"
+                                  ? "bg-primary-foreground/20 text-primary-foreground"
+                                  : "bg-muted text-muted-foreground"
                               }`}
                             >
                               {item.badge}
@@ -420,15 +420,15 @@ export function CommandMenu({
                             <kbd
                               className={`rounded px-1.5 py-0.5 text-[10px] font-mono font-semibold ${
                                 isSelected
-                                  ? "bg-white/20 text-white"
-                                  : "bg-slate-100 text-slate-500 border border-slate-200"
+                                  ? "bg-primary-foreground/20 text-primary-foreground"
+                                  : "bg-muted text-muted-foreground border border-border"
                               }`}
                             >
                               {item.shortcut}
                             </kbd>
                           )}
                           {isSelected && (
-                            <ArrowRight className="h-3.5 w-3.5 text-white/80" />
+                            <ArrowRight className="h-3.5 w-3.5 text-primary-foreground/80" />
                           )}
                         </div>
                       </button>
@@ -441,29 +441,29 @@ export function CommandMenu({
         </div>
 
         {/* Footer Shortcut Hints */}
-        <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5 bg-slate-50 text-[11px] text-slate-500 font-medium">
+        <div className="flex items-center justify-between border-t border-border px-4 py-2.5 bg-muted/30 text-[11px] text-muted-foreground font-medium">
           <div className="flex items-center space-x-3">
             <span className="flex items-center space-x-1">
-              <kbd className="rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-mono">
+              <kbd className="rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-mono">
                 ↑↓
               </kbd>
               <span>to navigate</span>
             </span>
             <span className="flex items-center space-x-1">
-              <kbd className="rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-mono">
+              <kbd className="rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-mono">
                 ↵
               </kbd>
               <span>to select</span>
             </span>
             <span className="flex items-center space-x-1">
-              <kbd className="rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-mono">
+              <kbd className="rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-mono">
                 esc
               </kbd>
               <span>to close</span>
             </span>
           </div>
 
-          <div className="flex items-center space-x-1.5 text-blue-600 font-semibold">
+          <div className="flex items-center space-x-1.5 text-primary font-semibold">
             <span>Centraxis Quick Command</span>
           </div>
         </div>
