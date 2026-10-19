@@ -4,12 +4,45 @@ import {
   WorkItemType,
   WorkItemStatus,
   WorkItemPriority,
+  TeamRole,
 } from "@centraxis/db";
 import {
   createTRPCRouter,
   protectedProcedure,
   developerProcedure,
 } from "../trpc";
+
+async function isUserAssignableToProject(
+  db: any,
+  projectId: string,
+  userId: string
+): Promise<boolean> {
+  const project = await db.project.findUnique({
+    where: { id: projectId },
+    select: { id: true, clientId: true },
+  });
+  if (!project) return false;
+
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      role: true,
+      globalRole: true,
+      clientMemberships: project.clientId
+        ? { where: { clientId: project.clientId } }
+        : false,
+      projectMemberships: { where: { projectId } },
+    },
+  });
+
+  if (!user) return false;
+  if (user.globalRole === "SYSTEM_ADMIN" || user.role === TeamRole.ORG_ADMIN) return true;
+  if (project.clientId && user.clientMemberships && user.clientMemberships.length > 0) return true;
+  if (user.projectMemberships && user.projectMemberships.length > 0) return true;
+
+  return false;
+}
 
 export const backlogRouter = createTRPCRouter({
   /**
@@ -198,6 +231,20 @@ export const backlogRouter = createTRPCRouter({
         });
       }
 
+      if (input.assigneeId) {
+        const isAssignable = await isUserAssignableToProject(
+          ctx.db,
+          input.projectId,
+          input.assigneeId,
+        );
+        if (!isAssignable) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Selected user is not a member of this project or client.",
+          });
+        }
+      }
+
       // Generate next project-scoped issue number
       const highestItem = await ctx.db.workItem.findFirst({
         where: { projectId: input.projectId },
@@ -258,6 +305,31 @@ export const backlogRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
+
+      if (data.assigneeId) {
+        const existing = await ctx.db.workItem.findUnique({
+          where: { id },
+          select: { projectId: true },
+        });
+        if (!existing) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Target work item does not exist.",
+          });
+        }
+        const isAssignable = await isUserAssignableToProject(
+          ctx.db,
+          existing.projectId,
+          data.assigneeId,
+        );
+        if (!isAssignable) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Selected user is not a member of this project or client.",
+          });
+        }
+      }
+
       return ctx.db.workItem.update({
         where: { id },
         data,

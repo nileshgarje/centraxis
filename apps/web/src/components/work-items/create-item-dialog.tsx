@@ -124,9 +124,9 @@ export function CreateItemDialog({
   }, [isOpen, defaultType, defaultSprintId, defaultParentId]);
 
   // Fetch contextual options
-  const { data: members } = api.project.listMembers.useQuery(
+  const { data: assignableUsers } = api.project.getAssignableUsers.useQuery(
     { projectId },
-    { enabled: isOpen },
+    { enabled: isOpen && !!projectId },
   );
 
   const { data: sprints } = api.sprint.list.useQuery(
@@ -409,9 +409,27 @@ export function CreateItemDialog({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="unassigned">Unassigned</SelectItem>
-                    {members?.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>
-                        {m.name} ({m.role})
+                    {assignableUsers?.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        <div className="flex items-center gap-2">
+                          {u.image ? (
+                            <img
+                              src={u.image}
+                              alt={u.name || u.email || "User"}
+                              className="h-4 w-4 rounded-full"
+                            />
+                          ) : (
+                            <div className="h-4 w-4 rounded-full bg-primary/10 text-primary text-[10px] flex items-center justify-center font-bold">
+                              {(u.name?.[0] || u.email?.[0] || "?").toUpperCase()}
+                            </div>
+                          )}
+                          <span>{u.name || u.email}</span>
+                          {u.globalRole === "SYSTEM_ADMIN" && (
+                            <span className="text-[10px] text-muted-foreground font-semibold">
+                              (Admin)
+                            </span>
+                          )}
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>

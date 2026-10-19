@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import { TeamRole } from "@centraxis/db";
 import {
   createTRPCRouter,
   protectedProcedure,
@@ -9,7 +10,7 @@ import {
 
 export const clientRouter = createTRPCRouter({
   /**
-   * List all clients for the user's organization with assigned projects
+   * List all clients accessible to the current user with assigned projects and members
    */
   list: protectedProcedure.query(async ({ ctx }) => {
     let orgId = ctx.session.user.organizationId;
@@ -25,8 +26,21 @@ export const clientRouter = createTRPCRouter({
       return [];
     }
 
+    const isSystemAdmin =
+      ctx.session.user.globalRole === "SYSTEM_ADMIN" ||
+      ctx.session.user.role === TeamRole.ORG_ADMIN;
+
     return ctx.db.client.findMany({
-      where: { orgId },
+      where: {
+        orgId,
+        ...(!isSystemAdmin
+          ? {
+              members: {
+                some: { userId: ctx.session.user.id },
+              },
+            }
+          : {}),
+      },
       include: {
         projects: {
           select: {
@@ -42,15 +56,100 @@ export const clientRouter = createTRPCRouter({
             },
           },
         },
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+                role: true,
+                globalRole: true,
+              },
+            },
+          },
+        },
         _count: {
           select: {
             projects: true,
+            members: true,
           },
         },
       },
       orderBy: { name: "asc" },
     });
   }),
+
+  /**
+   * Get single client by Slug with authorization check
+   */
+  getBySlug: protectedProcedure
+    .input(z.object({ slug: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const isSystemAdmin =
+        ctx.session.user.globalRole === "SYSTEM_ADMIN" ||
+        ctx.session.user.role === TeamRole.ORG_ADMIN;
+
+      const client = await ctx.db.client.findFirst({
+        where: {
+          slug: input.slug,
+          ...(!isSystemAdmin
+            ? {
+                members: {
+                  some: { userId: ctx.session.user.id },
+                },
+              }
+            : {}),
+        },
+        include: {
+          projects: {
+            include: {
+              sprints: {
+                where: { status: "ACTIVE" },
+                take: 1,
+              },
+              _count: {
+                select: {
+                  workItems: true,
+                  sprints: true,
+                },
+              },
+            },
+            orderBy: { name: "asc" },
+          },
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  image: true,
+                  role: true,
+                  globalRole: true,
+                },
+              },
+            },
+          },
+          _count: {
+            select: {
+              projects: true,
+              members: true,
+            },
+          },
+        },
+      });
+
+      if (!client) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Client workspace not found or you do not have access.",
+        });
+      }
+
+      return client;
+    }),
 
   /**
    * Get single client by ID
@@ -97,11 +196,14 @@ export const clientRouter = createTRPCRouter({
         name: z.string().min(1, "Client name is required"),
         slug: z
           .string()
+          .min(2, "Slug must be at least 2 characters")
+          .regex(/^[a-z0-9-]+$/, "Slug must only contain lowercase letters, numbers, and hyphens")
           .optional()
           .nullable()
           .or(z.literal("")),
         contactEmail: z
           .string()
+          .email("Invalid email address")
           .optional()
           .nullable()
           .or(z.literal("")),
@@ -148,6 +250,24 @@ export const clientRouter = createTRPCRouter({
 
       if (!baseSlug || baseSlug.length < 2) {
         baseSlug = `client-${Date.now().toString(36)}`;
+      }
+
+      // If user provided a specific slug, check for collision
+      if (input.slug?.trim()) {
+        const existing = await ctx.db.client.findUnique({
+          where: {
+            orgId_slug: {
+              orgId,
+              slug: baseSlug,
+            },
+          },
+        });
+        if (existing) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `Client slug "${baseSlug}" is already in use.`,
+          });
+        }
       }
 
       let generatedSlug = baseSlug;

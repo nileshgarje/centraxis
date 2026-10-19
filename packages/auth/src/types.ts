@@ -1,5 +1,5 @@
 import type { DefaultSession } from "next-auth";
-import type { TeamRole } from "@centraxis/db";
+import type { TeamRole, GlobalRole } from "@centraxis/db";
 
 export interface UserTeamMembership {
   teamId: string;
@@ -11,6 +11,7 @@ export interface CentraxisUser {
   name?: string | null;
   email?: string | null;
   image?: string | null;
+  globalRole: GlobalRole;
   role: TeamRole;
   organizationId: string | null;
   memberships: UserTeamMembership[];
@@ -27,6 +28,7 @@ declare module "next-auth" {
   }
 
   interface User {
+    globalRole?: GlobalRole;
     role?: TeamRole;
     organizationId?: string | null;
     memberships?: UserTeamMembership[];
@@ -37,6 +39,7 @@ declare module "@auth/core/jwt" {
   interface JWT {
     id?: string;
     organizationId?: string | null;
+    globalRole?: GlobalRole;
     role?: TeamRole;
     memberships?: UserTeamMembership[];
   }

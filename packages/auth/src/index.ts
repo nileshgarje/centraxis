@@ -3,7 +3,7 @@ import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { db, TeamRole } from "@centraxis/db";
+import { db, TeamRole, GlobalRole } from "@centraxis/db";
 import { env } from "@centraxis/env";
 import type { UserTeamMembership } from "./types";
 import "./types";
@@ -35,6 +35,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: profile.name || `${profile.given_name ?? ""} ${profile.family_name ?? ""}`.trim() || profile.email,
           email: profile.email || profile.preferred_username,
           image: profile.picture ?? null,
+          globalRole: GlobalRole.USER,
           role: TeamRole.DEVELOPER,
         };
       },
@@ -65,6 +66,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   image: true,
                   password: true,
                   role: true,
+                  globalRole: true,
                   organizationId: true,
                 },
               });
@@ -89,6 +91,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 email: user.email,
                 image: user.image,
                 role: user.role,
+                globalRole: user.globalRole,
                 organizationId: user.organizationId,
               };
             },
@@ -143,6 +146,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id;
         token.role = (user as any).role;
+        token.globalRole = (user as any).globalRole;
         token.organizationId = (user as any).organizationId;
       }
 
@@ -152,6 +156,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           select: {
             id: true,
             role: true,
+            globalRole: true,
             organizationId: true,
             memberships: {
               select: {
@@ -165,6 +170,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (dbUser) {
           token.organizationId = dbUser.organizationId;
           token.role = dbUser.role;
+          token.globalRole = dbUser.globalRole;
           token.memberships = dbUser.memberships as UserTeamMembership[];
         }
       }
@@ -178,6 +184,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.organizationId =
           (token.organizationId as string | null) ?? null;
         session.user.role = (token.role as TeamRole) ?? TeamRole.DEVELOPER;
+        session.user.globalRole =
+          (token.globalRole as GlobalRole) ??
+          (session.user.role === TeamRole.ORG_ADMIN
+            ? GlobalRole.SYSTEM_ADMIN
+            : GlobalRole.USER);
         session.user.memberships =
           (token.memberships as UserTeamMembership[]) ?? [];
       }

@@ -95,6 +95,11 @@ export function CreateClientDialog({
 
     const cleanSlug = slug.trim() ? slug.trim().toLowerCase() : generateClientSlug(name);
 
+    if (cleanSlug && !/^[a-z0-9-]+$/.test(cleanSlug)) {
+      setErrorMessage("Slug must contain only lowercase alphanumeric characters and hyphens.");
+      return;
+    }
+
     setErrorMessage(null);
     createMutation.mutate({
       name: name.trim(),

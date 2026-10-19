@@ -93,6 +93,23 @@ export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
 });
 
 /**
+ * System Admin procedure: requires System Admin global role or Org Admin role.
+ */
+export const systemAdminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  const user = ctx.session.user;
+  const isSysAdmin =
+    user.globalRole === "SYSTEM_ADMIN" || user.role === TeamRole.ORG_ADMIN;
+  if (!isSysAdmin) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Requires System Administrator privileges.",
+    });
+  }
+
+  return next({ ctx });
+});
+
+/**
  * Scrum Master procedure: requires Scrum Master or Org Admin role.
  */
 export const scrumMasterProcedure = protectedProcedure.use(({ ctx, next }) => {

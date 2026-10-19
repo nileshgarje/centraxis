@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import { TeamRole } from "@centraxis/db";
 import {
   createTRPCRouter,
   protectedProcedure,
@@ -47,6 +48,20 @@ export const projectRouter = createTRPCRouter({
         where: { id: input.id },
         include: {
           client: true,
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  image: true,
+                  role: true,
+                  globalRole: true,
+                },
+              },
+            },
+          },
           projectTeams: {
             include: {
               team: {
@@ -88,6 +103,170 @@ export const projectRouter = createTRPCRouter({
       }
 
       return project;
+    }),
+
+  /**
+   * Get single project by client slug and project key with access verification
+   */
+  getByClientAndKey: protectedProcedure
+    .input(
+      z.object({
+        clientSlug: z.string(),
+        projectKey: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const isSystemAdmin =
+        ctx.session.user.globalRole === "SYSTEM_ADMIN" ||
+        ctx.session.user.role === TeamRole.ORG_ADMIN;
+
+      const project = await ctx.db.project.findFirst({
+        where: {
+          key: { equals: input.projectKey, mode: "insensitive" },
+          client: {
+            slug: input.clientSlug,
+          },
+        },
+        include: {
+          client: true,
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  image: true,
+                  role: true,
+                  globalRole: true,
+                },
+              },
+            },
+          },
+          projectTeams: {
+            include: {
+              team: {
+                include: {
+                  memberships: {
+                    include: {
+                      user: {
+                        select: {
+                          id: true,
+                          name: true,
+                          email: true,
+                          image: true,
+                          role: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          sprints: {
+            orderBy: { createdAt: "desc" },
+            take: 5,
+          },
+          _count: {
+            select: {
+              workItems: true,
+              sprints: true,
+            },
+          },
+        },
+      });
+
+      if (!project) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Project with key ${input.projectKey} under client ${input.clientSlug} was not found.`,
+        });
+      }
+
+      // Check access for non-system admins
+      if (!isSystemAdmin) {
+        const isClientMember = project.clientId
+          ? await ctx.db.clientMember.findFirst({
+              where: {
+                clientId: project.clientId,
+                userId: ctx.session.user.id,
+              },
+            })
+          : null;
+
+        const isProjectMember = await ctx.db.projectMember.findFirst({
+          where: {
+            projectId: project.id,
+            userId: ctx.session.user.id,
+          },
+        });
+
+        if (!isClientMember && !isProjectMember) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have permission to access this project.",
+          });
+        }
+      }
+
+      return project;
+    }),
+
+  /**
+   * Get all users assignable to a project based on RBAC scoping:
+   * 1. SYSTEM_ADMIN (globalRole === 'SYSTEM_ADMIN' or role === ORG_ADMIN)
+   * 2. CLIENT_ADMIN or member of the project's parent client
+   * 3. Explicit PROJECT_MEMBER for this specific project
+   */
+  getAssignableUsers: protectedProcedure
+    .input(z.object({ projectId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const project = await ctx.db.project.findUnique({
+        where: { id: input.projectId },
+        select: { id: true, clientId: true },
+      });
+
+      if (!project) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Target project does not exist.",
+        });
+      }
+
+      const users = await ctx.db.user.findMany({
+        where: {
+          OR: [
+            { globalRole: "SYSTEM_ADMIN" },
+            { role: TeamRole.ORG_ADMIN },
+            ...(project.clientId
+              ? [{ clientMemberships: { some: { clientId: project.clientId } } }]
+              : []),
+            { projectMemberships: { some: { projectId: input.projectId } } },
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+          role: true,
+          globalRole: true,
+          clientMemberships: project.clientId
+            ? {
+                where: { clientId: project.clientId },
+                select: { role: true, clientId: true },
+              }
+            : undefined,
+          projectMemberships: {
+            where: { projectId: input.projectId },
+            select: { role: true, projectId: true },
+          },
+        },
+        orderBy: { name: "asc" },
+      });
+
+      return users;
     }),
 
   /**

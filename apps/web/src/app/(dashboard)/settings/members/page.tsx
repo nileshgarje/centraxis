@@ -18,6 +18,8 @@ import {
   ChevronDown,
   Loader2,
   Briefcase,
+  Building,
+  FolderKanban,
   X,
 } from "lucide-react";
 import {
@@ -43,6 +45,7 @@ import {
 } from "@centraxis/ui";
 import { api } from "~/trpc/react";
 import { InviteUserDialog } from "~/components/settings/invite-user-dialog";
+import { EditUserAccessDialog } from "~/components/settings/edit-user-access-dialog";
 
 type TabType = "active" | "pending";
 
@@ -59,6 +62,7 @@ export default function MembersSettingsPage() {
   const [activeTab, setActiveTab] = useState<TabType>("active");
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
+  const [memberToEditAccess, setMemberToEditAccess] = useState<any | null>(null);
   const [inviteToRevoke, setInviteToRevoke] = useState<{ id: string; email: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
@@ -246,11 +250,11 @@ export default function MembersSettingsPage() {
         {activeTab === "active" && (
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <div className="border-b border-slate-200 bg-slate-50/80 px-6 py-3.5 grid grid-cols-12 gap-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
-              <div className="col-span-4">User & Identity</div>
-              <div className="col-span-3">Assigned Squads</div>
-              <div className="col-span-2">Organization Role</div>
-              <div className="col-span-2">Member Since</div>
-              <div className="col-span-1 text-right">Actions</div>
+              <div className="col-span-3">User & Identity</div>
+              <div className="col-span-4">Client & Project Access</div>
+              <div className="col-span-2">Assigned Squads</div>
+              <div className="col-span-1">Org Role</div>
+              <div className="col-span-2 text-right">Actions</div>
             </div>
 
             {membersLoading ? (
@@ -269,41 +273,88 @@ export default function MembersSettingsPage() {
                     className="px-6 py-3.5 grid grid-cols-12 gap-4 items-center hover:bg-slate-50/60 transition"
                   >
                     {/* User & Identity */}
-                    <div className="col-span-4 flex items-center space-x-3">
+                    <div className="col-span-3 flex items-center space-x-3">
                       <div className="h-9 w-9 overflow-hidden rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-xs text-blue-700 shrink-0">
                         {member.name?.slice(0, 2).toUpperCase() ?? "U"}
                       </div>
                       <div className="truncate">
-                        <p className="text-xs font-bold text-slate-900 truncate">
-                          {member.name}
-                        </p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-xs font-bold text-slate-900 truncate">
+                            {member.name}
+                          </p>
+                          {member.globalRole === "SYSTEM_ADMIN" && (
+                            <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-950/50 dark:text-purple-300">
+                              SysAdmin
+                            </span>
+                          )}
+                        </div>
                         <p className="text-[11px] text-slate-500 truncate">
                           {member.email}
                         </p>
                       </div>
                     </div>
 
+                    {/* Client & Project Access Matrix */}
+                    <div className="col-span-4 flex flex-wrap gap-1">
+                      {member.clientMemberships && member.clientMemberships.length > 0 && (
+                        member.clientMemberships.map((cm) => (
+                          <span
+                            key={cm.id}
+                            className="inline-flex items-center space-x-1 rounded-md bg-blue-50 border border-blue-200 px-1.5 py-0.5 text-[10px] font-medium text-blue-800 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-300"
+                            title={`Client ${cm.client.name} - ${cm.role}`}
+                          >
+                            <Building className="h-2.5 w-2.5 text-blue-500" />
+                            <span>{cm.client.name}</span>
+                            <span className="opacity-75 text-[9px]">
+                              ({cm.role === "CLIENT_ADMIN" ? "Admin" : "Member"})
+                            </span>
+                          </span>
+                        ))
+                      )}
+                      {member.projectMemberships && member.projectMemberships.length > 0 && (
+                        member.projectMemberships.map((pm) => (
+                          <span
+                            key={pm.id}
+                            className="inline-flex items-center space-x-1 rounded-md bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 text-[10px] font-medium text-indigo-800 dark:bg-indigo-950/40 dark:border-indigo-800 dark:text-indigo-300"
+                            title={`Project [${pm.project.key}] ${pm.project.name} - ${pm.role}`}
+                          >
+                            <FolderKanban className="h-2.5 w-2.5 text-indigo-500" />
+                            <span className="font-mono font-bold">[{pm.project.key}]</span>
+                            <span className="opacity-75 text-[9px]">
+                              ({pm.role === "PROJECT_LEAD" ? "Lead" : pm.role === "VIEWER" ? "Viewer" : "Member"})
+                            </span>
+                          </span>
+                        ))
+                      )}
+                      {(!member.clientMemberships || member.clientMemberships.length === 0) &&
+                        (!member.projectMemberships || member.projectMemberships.length === 0) && (
+                          <span className="text-[11px] text-slate-400 italic">
+                            No scoped access
+                          </span>
+                      )}
+                    </div>
+
                     {/* Assigned Squads */}
-                    <div className="col-span-3 flex flex-wrap gap-1">
+                    <div className="col-span-2 flex flex-wrap gap-1">
                       {member.teams.length > 0 ? (
                         member.teams.map((t) => (
                           <span
                             key={t.id}
-                            className="inline-flex items-center space-x-1 rounded-md bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10px] font-medium text-slate-700"
+                            className="inline-flex items-center space-x-1 rounded-md bg-slate-100 border border-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-700"
                           >
                             <Briefcase className="h-2.5 w-2.5 text-slate-400" />
-                            <span>{t.name}</span>
+                            <span className="truncate max-w-[85px]">{t.name}</span>
                           </span>
                         ))
                       ) : (
                         <span className="text-[11px] text-slate-400 italic">
-                          No squad assigned
+                          None
                         </span>
                       )}
                     </div>
 
                     {/* Organization Role (Inline Selector) */}
-                    <div className="col-span-2">
+                    <div className="col-span-1">
                       <Select
                         value={member.role}
                         onValueChange={(val) =>
@@ -313,29 +364,31 @@ export default function MembersSettingsPage() {
                           })
                         }
                       >
-                        <SelectTrigger className={`h-7 w-[120px] rounded-lg border px-2 text-[10px] font-bold uppercase tracking-wider ${ROLE_BADGES[member.role] ?? ROLE_BADGES.DEVELOPER}`}>
+                        <SelectTrigger className={`h-6 w-[88px] rounded-lg border px-1.5 text-[9px] font-bold uppercase tracking-wider ${ROLE_BADGES[member.role] ?? ROLE_BADGES.DEVELOPER}`}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="DEVELOPER">Developer</SelectItem>
-                          <SelectItem value="SCRUM_MASTER">Scrum Master</SelectItem>
+                          <SelectItem value="DEVELOPER">Dev</SelectItem>
+                          <SelectItem value="SCRUM_MASTER">Scrum</SelectItem>
                           <SelectItem value="ORG_ADMIN">Admin</SelectItem>
                           <SelectItem value="VIEWER">Viewer</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
-                    {/* Member Since / Last Active */}
-                    <div className="col-span-2 text-xs text-muted-foreground font-medium">
-                      {new Date(member.createdAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </div>
+                    {/* Actions */}
+                    <div className="col-span-2 flex items-center justify-end gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setMemberToEditAccess(member as any)}
+                        className="h-7 px-2 text-[11px] font-semibold gap-1"
+                        title="Edit user client and project access matrix"
+                      >
+                        <Shield className="h-3 w-3 text-blue-600" />
+                        <span>Access</span>
+                      </Button>
 
-                    {/* Remove Action */}
-                    <div className="col-span-1 flex justify-end">
                       <Button
                         variant="ghost"
                         size="icon"
@@ -343,7 +396,7 @@ export default function MembersSettingsPage() {
                           setMemberToRemove({ id: member.id, name: member.name ?? member.email ?? "Member" })
                         }
                         title="Remove member from organization"
-                        className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition"
+                        className="h-7 w-7 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -527,6 +580,14 @@ export default function MembersSettingsPage() {
       <InviteUserDialog
         isOpen={isInviteDialogOpen}
         onClose={() => setIsInviteDialogOpen(false)}
+      />
+
+      {/* Edit User Access Modal Dialog */}
+      <EditUserAccessDialog
+        member={memberToEditAccess}
+        isOpen={!!memberToEditAccess}
+        onClose={() => setMemberToEditAccess(null)}
+        onSuccess={() => utils.org.listMembers.invalidate()}
       />
     </div>
   );

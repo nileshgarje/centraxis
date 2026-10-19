@@ -11,6 +11,22 @@ datasource db {
 // Enums
 // ------------------------------------------------------
 
+enum GlobalRole {
+  SYSTEM_ADMIN
+  USER
+}
+
+enum ClientRole {
+  CLIENT_ADMIN
+  CLIENT_MEMBER
+}
+
+enum ProjectRole {
+  PROJECT_LEAD
+  MEMBER
+  VIEWER
+}
+
 enum TeamRole {
   ORG_ADMIN
   SCRUM_MASTER
@@ -74,11 +90,26 @@ model Client {
   orgId          String
   organization   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
   projects       Project[]
+  members        ClientMember[]
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
   @@unique([orgId, slug])
   @@index([orgId])
+}
+
+model ClientMember {
+  id        String     @id @default(cuid())
+  userId    String
+  clientId  String
+  role      ClientRole @default(CLIENT_MEMBER)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client    Client     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+
+  @@unique([userId, clientId])
+  @@index([userId])
+  @@index([clientId])
 }
 
 model User {
@@ -88,6 +119,7 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
+  globalRole    GlobalRole      @default(USER)
   role          TeamRole        @default(DEVELOPER)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
@@ -95,10 +127,12 @@ model User {
   organizationId String?
   organization   Organization?   @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
-  accounts        Account[]
-  sessions        Session[]
-  memberships     TeamMembership[]
-  sentInvitations Invitation[]    @relation("SentInvitations")
+  accounts           Account[]
+  sessions           Session[]
+  memberships        TeamMembership[]
+  clientMemberships  ClientMember[]
+  projectMemberships ProjectMember[]
+  sentInvitations    Invitation[]    @relation("SentInvitations")
 
   assignedWorkItems WorkItem[]  @relation("AssignedWorkItems")
   reportedWorkItems WorkItem[]  @relation("ReportedWorkItems")
@@ -217,13 +251,27 @@ model Project {
 
   clientId                  String?
   client                    Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
-
   projectTeams              ProjectTeam[]
   sprints                   Sprint[]
   workItems                 WorkItem[]
+  members                   ProjectMember[]
 
   @@index([organizationId])
   @@index([clientId])
+}
+
+model ProjectMember {
+  id        String      @id @default(cuid())
+  userId    String
+  projectId String
+  role      ProjectRole @default(MEMBER)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@unique([userId, projectId])
+  @@index([userId])
+  @@index([projectId])
 }
 
 model ProjectTeam {

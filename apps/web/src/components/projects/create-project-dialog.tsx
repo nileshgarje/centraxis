@@ -37,6 +37,7 @@ interface CreateProjectDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onProjectCreated?: (projectId: string) => void;
+  defaultClientId?: string;
 }
 
 function generateProjectKey(name: string): string {
@@ -62,6 +63,7 @@ export function CreateProjectDialog({
   isOpen,
   onClose,
   onProjectCreated,
+  defaultClientId,
 }: CreateProjectDialogProps) {
   const utils = api.useUtils();
 
@@ -70,8 +72,16 @@ export function CreateProjectDialog({
   const [isKeyManuallyEdited, setIsKeyManuallyEdited] = useState(false);
   const [description, setDescription] = useState("");
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
-  const [selectedClientId, setSelectedClientId] = useState<string>("");
+  const [selectedClientId, setSelectedClientId] = useState<string>(defaultClientId ?? "");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (defaultClientId) {
+        setSelectedClientId(defaultClientId);
+      }
+    }
+  }, [isOpen, defaultClientId]);
 
   // Query clients for client assignment
   const { data: clients } = api.clients.list.useQuery(undefined, {

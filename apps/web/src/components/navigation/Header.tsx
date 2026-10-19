@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
   Sparkles,
@@ -18,6 +19,8 @@ import {
   BarChart3,
   Building2,
   ShieldCheck,
+  Shield,
+  Settings,
   LogOut,
   User,
   FolderGit2,
@@ -60,6 +63,8 @@ interface HeaderProps {
   onCreateSprint?: () => void;
   onOpenInvite?: () => void;
   onOpenCommandMenu?: () => void;
+  clientSlug?: string;
+  projectKey?: string;
 }
 
 export function Header({
@@ -75,7 +80,10 @@ export function Header({
   onCreateSprint,
   onOpenInvite,
   onOpenCommandMenu,
+  clientSlug,
+  projectKey,
 }: HeaderProps) {
+  const router = useRouter();
   const { data: session } = useSession();
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
   const [isCreateClientOpen, setIsCreateClientOpen] = useState(false);
@@ -194,7 +202,13 @@ export function Header({
                       <div key={client.id} className="py-1">
                         <div className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
                           <Building2 className="h-3 w-3 text-indigo-500" />
-                          <span className="truncate">{client.name}</span>
+                          <Link
+                            href={`/${client.slug}`}
+                            onClick={() => setIsProjectDropdownOpen(false)}
+                            className="truncate hover:text-foreground hover:underline transition"
+                          >
+                            {client.name}
+                          </Link>
                           <span className="ml-auto text-[10px] text-muted-foreground font-mono">
                             {items.length}
                           </span>
@@ -215,6 +229,9 @@ export function Header({
                                   onClick={() => {
                                     onSelectProject(project.id);
                                     setIsProjectDropdownOpen(false);
+                                    if (client.slug && project.key) {
+                                      router.push(`/${client.slug}/${project.key}/${activeTab || "board"}`);
+                                    }
                                   }}
                                   className={`flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs transition ${
                                     isSelected
@@ -489,6 +506,15 @@ export function Header({
                   </Link>
                 </DropdownMenuItem>
 
+                {clientSlug && (
+                  <DropdownMenuItem asChild>
+                    <Link href={`/${clientSlug}/settings`} className="flex items-center gap-2 cursor-pointer">
+                      <Settings className="h-4 w-4 text-muted-foreground" />
+                      <span>Client Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+
                 <DropdownMenuItem asChild>
                   <Link href="/settings/clients" className="flex items-center gap-2 cursor-pointer">
                     <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -502,6 +528,15 @@ export function Header({
                     <span>Workspace Members</span>
                   </Link>
                 </DropdownMenuItem>
+
+                {(session?.user?.globalRole === "SYSTEM_ADMIN" || session?.user?.role === "ORG_ADMIN") && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin" className="flex items-center gap-2 cursor-pointer font-medium text-indigo-600 dark:text-indigo-400">
+                      <Shield className="h-4 w-4" />
+                      <span>Admin Hub</span>
+                    </Link>
+                  </DropdownMenuItem>
+                )}
 
                 <DropdownMenuSeparator />
 

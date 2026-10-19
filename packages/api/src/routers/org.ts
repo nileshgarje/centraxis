@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { TeamRole } from "@centraxis/db";
+import { TeamRole, GlobalRole, ClientRole, ProjectRole } from "@centraxis/db";
 import {
   createTRPCRouter,
   protectedProcedure,
@@ -32,6 +32,20 @@ export const orgRouter = createTRPCRouter({
             },
           },
         },
+        clientMemberships: {
+          include: {
+            client: {
+              select: { id: true, name: true, slug: true },
+            },
+          },
+        },
+        projectMemberships: {
+          include: {
+            project: {
+              select: { id: true, name: true, key: true },
+            },
+          },
+        },
       },
       orderBy: [{ role: "asc" }, { name: "asc" }],
     });
@@ -42,9 +56,22 @@ export const orgRouter = createTRPCRouter({
       email: m.email,
       image: m.image,
       role: m.role,
+      globalRole: m.globalRole,
       createdAt: m.createdAt,
       updatedAt: m.updatedAt,
       teams: m.memberships.map((tm) => tm.team),
+      clientMemberships: m.clientMemberships.map((cm) => ({
+        id: cm.id,
+        clientId: cm.clientId,
+        role: cm.role,
+        client: cm.client,
+      })),
+      projectMemberships: m.projectMemberships.map((pm) => ({
+        id: pm.id,
+        projectId: pm.projectId,
+        role: pm.role,
+        project: pm.project,
+      })),
     }));
   }),
 
@@ -306,6 +333,72 @@ export const orgRouter = createTRPCRouter({
         data: {
           organizationId: null,
         },
+      });
+    }),
+
+  /**
+   * Transactionally sync a member's client and project memberships (RBAC Matrix)
+   */
+  updateUserAccessMatrix: scrumMasterProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        globalRole: z.nativeEnum(GlobalRole).optional(),
+        clientMemberships: z.array(
+          z.object({
+            clientId: z.string(),
+            role: z.nativeEnum(ClientRole),
+          })
+        ),
+        projectMemberships: z.array(
+          z.object({
+            projectId: z.string(),
+            role: z.nativeEnum(ProjectRole),
+          })
+        ),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.$transaction(async (tx) => {
+        // Optional global role update
+        if (input.globalRole) {
+          await tx.user.update({
+            where: { id: input.userId },
+            data: { globalRole: input.globalRole },
+          });
+        }
+
+        // 1. Sync client memberships
+        await tx.clientMember.deleteMany({
+          where: { userId: input.userId },
+        });
+
+        if (input.clientMemberships.length > 0) {
+          await tx.clientMember.createMany({
+            data: input.clientMemberships.map((cm) => ({
+              userId: input.userId,
+              clientId: cm.clientId,
+              role: cm.role,
+            })),
+          });
+        }
+
+        // 2. Sync project memberships
+        await tx.projectMember.deleteMany({
+          where: { userId: input.userId },
+        });
+
+        if (input.projectMemberships.length > 0) {
+          await tx.projectMember.createMany({
+            data: input.projectMemberships.map((pm) => ({
+              userId: input.userId,
+              projectId: pm.projectId,
+              role: pm.role,
+            })),
+          });
+        }
+
+        return { success: true };
       });
     }),
 });

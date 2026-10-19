@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createTRPCReact, httpBatchLink } from "@trpc/react-query";
-import type { AppRouter } from "@centraxis/api";
+import type { AppRouter, RouterOutputs, RouterInputs } from "@centraxis/api";
 import SuperJSON from "superjson";
 
 export const api = createTRPCReact<AppRouter>();
+export type { RouterOutputs, RouterInputs };
 
 function getBaseUrl() {
   if (typeof window !== "undefined") return window.location.origin;

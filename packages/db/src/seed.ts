@@ -1,4 +1,14 @@
-import { PrismaClient, TeamRole, SprintStatus, WorkItemType, WorkItemStatus, WorkItemPriority } from "@prisma/client";
+import {
+  PrismaClient,
+  TeamRole,
+  GlobalRole,
+  ClientRole,
+  ProjectRole,
+  SprintStatus,
+  WorkItemType,
+  WorkItemStatus,
+  WorkItemPriority,
+} from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -12,6 +22,8 @@ async function main() {
   await prisma.workItem.deleteMany();
   await prisma.sprint.deleteMany();
   await prisma.projectTeam.deleteMany();
+  await prisma.projectMember.deleteMany();
+  await prisma.clientMember.deleteMany();
   await prisma.project.deleteMany();
   await prisma.client.deleteMany();
   await prisma.teamMembership.deleteMany();
@@ -314,7 +326,9 @@ async function main() {
   ];
 
   const createdUsers = [];
+  const userByEmail = new Map<string, any>();
   for (const spec of userSpecs) {
+    const isSystemAdmin = spec.orgRole === TeamRole.ORG_ADMIN;
     const user = await prisma.user.create({
       data: {
         name: spec.name,
@@ -323,6 +337,7 @@ async function main() {
         emailVerified: new Date(),
         image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(spec.name)}`,
         role: spec.orgRole,
+        globalRole: isSystemAdmin ? GlobalRole.SYSTEM_ADMIN : GlobalRole.USER,
         organizationId: org.id,
         memberships: {
           create: {
@@ -333,6 +348,82 @@ async function main() {
       },
     });
     createdUsers.push(user);
+    userByEmail.set(spec.email, user);
+  }
+
+  // 5b. Seed Multi-Client & Multi-Project Memberships (RBAC Matrix)
+  console.log("Seeding Multi-Client & Multi-Project Memberships...");
+
+  // Client Apex (Parent of Centraxis Core)
+  const rachel = userByEmail.get("rachel.green@centvis.com");
+  const liam = userByEmail.get("liam.chen@centvis.com");
+  const sophia = userByEmail.get("sophia.rodriguez@centvis.com");
+  const ethan = userByEmail.get("ethan.wright@centvis.com");
+  const olivia = userByEmail.get("olivia.patel@centvis.com");
+  const emily = userByEmail.get("emily.watson@centvis.com");
+
+  // Client Nexus (Parent of Centraxis Mobile App)
+  const marcus = userByEmail.get("marcus.vance@centvis.com");
+  const lucas = userByEmail.get("lucas.silva@centvis.com");
+  const aria = userByEmail.get("aria.takahashi@centvis.com");
+  const david = userByEmail.get("david.beckham@centvis.com");
+
+  // Client Apex Memberships
+  if (rachel) {
+    await prisma.clientMember.create({
+      data: { userId: rachel.id, clientId: clientApex.id, role: ClientRole.CLIENT_ADMIN },
+    });
+  }
+  for (const u of [liam, sophia, ethan, olivia, emily].filter(Boolean)) {
+    await prisma.clientMember.create({
+      data: { userId: u.id, clientId: clientApex.id, role: ClientRole.CLIENT_MEMBER },
+    });
+  }
+
+  // Client Nexus Memberships
+  if (marcus) {
+    await prisma.clientMember.create({
+      data: { userId: marcus.id, clientId: clientNexus.id, role: ClientRole.CLIENT_ADMIN },
+    });
+  }
+  for (const u of [lucas, aria, olivia, david].filter(Boolean)) {
+    await prisma.clientMember.create({
+      data: { userId: u.id, clientId: clientNexus.id, role: ClientRole.CLIENT_MEMBER },
+    });
+  }
+
+  // Centraxis Core (Project 1) Memberships
+  if (rachel) {
+    await prisma.projectMember.create({
+      data: { userId: rachel.id, projectId: coreProject.id, role: ProjectRole.PROJECT_LEAD },
+    });
+  }
+  for (const u of [liam, sophia, ethan, olivia].filter(Boolean)) {
+    await prisma.projectMember.create({
+      data: { userId: u.id, projectId: coreProject.id, role: ProjectRole.MEMBER },
+    });
+  }
+  if (emily) {
+    await prisma.projectMember.create({
+      data: { userId: emily.id, projectId: coreProject.id, role: ProjectRole.VIEWER },
+    });
+  }
+
+  // Centraxis Mobile App (Project 2) Memberships
+  if (marcus) {
+    await prisma.projectMember.create({
+      data: { userId: marcus.id, projectId: mobileProject.id, role: ProjectRole.PROJECT_LEAD },
+    });
+  }
+  for (const u of [lucas, aria, olivia].filter(Boolean)) {
+    await prisma.projectMember.create({
+      data: { userId: u.id, projectId: mobileProject.id, role: ProjectRole.MEMBER },
+    });
+  }
+  if (david) {
+    await prisma.projectMember.create({
+      data: { userId: david.id, projectId: mobileProject.id, role: ProjectRole.VIEWER },
+    });
   }
 
   // 6. Seed Sprints for CTX Project
