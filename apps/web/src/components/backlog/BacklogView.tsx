@@ -13,10 +13,16 @@ import {
   Calendar,
 } from "lucide-react";
 import { api } from "~/trpc/react";
+import { InlineCreateRow } from "./inline-create-row";
 
 interface BacklogViewProps {
   projectId: string;
   onOpenAiModal: () => void;
+  onCreateItem?: (defaults?: {
+    sprintId?: string | null;
+    parentId?: string | null;
+    type?: "EPIC" | "FEATURE" | "STORY" | "TASK" | "BUG";
+  }) => void;
 }
 
 const TYPE_BADGES: Record<string, string> = {
@@ -27,7 +33,11 @@ const TYPE_BADGES: Record<string, string> = {
   BUG: "bg-red-100 text-red-800 border-red-200",
 };
 
-export function BacklogView({ projectId, onOpenAiModal }: BacklogViewProps) {
+export function BacklogView({
+  projectId,
+  onOpenAiModal,
+  onCreateItem,
+}: BacklogViewProps) {
   const { data: tree, isLoading } = api.backlog.getTree.useQuery({
     projectId,
   });
@@ -72,7 +82,17 @@ export function BacklogView({ projectId, onOpenAiModal }: BacklogViewProps) {
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2.5">
+          {onCreateItem && (
+            <button
+              onClick={() => onCreateItem()}
+              className="flex items-center space-x-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 active:scale-95"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Create Item</span>
+            </button>
+          )}
+
           <button
             onClick={onOpenAiModal}
             className="flex items-center space-x-1.5 rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"
@@ -189,6 +209,19 @@ export function BacklogView({ projectId, onOpenAiModal }: BacklogViewProps) {
                     ) : (
                       <span className="text-xs text-slate-400">Unassigned</span>
                     )}
+
+                    {onCreateItem && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onCreateItem({ parentId: item.id, type: "TASK" });
+                        }}
+                        title="Add child subtask"
+                        className="rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-blue-600 transition"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -245,6 +278,11 @@ export function BacklogView({ projectId, onOpenAiModal }: BacklogViewProps) {
               </div>
             ))
           )}
+        </div>
+
+        {/* Bottom Quick-Add Row */}
+        <div className="border-t border-slate-200 bg-slate-50/80 p-3.5">
+          <InlineCreateRow projectId={projectId} />
         </div>
       </div>
     </div>

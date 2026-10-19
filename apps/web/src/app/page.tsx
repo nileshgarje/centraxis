@@ -7,6 +7,7 @@ import { BacklogView } from "~/components/backlog/BacklogView";
 import { TeamsView } from "~/components/teams/TeamsView";
 import { SprintMetrics } from "~/components/metrics/SprintMetrics";
 import { AiStoryModal } from "~/components/ai-modal/AiStoryModal";
+import { CreateItemDialog } from "~/components/work-items/create-item-dialog";
 import { api } from "~/trpc/react";
 
 export default function CentraxisApp() {
@@ -18,6 +19,12 @@ export default function CentraxisApp() {
     "board" | "backlog" | "teams" | "metrics"
   >("board");
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [isCreateItemOpen, setIsCreateItemOpen] = useState(false);
+  const [createItemDefaults, setCreateItemDefaults] = useState<{
+    sprintId?: string | null;
+    parentId?: string | null;
+    type?: "EPIC" | "FEATURE" | "STORY" | "TASK" | "BUG";
+  }>({});
 
   // Automatically select the first project once loaded
   useEffect(() => {
@@ -30,6 +37,11 @@ export default function CentraxisApp() {
     { projectId: selectedProjectId },
     { enabled: !!selectedProjectId },
   );
+
+  const handleOpenCreateItem = (defaults?: typeof createItemDefaults) => {
+    setCreateItemDefaults(defaults ?? { sprintId: activeSprint?.id });
+    setIsCreateItemOpen(true);
+  };
 
   if (projectsLoading) {
     return (
@@ -65,18 +77,23 @@ export default function CentraxisApp() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         onOpenAiModal={() => setIsAiModalOpen(true)}
+        onCreateItem={() => handleOpenCreateItem()}
       />
 
       {/* Main Workspace Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8">
         {activeTab === "board" && (
-          <KanbanBoard projectId={selectedProjectId} />
+          <KanbanBoard
+            projectId={selectedProjectId}
+            onCreateItem={handleOpenCreateItem}
+          />
         )}
 
         {activeTab === "backlog" && (
           <BacklogView
             projectId={selectedProjectId}
             onOpenAiModal={() => setIsAiModalOpen(true)}
+            onCreateItem={handleOpenCreateItem}
           />
         )}
 
@@ -88,6 +105,16 @@ export default function CentraxisApp() {
           <SprintMetrics projectId={selectedProjectId} />
         )}
       </main>
+
+      {/* Create Work Item Modal Dialog */}
+      <CreateItemDialog
+        isOpen={isCreateItemOpen}
+        onClose={() => setIsCreateItemOpen(false)}
+        projectId={selectedProjectId}
+        defaultSprintId={createItemDefaults.sprintId ?? activeSprint?.id}
+        defaultParentId={createItemDefaults.parentId}
+        defaultType={createItemDefaults.type}
+      />
 
       {/* Global AI Story Agent Modal Dialog (Cmd+K) */}
       <AiStoryModal

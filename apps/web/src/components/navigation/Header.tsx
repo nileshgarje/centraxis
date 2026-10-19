@@ -11,6 +11,7 @@ interface HeaderProps {
   activeTab: "board" | "backlog" | "teams" | "metrics";
   onTabChange: (tab: "board" | "backlog" | "teams" | "metrics") => void;
   onOpenAiModal: () => void;
+  onCreateItem: () => void;
 }
 
 export function Header({
@@ -21,6 +22,7 @@ export function Header({
   activeTab,
   onTabChange,
   onOpenAiModal,
+  onCreateItem,
 }: HeaderProps) {
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
 
@@ -123,8 +125,16 @@ export function Header({
           </button>
         </nav>
 
-        {/* AI Action & User Profile */}
-        <div className="flex items-center space-x-4">
+        {/* Create Item, AI Action & User Profile */}
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={onCreateItem}
+            className="flex items-center space-x-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 active:scale-95"
+          >
+            <span className="text-sm font-bold leading-none">+</span>
+            <span>Create</span>
+          </button>
+
           <button
             onClick={onOpenAiModal}
             className="group flex items-center space-x-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-md shadow-blue-500/20 transition hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg hover:shadow-blue-500/30 active:scale-95"

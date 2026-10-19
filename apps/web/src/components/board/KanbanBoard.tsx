@@ -86,7 +86,13 @@ const PRIORITY_STYLES: Record<string, string> = {
   LOW: "bg-slate-50 text-slate-700 border-slate-200",
 };
 
-export function KanbanBoard({ projectId }: { projectId: string }) {
+export function KanbanBoard({
+  projectId,
+  onCreateItem,
+}: {
+  projectId: string;
+  onCreateItem?: (defaults?: { sprintId?: string | null }) => void;
+}) {
   const utils = api.useUtils();
   const { data: boardData, isLoading, error: queryError } =
     api.board.getBoardData.useQuery({ projectId });
@@ -238,6 +244,16 @@ export function KanbanBoard({ projectId }: { projectId: string }) {
                 />
               </div>
             </div>
+
+            {onCreateItem && (
+              <button
+                onClick={() => onCreateItem({ sprintId: sprint?.id })}
+                className="flex items-center space-x-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 active:scale-95"
+              >
+                <span className="text-sm font-bold leading-none">+</span>
+                <span>Add Card</span>
+              </button>
+            )}
           </div>
         )}
       </div>
