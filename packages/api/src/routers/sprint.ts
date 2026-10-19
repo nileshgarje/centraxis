@@ -101,8 +101,8 @@ export const sprintRouter = createTRPCRouter({
         projectId: z.string(),
         name: z.string().min(2, "Sprint name must be at least 2 characters"),
         goal: z.string().optional(),
-        startDate: z.date().optional(),
-        endDate: z.date().optional(),
+        startDate: z.coerce.date().optional(),
+        endDate: z.coerce.date().optional(),
         teamId: z.string().optional(),
       }),
     )
@@ -117,6 +117,77 @@ export const sprintRouter = createTRPCRouter({
           teamId: input.teamId,
           status: SprintStatus.PLANNED,
         },
+      });
+    }),
+
+  /**
+   * Alias for create to support createSprint caller
+   */
+  createSprint: scrumMasterProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        name: z.string().min(2, "Sprint name must be at least 2 characters"),
+        goal: z.string().optional(),
+        startDate: z.coerce.date().optional(),
+        endDate: z.coerce.date().optional(),
+        teamId: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.sprint.create({
+        data: {
+          name: input.name,
+          goal: input.goal,
+          startDate: input.startDate,
+          endDate: input.endDate,
+          projectId: input.projectId,
+          teamId: input.teamId,
+          status: SprintStatus.PLANNED,
+        },
+      });
+    }),
+
+  /**
+   * Update sprint details
+   */
+  updateSprint: scrumMasterProcedure
+    .input(
+      z.object({
+        sprintId: z.string(),
+        name: z.string().min(2, "Sprint name must be at least 2 characters").optional(),
+        goal: z.string().nullable().optional(),
+        startDate: z.coerce.date().nullable().optional(),
+        endDate: z.coerce.date().nullable().optional(),
+        teamId: z.string().nullable().optional(),
+        status: z.nativeEnum(SprintStatus).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { sprintId, ...data } = input;
+      return ctx.db.sprint.update({
+        where: { id: sprintId },
+        data,
+      });
+    }),
+
+  update: scrumMasterProcedure
+    .input(
+      z.object({
+        sprintId: z.string(),
+        name: z.string().min(2, "Sprint name must be at least 2 characters").optional(),
+        goal: z.string().nullable().optional(),
+        startDate: z.coerce.date().nullable().optional(),
+        endDate: z.coerce.date().nullable().optional(),
+        teamId: z.string().nullable().optional(),
+        status: z.nativeEnum(SprintStatus).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { sprintId, ...data } = input;
+      return ctx.db.sprint.update({
+        where: { id: sprintId },
+        data,
       });
     }),
 
