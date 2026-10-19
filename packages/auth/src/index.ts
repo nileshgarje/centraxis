@@ -29,6 +29,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           scope: "openid profile email User.Read",
         },
       },
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name || `${profile.given_name ?? ""} ${profile.family_name ?? ""}`.trim() || profile.email,
+          email: profile.email || profile.preferred_username,
+          image: profile.picture ?? null,
+          role: TeamRole.DEVELOPER,
+        };
+      },
     }),
 
     // Local Testing Bypass via Credentials (Restricted to Development Mode)
@@ -88,6 +97,48 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       : []),
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === "microsoft-entra-id" && user.email) {
+        // Restrict auto-provisioning to allowed tenant domains if specified
+        const allowedDomains = process.env.ALLOWED_EMAIL_DOMAINS
+          ? process.env.ALLOWED_EMAIL_DOMAINS.split(",").map((d) => d.trim().toLowerCase())
+          : ["centvis.com"]; // Default allowed domain
+
+        const userDomain = user.email.split("@")[1]?.toLowerCase();
+        if (allowedDomains.length > 0 && userDomain && !allowedDomains.includes(userDomain)) {
+          const pendingInvite = await db.invitation.findFirst({
+            where: {
+              email: user.email.toLowerCase(),
+              status: "PENDING",
+            },
+          });
+          if (!pendingInvite) {
+            console.warn(`[Auth] Blocked Entra ID signin from uninvited external domain: ${userDomain}`);
+            return false;
+          }
+        }
+
+        // Assign to default Organization if user has no orgId
+        const defaultOrg = await db.organization.findFirst({
+          orderBy: { createdAt: "asc" },
+        });
+
+        if (defaultOrg) {
+          const dbUser = await db.user.findUnique({
+            where: { email: user.email.toLowerCase() },
+          });
+
+          if (dbUser && !dbUser.organizationId) {
+            await db.user.update({
+              where: { id: dbUser.id },
+              data: { organizationId: defaultOrg.id },
+            });
+          }
+        }
+      }
+      return true;
+    },
+
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;

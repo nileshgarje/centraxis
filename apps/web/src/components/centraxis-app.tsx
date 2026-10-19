@@ -138,6 +138,8 @@ export function CentraxisApp({
       id: p.id,
       key: p.key,
       name: p.name,
+      clientId: p.clientId ?? null,
+      client: p.client ?? null,
     })) ?? [];
 
   return (

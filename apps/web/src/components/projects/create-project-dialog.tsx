@@ -51,7 +51,13 @@ export function CreateProjectDialog({
   const [isKeyManuallyEdited, setIsKeyManuallyEdited] = useState(false);
   const [description, setDescription] = useState("");
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Query clients for client assignment
+  const { data: clients } = api.clients.list.useQuery(undefined, {
+    enabled: isOpen,
+  });
 
   // Query existing teams for multi-select binding
   const { data: teams, isLoading: teamsLoading } = api.team.list.useQuery(
@@ -79,6 +85,7 @@ export function CreateProjectDialog({
       setIsKeyManuallyEdited(false);
       setDescription("");
       setSelectedTeamIds([]);
+      setSelectedClientId("");
       setErrorMessage(null);
     }
   }, [isOpen]);
@@ -107,6 +114,7 @@ export function CreateProjectDialog({
         utils.project.list.invalidate(),
         utils.project.listTeams.invalidate(),
         utils.team.list.invalidate(),
+        utils.clients.list.invalidate(),
       ]);
       onClose();
       if (onProjectCreated && created?.id) {
@@ -139,6 +147,7 @@ export function CreateProjectDialog({
     createMutation.mutate({
       name: name.trim(),
       key: cleanKey,
+      clientId: selectedClientId || undefined,
       description: description.trim() || undefined,
       teamIds: selectedTeamIds.length > 0 ? selectedTeamIds : undefined,
     });
@@ -203,6 +212,28 @@ export function CreateProjectDialog({
               autoFocus
               className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
+          </div>
+
+          {/* Client Tenant Selection */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-semibold text-slate-700">
+                Client Tenant
+              </label>
+              <span className="text-[11px] text-slate-400">Optional</span>
+            </div>
+            <select
+              value={selectedClientId}
+              onChange={(e) => setSelectedClientId(e.target.value)}
+              className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-medium text-slate-900 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            >
+              <option value="">-- No Client (Internal Project) --</option>
+              {clients?.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.slug})
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Project Key */}

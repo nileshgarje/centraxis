@@ -16,6 +16,7 @@ export const projectRouter = createTRPCRouter({
     return ctx.db.project.findMany({
       where: orgId ? { organizationId: orgId } : undefined,
       include: {
+        client: true,
         projectTeams: {
           include: {
             team: true,
@@ -45,6 +46,7 @@ export const projectRouter = createTRPCRouter({
       const project = await ctx.db.project.findUnique({
         where: { id: input.id },
         include: {
+          client: true,
           projectTeams: {
             include: {
               team: {
@@ -231,6 +233,7 @@ export const projectRouter = createTRPCRouter({
           .toUpperCase(),
         description: z.string().optional(),
         defaultSprintDurationDays: z.number().int().min(7).max(30).default(14),
+        clientId: z.string().optional(),
         teamIds: z.array(z.string()).optional(),
       }),
     )
@@ -268,6 +271,7 @@ export const projectRouter = createTRPCRouter({
           description: input.description,
           defaultSprintDurationDays: input.defaultSprintDurationDays,
           organizationId: orgId,
+          clientId: input.clientId || null,
           projectTeams: input.teamIds
             ? {
                 create: input.teamIds.map((teamId) => ({
@@ -293,6 +297,7 @@ export const projectRouter = createTRPCRouter({
           .toUpperCase(),
         description: z.string().optional(),
         defaultSprintDurationDays: z.number().int().min(7).max(30).default(14),
+        clientId: z.string().optional(),
         teamIds: z.array(z.string()).optional(),
       }),
     )
@@ -330,6 +335,7 @@ export const projectRouter = createTRPCRouter({
           description: input.description,
           defaultSprintDurationDays: input.defaultSprintDurationDays,
           organizationId: orgId,
+          clientId: input.clientId || null,
           projectTeams: input.teamIds
             ? {
                 create: input.teamIds.map((teamId) => ({

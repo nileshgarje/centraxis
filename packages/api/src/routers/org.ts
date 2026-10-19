@@ -6,6 +6,7 @@ import {
   protectedProcedure,
   scrumMasterProcedure,
 } from "../trpc";
+import { sendEmail, renderUserInvitationEmail } from "../services/email";
 
 export const orgRouter = createTRPCRouter({
   /**
@@ -104,8 +105,18 @@ export const orgRouter = createTRPCRouter({
         });
       }
 
+      const org = await ctx.db.organization.findUnique({
+        where: { id: orgId },
+        select: { name: true },
+      });
+      const inviter = await ctx.db.user.findUnique({
+        where: { id: ctx.session.user.id },
+        select: { name: true },
+      });
+
       const results = [];
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+      const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3001";
 
       for (const email of input.emails) {
         const normalizedEmail = email.toLowerCase().trim();
@@ -165,6 +176,22 @@ export const orgRouter = createTRPCRouter({
           },
         });
 
+        // Send invitation email
+        try {
+          await sendEmail({
+            to: normalizedEmail,
+            subject: `You've been invited to join ${org?.name || "Centraxis"}`,
+            html: renderUserInvitationEmail({
+              orgName: org?.name || "Centraxis",
+              inviterName: inviter?.name || undefined,
+              role: input.role,
+              acceptUrl: `${baseUrl}/invitations/${invitation.id}`,
+            }),
+          });
+        } catch (e) {
+          console.error("Failed to send invitation email:", e);
+        }
+
         results.push({
           email: normalizedEmail,
           invitationId: invitation.id,
@@ -211,13 +238,35 @@ export const orgRouter = createTRPCRouter({
     .input(z.object({ invitationId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      return ctx.db.invitation.update({
+      const updated = await ctx.db.invitation.update({
         where: { id: input.invitationId },
         data: {
           expiresAt,
           status: "PENDING",
         },
+        include: {
+          organization: { select: { name: true } },
+          invitedBy: { select: { name: true } },
+        },
       });
+
+      const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3001";
+      try {
+        await sendEmail({
+          to: updated.email,
+          subject: `Reminder: You've been invited to join ${updated.organization.name}`,
+          html: renderUserInvitationEmail({
+            orgName: updated.organization.name,
+            inviterName: updated.invitedBy?.name || undefined,
+            role: updated.role,
+            acceptUrl: `${baseUrl}/invitations/${updated.id}`,
+          }),
+        });
+      } catch (e) {
+        console.error("Failed to resend invitation email:", e);
+      }
+
+      return updated;
     }),
 
   /**

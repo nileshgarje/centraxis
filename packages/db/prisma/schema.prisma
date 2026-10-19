@@ -61,7 +61,24 @@ model Organization {
   users       User[]
   teams       Team[]
   projects    Project[]
+  clients     Client[]
   invitations Invitation[]
+}
+
+model Client {
+  id             String       @id @default(cuid())
+  name           String
+  slug           String       // e.g. "acme-corp"
+  logo           String?
+  contactEmail   String?
+  orgId          String
+  organization   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  projects       Project[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([orgId, slug])
+  @@index([orgId])
 }
 
 model User {
@@ -198,11 +215,15 @@ model Project {
   organizationId            String
   organization              Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
+  clientId                  String?
+  client                    Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
   projectTeams              ProjectTeam[]
   sprints                   Sprint[]
   workItems                 WorkItem[]
 
   @@index([organizationId])
+  @@index([clientId])
 }
 
 model ProjectTeam {

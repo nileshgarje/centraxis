@@ -13,6 +13,7 @@ async function main() {
   await prisma.sprint.deleteMany();
   await prisma.projectTeam.deleteMany();
   await prisma.project.deleteMany();
+  await prisma.client.deleteMany();
   await prisma.teamMembership.deleteMany();
   await prisma.team.deleteMany();
   await prisma.session.deleteMany();
@@ -26,6 +27,26 @@ async function main() {
     data: {
       name: "Centvis",
       slug: "centvis",
+    },
+  });
+
+  // 1b. Seed 2 Clients under "Centvis"
+  console.log("Creating 2 Clients (Multi-Client Architecture)...");
+  const clientApex = await prisma.client.create({
+    data: {
+      name: "Client Apex",
+      slug: "client-apex",
+      contactEmail: "apex@centvis.com",
+      orgId: org.id,
+    },
+  });
+
+  const clientNexus = await prisma.client.create({
+    data: {
+      name: "Client Nexus",
+      slug: "client-nexus",
+      contactEmail: "nexus@centvis.com",
+      orgId: org.id,
     },
   });
 
@@ -56,7 +77,7 @@ async function main() {
   });
 
   // 3. Seed 2 Projects
-  console.log("Creating 2 Projects...");
+  console.log("Creating 2 Projects associated with Clients...");
   const coreProject = await prisma.project.create({
     data: {
       name: "Centraxis Core",
@@ -64,6 +85,7 @@ async function main() {
       description: "Next-gen multi-project agile management platform",
       defaultSprintDurationDays: 14,
       organizationId: org.id,
+      clientId: clientApex.id,
     },
   });
 
@@ -74,6 +96,7 @@ async function main() {
       description: "Companion iOS/Android application for sprint planning and review",
       defaultSprintDurationDays: 14,
       organizationId: org.id,
+      clientId: clientNexus.id,
     },
   });
 

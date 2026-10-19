@@ -8,8 +8,11 @@ import { boardRouter } from "./routers/board";
 import { aiRouter } from "./routers/ai";
 import { metricsRouter } from "./routers/metrics";
 
+import { clientRouter } from "./routers/client";
+
 export const appRouter = createTRPCRouter({
   org: orgRouter,
+  clients: clientRouter,
   project: projectRouter,
   team: teamRouter,
   backlog: backlogRouter,
