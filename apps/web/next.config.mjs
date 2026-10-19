@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: [
+    "@centraxis/ai",
     "@centraxis/api",
     "@centraxis/auth",
     "@centraxis/db",
