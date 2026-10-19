@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: centraxis-postgres-prod
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-centraxis}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-centraxis_password}
+      POSTGRES_DB: ${POSTGRES_DB:-centraxis_db}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-centraxis} -d ${POSTGRES_DB:-centraxis_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - centraxis_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: centraxis-redis-prod
+    restart: always
+    volumes:
+      - redis_prod_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - centraxis_network
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: centraxis-web-prod
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-centraxis}:${POSTGRES_PASSWORD:-centraxis_password}@postgres:5432/${POSTGRES_DB:-centraxis_db}?schema=public
+      REDIS_URL: redis://redis:6379
+      AUTH_SECRET: ${AUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      AZURE_AD_CLIENT_ID: ${AZURE_AD_CLIENT_ID}
+      AZURE_AD_CLIENT_SECRET: ${AZURE_AD_CLIENT_SECRET}
+      AZURE_AD_TENANT_ID: ${AZURE_AD_TENANT_ID}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - centraxis_network
+
+volumes:
+  postgres_prod_data:
+    driver: local
+  redis_prod_data:
+    driver: local
+
+networks:
+  centraxis_network:
+    driver: bridge

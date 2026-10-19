@@ -8,8 +8,8 @@ interface HeaderProps {
   selectedProjectId: string;
   onSelectProject: (id: string) => void;
   activeSprintName?: string;
-  activeTab: "board" | "backlog" | "teams";
-  onTabChange: (tab: "board" | "backlog" | "teams") => void;
+  activeTab: "board" | "backlog" | "teams" | "metrics";
+  onTabChange: (tab: "board" | "backlog" | "teams" | "metrics") => void;
   onOpenAiModal: () => void;
 }
 
@@ -109,6 +109,17 @@ export function Header({
           >
             <Users className="h-3.5 w-3.5" />
             <span>Squads & Roles</span>
+          </button>
+          <button
+            onClick={() => onTabChange("metrics")}
+            className={`flex items-center space-x-2 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+              activeTab === "metrics"
+                ? "bg-white text-blue-700 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>Sprint Burndown</span>
           </button>
         </nav>
 

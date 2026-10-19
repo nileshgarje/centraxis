@@ -4,6 +4,7 @@ import { backlogRouter } from "./routers/backlog";
 import { sprintRouter } from "./routers/sprint";
 import { boardRouter } from "./routers/board";
 import { aiRouter } from "./routers/ai";
+import { metricsRouter } from "./routers/metrics";
 
 export const appRouter = createTRPCRouter({
   project: projectRouter,
@@ -11,6 +12,7 @@ export const appRouter = createTRPCRouter({
   sprint: sprintRouter,
   board: boardRouter,
   ai: aiRouter,
+  metrics: metricsRouter,
 });
 
 export type AppRouter = typeof appRouter;

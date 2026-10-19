@@ -5,6 +5,7 @@ import { Header } from "~/components/navigation/Header";
 import { KanbanBoard } from "~/components/board/KanbanBoard";
 import { BacklogView } from "~/components/backlog/BacklogView";
 import { TeamsView } from "~/components/teams/TeamsView";
+import { SprintMetrics } from "~/components/metrics/SprintMetrics";
 import { AiStoryModal } from "~/components/ai-modal/AiStoryModal";
 import { api } from "~/trpc/react";
 
@@ -13,9 +14,9 @@ export default function CentraxisApp() {
     api.project.list.useQuery();
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<"board" | "backlog" | "teams">(
-    "board",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "board" | "backlog" | "teams" | "metrics"
+  >("board");
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   // Automatically select the first project once loaded
@@ -81,6 +82,10 @@ export default function CentraxisApp() {
 
         {activeTab === "teams" && (
           <TeamsView projectId={selectedProjectId} />
+        )}
+
+        {activeTab === "metrics" && (
+          <SprintMetrics projectId={selectedProjectId} />
         )}
       </main>
 
