@@ -1,9 +1,11 @@
 import { PrismaClient, TeamRole, SprintStatus, WorkItemType, WorkItemStatus, WorkItemPriority } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log("🌱 Starting Centraxis database seed...");
+  const defaultHashedPassword = await bcrypt.hash("password123", 10);
 
   // Clean existing records in reverse dependency order
   await prisma.aiStoryLog.deleteMany();
@@ -287,6 +289,7 @@ async function main() {
       data: {
         name: spec.name,
         email: spec.email,
+        password: defaultHashedPassword,
         emailVerified: new Date(),
         image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(spec.name)}`,
         role: spec.orgRole,

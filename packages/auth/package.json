@@ -17,12 +17,14 @@
     "@auth/prisma-adapter": "^2.7.4",
     "@centraxis/db": "workspace:*",
     "@centraxis/env": "workspace:*",
+    "bcryptjs": "^3.0.2",
     "next": "^15.1.7",
     "next-auth": "5.0.0-beta.25"
   },
   "devDependencies": {
     "@centraxis/eslint-config": "workspace:*",
     "@centraxis/typescript-config": "workspace:*",
+    "@types/bcryptjs": "^2.4.6",
     "typescript": "^5.8.2"
   }
 }
