@@ -5,18 +5,13 @@ import {
   Layers,
   ChevronDown,
   ChevronRight,
-  Plus,
-  Sparkles,
   Calendar,
   Zap,
   Play,
   CheckCircle2,
-  Edit3,
   GripVertical,
   Users,
   AlertTriangle,
-  MoveRight,
-  Loader2,
 } from "lucide-react";
 import {
   DragDropContext,
@@ -32,6 +27,13 @@ import {
 } from "../sprints/create-sprint-dialog";
 import { WorkItemDrawer } from "../work-items/work-item-drawer";
 import { CompleteSprintDialog } from "../sprints/complete-sprint-dialog";
+import {
+  Button,
+  Badge,
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@centraxis/ui";
 
 interface BacklogViewProps {
   projectId: string;
@@ -44,20 +46,33 @@ interface BacklogViewProps {
   onCreateSprint?: () => void;
 }
 
-const TYPE_BADGES: Record<string, string> = {
-  EPIC: "bg-purple-100 text-purple-800 border-purple-200",
-  FEATURE: "bg-indigo-100 text-indigo-800 border-indigo-200",
-  STORY: "bg-blue-100 text-blue-800 border-blue-200",
-  TASK: "bg-slate-100 text-slate-800 border-slate-200",
-  BUG: "bg-red-100 text-red-800 border-red-200",
-};
+function getTypeBadgeVariant(type: string): "default" | "secondary" | "outline" | "status-backlog" | "status-todo" | "status-in-progress" | "status-in-review" | "status-done" {
+  switch (type) {
+    case "EPIC":
+      return "status-in-review";
+    case "FEATURE":
+      return "status-todo";
+    case "STORY":
+      return "status-todo";
+    case "BUG":
+      return "destructive" as any;
+    default:
+      return "secondary";
+  }
+}
 
-const PRIORITY_BADGES: Record<string, string> = {
-  URGENT: "text-red-700 bg-red-50 border-red-200",
-  HIGH: "text-orange-700 bg-orange-50 border-orange-200",
-  MEDIUM: "text-blue-700 bg-blue-50 border-blue-200",
-  LOW: "text-slate-600 bg-slate-50 border-slate-200",
-};
+function getPriorityBadgeVariant(priority: string): "default" | "secondary" | "outline" | "priority-low" | "priority-medium" | "priority-high" | "priority-urgent" {
+  switch (priority) {
+    case "URGENT":
+      return "priority-urgent";
+    case "HIGH":
+      return "priority-high";
+    case "MEDIUM":
+      return "priority-medium";
+    default:
+      return "priority-low";
+  }
+}
 
 export function BacklogView({
   projectId,
@@ -67,35 +82,13 @@ export function BacklogView({
 }: BacklogViewProps) {
   const utils = api.useUtils();
 
-  // Queries
-  const { data: tree, isLoading: treeLoading } = api.backlog.getTree.useQuery({
-    projectId,
-  });
-
-  const { data: sprints, isLoading: sprintsLoading } =
-    api.sprint.list.useQuery({
-      projectId,
-    });
-
-  const { data: velocityData } = api.metrics.getTeamVelocity.useQuery(
-    { projectId },
-    { enabled: !!projectId },
-  );
-
-  const recommendedVelocity = velocityData?.averageVelocity ?? 25;
-
-  // Local state for interactive UI
   const [isMounted, setIsMounted] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
-  const [collapsedSections, setCollapsedSections] = useState<
-    Record<string, boolean>
-  >({});
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  // Sprint Dialog state
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isSprintDialogOpen, setIsSprintDialogOpen] = useState(false);
   const [sprintToEdit, setSprintToEdit] = useState<SprintData | null>(null);
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [sprintToComplete, setSprintToComplete] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -103,15 +96,25 @@ export function BacklogView({
     setIsMounted(true);
   }, []);
 
+  // Fetch hierarchical tree
+  const { data: tree, isLoading: treeLoading } = api.backlog.getTree.useQuery({
+    projectId,
+  });
+
+  // Fetch sprints
+  const { data: sprints, isLoading: sprintsLoading } = api.sprint.list.useQuery({
+    projectId,
+  });
+
+  // Recommended velocity
+  const recommendedVelocity = 28;
+
   const toggleExpandItem = (id: string) => {
     setExpandedItems((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const toggleCollapseSection = (sectionKey: string) => {
-    setCollapsedSections((prev) => ({
-      ...prev,
-      [sectionKey]: !prev[sectionKey],
-    }));
+  const toggleCollapseSection = (key: string) => {
+    setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleOpenCreateSprint = () => {
@@ -123,19 +126,6 @@ export function BacklogView({
     }
   };
 
-  const handleOpenEditSprint = (sprint: NonNullable<typeof sprints>[number]) => {
-    setSprintToEdit({
-      id: sprint.id,
-      name: sprint.name,
-      goal: sprint.goal,
-      startDate: sprint.startDate,
-      endDate: sprint.endDate,
-      teamId: sprint.teamId,
-      status: sprint.status,
-    });
-    setIsSprintDialogOpen(true);
-  };
-
   // Mutations
   const updateItemMutation = api.backlog.updateItem.useMutation({
     onSuccess: async () => {
@@ -143,6 +133,7 @@ export function BacklogView({
       await Promise.all([
         utils.backlog.getTree.invalidate({ projectId }),
         utils.sprint.list.invalidate({ projectId }),
+        utils.board.getBoardData.invalidate(),
       ]);
     },
     onError: (err) => {
@@ -157,6 +148,7 @@ export function BacklogView({
       await Promise.all([
         utils.sprint.list.invalidate({ projectId }),
         utils.sprint.getActive.invalidate({ projectId }),
+        utils.board.getBoardData.invalidate(),
       ]);
     },
     onError: (err) => {
@@ -164,21 +156,6 @@ export function BacklogView({
     },
   });
 
-  const completeSprintMutation = api.sprint.complete.useMutation({
-    onSuccess: async () => {
-      setErrorMessage(null);
-      await Promise.all([
-        utils.sprint.list.invalidate({ projectId }),
-        utils.sprint.getActive.invalidate({ projectId }),
-        utils.backlog.getTree.invalidate({ projectId }),
-      ]);
-    },
-    onError: (err) => {
-      setErrorMessage(err.message || "Failed to complete sprint.");
-    },
-  });
-
-  // Drag and Drop Handler between Sprints and Backlog
   const handleDragEnd = (result: DropResult) => {
     const { source, destination, draggableId } = result;
 
@@ -193,7 +170,6 @@ export function BacklogView({
     const targetSprintId =
       destination.droppableId === "BACKLOG" ? null : destination.droppableId;
 
-    // Mutate work item target sprint
     updateItemMutation.mutate({
       id: draggableId,
       sprintId: targetSprintId,
@@ -249,12 +225,10 @@ export function BacklogView({
 
   if (treeLoading || sprintsLoading) {
     return (
-      <div className="flex h-96 items-center justify-center">
-        <div className="flex flex-col items-center space-y-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-          <p className="text-sm font-medium text-slate-500">
-            Loading backlog planning & sprints...
-          </p>
+      <div className="flex h-72 items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-xs text-muted-foreground">Loading backlog & sprints...</p>
         </div>
       </div>
     );
@@ -262,67 +236,43 @@ export function BacklogView({
 
   return (
     <div className="space-y-6">
-      {/* Backlog Planning Toolbar */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center space-x-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
-            <Layers className="h-5 w-5" />
+      {/* 1. Minimal Page Header directly on canvas background */}
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold tracking-tight text-foreground">
+              Backlog
+            </h1>
+            <span className="rounded-full bg-muted border border-border px-2.5 py-0.5 text-xs font-mono font-medium text-muted-foreground">
+              {sprints?.length ?? 0} sprints
+            </span>
           </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h2 className="font-bold text-slate-900 text-lg">Backlog Planning</h2>
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
-                {sprints?.length ?? 0} Sprints
-              </span>
-            </div>
-            <p className="text-xs text-slate-500">
-              Drag and drop items between sprints and backlog with real-time capacity indicators
-            </p>
-          </div>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Backlog Planning & Sprint Backlog
+          </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Create Sprint Button */}
-          <button
-            onClick={handleOpenCreateSprint}
-            className="flex items-center space-x-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-95"
-          >
-            <Calendar className="h-4 w-4 text-blue-600" />
-            <span>+ Create Sprint</span>
-          </button>
-
-          {/* Create Item Button */}
-          {onCreateItem && (
-            <button
-              onClick={() => onCreateItem()}
-              className="flex items-center space-x-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 active:scale-95"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Create Item</span>
-            </button>
-          )}
-
-          {/* AI Story Agent Button */}
-          <button
-            onClick={onOpenAiModal}
-            className="flex items-center space-x-1.5 rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"
-          >
-            <Sparkles className="h-4 w-4" />
-            <span>Generate with AI</span>
-          </button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleOpenCreateSprint}
+          className="gap-1.5 h-8 text-xs shadow-xs"
+        >
+          <Calendar className="h-3.5 w-3.5" />
+          <span>Create Sprint</span>
+        </Button>
       </div>
 
       {/* Error Alert */}
       {errorMessage && (
-        <div className="flex items-center justify-between rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-xs text-red-700 font-medium">
-          <div className="flex items-center space-x-2">
-            <AlertTriangle className="h-4 w-4 text-red-600 shrink-0" />
+        <div className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-2.5 text-xs text-destructive font-medium">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
             <span>{errorMessage}</span>
           </div>
           <button
             onClick={() => setErrorMessage(null)}
-            className="text-red-500 hover:text-red-700 font-bold ml-4"
+            className="text-destructive hover:underline font-semibold ml-4"
           >
             Dismiss
           </button>
@@ -342,8 +292,7 @@ export function BacklogView({
                 (sum, item) =>
                   sum +
                   (item.storyPoints ?? 0) +
-                  (item.children?.reduce((c, ch) => c + (ch.storyPoints ?? 0), 0) ??
-                    0),
+                  (item.children?.reduce((c, ch) => c + (ch.storyPoints ?? 0), 0) ?? 0),
                 0,
               );
               const isOverCapacity = committedPoints > recommendedVelocity;
@@ -371,15 +320,15 @@ export function BacklogView({
                       ? "active-sprint-container"
                       : `sprint-container-${sprint.id}`
                   }
-                  className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden transition-all"
+                  className="rounded-lg border border-border bg-card overflow-hidden shadow-xs"
                 >
                   {/* Sprint Container Header */}
-                  <div className="border-b border-slate-200 bg-slate-50/80 px-4 py-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    {/* Left: Title, Status, Dates, Team */}
-                    <div className="flex items-center space-x-3">
+                  <div className="border-b border-border bg-muted/30 px-3.5 py-2.5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    {/* Left: Chevron + Sprint Name + Date Range */}
+                    <div className="flex items-center gap-2.5">
                       <button
                         onClick={() => toggleCollapseSection(sprint.id)}
-                        className="rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition"
+                        className="rounded p-0.5 text-muted-foreground hover:text-foreground transition"
                       >
                         {isCollapsed ? (
                           <ChevronRight className="h-4 w-4" />
@@ -388,146 +337,104 @@ export function BacklogView({
                         )}
                       </button>
 
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="font-bold text-sm text-slate-900">
-                            {sprint.name}
-                          </h3>
+                      <h3 className="font-semibold text-sm text-foreground">
+                        {sprint.name}
+                      </h3>
 
-                          {/* Status Badge */}
-                          <span
-                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                              sprint.status === "ACTIVE"
-                                ? "bg-emerald-100 text-emerald-800"
-                                : sprint.status === "PLANNED"
-                                  ? "bg-blue-100 text-blue-800"
-                                  : "bg-slate-100 text-slate-600"
-                            }`}
-                          >
-                            {sprint.status}
+                      <Badge
+                        variant={
+                          sprint.status === "ACTIVE"
+                            ? "status-done"
+                            : sprint.status === "PLANNED"
+                              ? "status-todo"
+                              : "status-backlog"
+                        }
+                        className="text-[10px] font-medium uppercase tracking-wider py-0 px-1.5"
+                      >
+                        {sprint.status}
+                      </Badge>
+
+                      {sprint.team && (
+                        <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <Users className="h-3 w-3" />
+                          <span>{sprint.team.name}</span>
+                        </span>
+                      )}
+
+                      {(startStr || endStr) && (
+                        <span className="hidden md:inline-flex items-center gap-1 text-xs text-muted-foreground font-mono">
+                          <Calendar className="h-3 w-3 opacity-60" />
+                          <span>
+                            {startStr ?? "TBD"} – {endStr ?? "TBD"}
                           </span>
-
-                          {/* Team Badge */}
-                          {sprint.team && (
-                            <span className="flex items-center space-x-1 rounded bg-slate-100 border border-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-700">
-                              <Users className="h-3 w-3 text-slate-500" />
-                              <span>{sprint.team.name}</span>
-                            </span>
-                          )}
-
-                          {/* Date span */}
-                          {(startStr || endStr) && (
-                            <span className="flex items-center space-x-1 text-xs text-slate-500 font-medium">
-                              <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                              <span>
-                                {startStr ?? "TBD"} – {endStr ?? "TBD"}
-                              </span>
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Sprint Goal */}
-                        {sprint.goal && (
-                          <p className="text-xs text-slate-500 mt-0.5 italic line-clamp-1">
-                            Goal: {sprint.goal}
-                          </p>
-                        )}
-                      </div>
+                        </span>
+                      )}
                     </div>
 
-                    {/* Right: Capacity & Estimates Indicator + Sprint Controls */}
-                    <div className="flex items-center space-x-3 shrink-0">
-                      {/* Capacity & Estimates Indicator (Committed vs Rolling Velocity) */}
+                    {/* Right: Capacity Indicator + Single Complete / Start Action */}
+                    <div className="flex items-center gap-2.5 shrink-0">
                       <div
-                        className={`flex items-center space-x-1.5 rounded-full px-3 py-1 text-xs font-semibold border ${
+                        className={`flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-mono font-medium border ${
                           isOverCapacity
-                            ? "bg-amber-50 text-amber-800 border-amber-300 shadow-sm"
+                            ? "bg-amber-500/10 text-amber-500 border-amber-500/30"
                             : committedPoints > 0
-                              ? "bg-emerald-50 text-emerald-800 border-emerald-300"
-                              : "bg-slate-100 text-slate-600 border-slate-200"
+                              ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30"
+                              : "bg-muted text-muted-foreground border-border"
                         }`}
-                        title={`Total Committed Story Points: ${committedPoints} pts | Recommended Velocity: ${recommendedVelocity} pts (rolling average of previous sprints)`}
+                        title={`Total Committed Story Points: ${committedPoints} pts | Recommended Velocity: ${recommendedVelocity} pts`}
                       >
-                        <Zap
-                          className={`h-3.5 w-3.5 shrink-0 ${
-                            isOverCapacity ? "text-amber-600" : "text-emerald-600"
-                          }`}
-                        />
+                        <Zap className="h-3 w-3 text-amber-500" />
                         <span>
                           {committedPoints} / {recommendedVelocity} pts
                         </span>
                         {isOverCapacity && (
-                          <span className="rounded bg-amber-200/80 px-1.5 py-0.5 text-[9px] font-bold uppercase text-amber-900 tracking-wider">
-                            Over Capacity
+                          <span className="text-[9px] uppercase font-bold text-amber-600 dark:text-amber-400">
+                            Over
                           </span>
                         )}
                       </div>
 
-                      {/* Edit Sprint Button */}
-                      <button
-                        onClick={() => handleOpenEditSprint(sprint)}
-                        title="Edit Sprint Settings"
-                        className="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition shadow-sm"
-                      >
-                        <Edit3 className="h-3.5 w-3.5" />
-                      </button>
-
-                      {/* Sprint Lifecycle Action (Start / Complete) */}
                       {sprint.status === "PLANNED" && (
-                        <button
-                          onClick={() =>
-                            startSprintMutation.mutate({ sprintId: sprint.id })
-                          }
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                          onClick={() => startSprintMutation.mutate({ sprintId: sprint.id })}
                           disabled={startSprintMutation.isPending}
-                          className="flex items-center space-x-1 rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 transition active:scale-95"
                         >
                           <Play className="h-3 w-3 fill-current" />
                           <span>Start Sprint</span>
-                        </button>
+                        </Button>
                       )}
 
                       {sprint.status === "ACTIVE" && (
-                        <button
-                          type="button"
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs gap-1 text-primary border-primary/30 hover:bg-primary/10"
                           onClick={() => setSprintToComplete(sprint.id)}
-                          className="flex items-center space-x-1 rounded-lg bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition active:scale-95"
                         >
                           <CheckCircle2 className="h-3.5 w-3.5" />
                           <span>Complete Sprint</span>
-                        </button>
-                      )}
-
-                      {/* Add Item Quick Button */}
-                      {onCreateItem && (
-                        <button
-                          onClick={() => onCreateItem({ sprintId: sprint.id })}
-                          title="Add item to this sprint"
-                          className="flex items-center space-x-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                          <span>Add</span>
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </div>
 
-                  {/* Sprint Droppable Items Container */}
+                  {/* Sprint Droppable Items Lane */}
                   {!isCollapsed && (
                     <Droppable droppableId={sprint.id}>
                       {(provided, snapshot) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.droppableProps}
-                          className={`min-h-[60px] divide-y divide-slate-100 transition-colors ${
-                            snapshot.isDraggingOver
-                              ? "bg-blue-50/40 ring-2 ring-blue-500/20 ring-inset"
-                              : "bg-white"
+                          className={`min-h-[44px] divide-y divide-border/60 transition-colors ${
+                            snapshot.isDraggingOver ? "bg-primary/5" : "bg-card"
                           }`}
                         >
                           {sprintItems.length === 0 ? (
-                            <div className="p-8 text-center text-xs text-slate-400">
-                              No work items planned for this sprint yet. Drag items
-                              from the backlog or add one below.
+                            <div className="p-6 text-center text-xs text-muted-foreground">
+                              No work items planned for this sprint yet. Drag items from the backlog or add one below.
                             </div>
                           ) : (
                             sprintItems.map((item, index) => (
@@ -543,180 +450,133 @@ export function BacklogView({
                                     data-testid="work-item-card"
                                     data-item-id={item.id}
                                     data-item-key={item.key}
-                                    className={`transition ${
+                                    className={`transition-colors ${
                                       dragSnapshot.isDragging
-                                        ? "bg-white shadow-xl ring-2 ring-blue-500 rounded-lg z-30"
-                                        : "hover:bg-slate-50/70"
+                                        ? "bg-card shadow-lg ring-1 ring-primary z-30"
+                                        : "hover:bg-muted/40"
                                     }`}
                                   >
-                                    {/* Level 1: Item Row */}
-                                    <div className="flex items-center px-4 py-3 grid grid-cols-12 gap-3 text-xs">
-                                      {/* Left / Drag Handle / Title */}
-                                      <div className="col-span-6 flex items-center space-x-2">
-                                        <div
-                                          {...dragProvided.dragHandleProps}
-                                          className="cursor-grab text-slate-300 hover:text-slate-600"
-                                        >
-                                          <GripVertical className="h-4 w-4" />
-                                        </div>
+                                    {/* Compact Linear-Style Item Row */}
+                                    <div className="flex items-center gap-2.5 px-3 py-2 text-xs h-10">
+                                      {/* Drag Handle */}
+                                      <div
+                                        {...dragProvided.dragHandleProps}
+                                        className="cursor-grab text-muted-foreground/40 hover:text-foreground shrink-0"
+                                      >
+                                        <GripVertical className="h-3.5 w-3.5" />
+                                      </div>
 
-                                        {item.children.length > 0 ? (
-                                          <button
-                                            onClick={() =>
-                                              toggleExpandItem(item.id)
-                                            }
-                                            className="rounded p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700"
-                                          >
-                                            {expandedItems[item.id] ? (
-                                              <ChevronDown className="h-3.5 w-3.5" />
-                                            ) : (
-                                              <ChevronRight className="h-3.5 w-3.5" />
-                                            )}
-                                          </button>
-                                        ) : (
-                                          <div className="w-4" />
-                                        )}
-
+                                      {/* Expand Chevron for subtasks */}
+                                      {item.children.length > 0 ? (
                                         <button
-                                          type="button"
-                                          onClick={() => setSelectedItemId(item.id)}
-                                          className="flex items-center space-x-2 text-left truncate group/title hover:opacity-80 transition cursor-pointer"
+                                          onClick={() => toggleExpandItem(item.id)}
+                                          className="rounded p-0.5 text-muted-foreground hover:bg-muted shrink-0"
                                         >
-                                          <span className="font-mono font-bold text-blue-700 bg-blue-50 group-hover/title:bg-blue-100 px-1.5 py-0.5 rounded text-[11px]">
-                                            {item.key}
-                                          </span>
-
-                                          <span className="font-medium text-slate-900 group-hover/title:text-blue-600 truncate">
-                                            {item.title}
-                                          </span>
+                                          {expandedItems[item.id] ? (
+                                            <ChevronDown className="h-3.5 w-3.5" />
+                                          ) : (
+                                            <ChevronRight className="h-3.5 w-3.5" />
+                                          )}
                                         </button>
-                                      </div>
+                                      ) : (
+                                        <div className="w-4 shrink-0" />
+                                      )}
 
-                                      {/* Type & Priority */}
-                                      <div className="col-span-2 flex items-center space-x-1.5">
-                                        <span
-                                          className={`rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase ${
-                                            TYPE_BADGES[item.type] ??
-                                            TYPE_BADGES.STORY
-                                          }`}
-                                        >
-                                          {item.type}
-                                        </span>
-                                        <span
-                                          className={`rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${
-                                            PRIORITY_BADGES[item.priority] ??
-                                            PRIORITY_BADGES.MEDIUM
-                                          }`}
-                                        >
-                                          {item.priority}
-                                        </span>
-                                      </div>
+                                      {/* Key Badge */}
+                                      <span className="font-mono text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded shrink-0">
+                                        {item.key}
+                                      </span>
 
-                                      {/* Points */}
-                                      <div className="col-span-1 flex items-center justify-center">
-                                        {item.storyPoints !== null && (
-                                          <span className="rounded bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-700">
-                                            {item.storyPoints}
+                                      {/* Title (Takes Maximum Horizontal Room) */}
+                                      <button
+                                        type="button"
+                                        onClick={() => setSelectedItemId(item.id)}
+                                        className="flex-1 text-left truncate font-medium text-foreground hover:text-primary transition-colors cursor-pointer"
+                                      >
+                                        <span className="truncate">{item.title}</span>
+                                      </button>
+
+                                      {/* Type Badge */}
+                                      <Badge
+                                        variant={getTypeBadgeVariant(item.type)}
+                                        className="text-[10px] shrink-0 font-medium py-0 px-1.5"
+                                      >
+                                        {item.type}
+                                      </Badge>
+
+                                      {/* Priority Badge */}
+                                      <Badge
+                                        variant={getPriorityBadgeVariant(item.priority)}
+                                        className="text-[10px] shrink-0 font-medium py-0 px-1.5"
+                                      >
+                                        {item.priority}
+                                      </Badge>
+
+                                      {/* Points subtle pill */}
+                                      <div className="w-12 text-center shrink-0">
+                                        {item.storyPoints !== null ? (
+                                          <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground">
+                                            {item.storyPoints} pts
                                           </span>
-                                        )}
+                                        ) : null}
                                       </div>
 
-                                      {/* Assignee & Move / Add Subtask Actions */}
-                                      <div className="col-span-3 flex items-center justify-end space-x-2">
+                                      {/* Assignee Avatar + Full Name */}
+                                      <div className="flex items-center gap-1.5 shrink-0 min-w-[130px] justify-end">
                                         {item.assignee ? (
-                                          <span className="text-[11px] text-slate-700 font-medium truncate max-w-[100px]">
-                                            {item.assignee.name}
-                                          </span>
+                                          <>
+                                            <Avatar className="h-5 w-5 ring-1 ring-border">
+                                              <AvatarImage src={item.assignee.image ?? undefined} />
+                                              <AvatarFallback className="text-[9px] font-bold">
+                                                {item.assignee.name?.slice(0, 2).toUpperCase() ?? "U"}
+                                              </AvatarFallback>
+                                            </Avatar>
+                                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                              {item.assignee.name}
+                                            </span>
+                                          </>
                                         ) : (
-                                          <span className="text-[11px] text-slate-400">
+                                          <span className="text-xs text-muted-foreground/60 whitespace-nowrap">
                                             Unassigned
                                           </span>
-                                        )}
-
-                                        {/* Quick Move to Backlog or other Sprint */}
-                                        <select
-                                          value={item.sprintId ?? "BACKLOG"}
-                                          onChange={(e) => {
-                                            const val = e.target.value;
-                                            updateItemMutation.mutate({
-                                              id: item.id,
-                                              sprintId:
-                                                val === "BACKLOG" ? null : val,
-                                            });
-                                          }}
-                                          title="Move to Sprint..."
-                                          className="text-[10px] font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 focus:outline-none"
-                                        >
-                                          <option value="BACKLOG">Backlog</option>
-                                          {sprints?.map((s) => (
-                                            <option key={s.id} value={s.id}>
-                                              {s.name}
-                                            </option>
-                                          ))}
-                                        </select>
-
-                                        {onCreateItem && (
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              onCreateItem({
-                                                parentId: item.id,
-                                                sprintId: sprint.id,
-                                                type: "TASK",
-                                              });
-                                            }}
-                                            title="Add child subtask"
-                                            className="rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-blue-600 transition"
-                                          >
-                                            <Plus className="h-3.5 w-3.5" />
-                                          </button>
                                         )}
                                       </div>
                                     </div>
 
                                     {/* Subtasks (Children) */}
-                                    {expandedItems[item.id] &&
-                                      item.children.length > 0 && (
-                                        <div className="bg-slate-50/50 divide-y divide-slate-100 border-t border-slate-100 pl-8">
-                                          {item.children.map((child) => (
-                                            <div
-                                              key={child.id}
-                                              className="flex items-center px-4 py-2 grid grid-cols-12 gap-3 text-xs"
+                                    {expandedItems[item.id] && item.children.length > 0 && (
+                                      <div className="bg-muted/15 divide-y divide-border/40 border-t border-border/40 pl-8">
+                                        {item.children.map((child) => (
+                                          <div
+                                            key={child.id}
+                                            className="flex items-center gap-2.5 px-3 py-1.5 text-xs h-8"
+                                          >
+                                            <span className="font-mono text-[10px] text-muted-foreground">
+                                              {child.key}
+                                            </span>
+                                            <span className="flex-1 text-foreground truncate">
+                                              {child.title}
+                                            </span>
+                                            <Badge
+                                              variant={getTypeBadgeVariant(child.type)}
+                                              className="text-[9px] py-0 px-1"
                                             >
-                                              <div className="col-span-6 flex items-center space-x-2">
-                                                <span className="font-mono text-[10px] font-medium text-slate-700 bg-white border border-slate-200 px-1 py-0.5 rounded">
-                                                  {child.key}
+                                              {child.type}
+                                            </Badge>
+                                            <div className="w-12 text-center">
+                                              {child.storyPoints !== null && (
+                                                <span className="text-[10px] font-mono text-muted-foreground">
+                                                  {child.storyPoints} pts
                                                 </span>
-                                                <span className="text-slate-800 truncate">
-                                                  {child.title}
-                                                </span>
-                                              </div>
-                                              <div className="col-span-2 flex items-center space-x-1.5">
-                                                <span
-                                                  className={`rounded border px-1 py-0.2 text-[8px] font-bold uppercase ${
-                                                    TYPE_BADGES[child.type] ??
-                                                    TYPE_BADGES.TASK
-                                                  }`}
-                                                >
-                                                  {child.type}
-                                                </span>
-                                              </div>
-                                              <div className="col-span-1 text-center">
-                                                {child.storyPoints !== null && (
-                                                  <span className="text-[10px] font-semibold text-slate-600">
-                                                    {child.storyPoints}
-                                                  </span>
-                                                )}
-                                              </div>
-                                              <div className="col-span-3 text-right">
-                                                <span className="text-[10px] text-slate-500">
-                                                  {child.assignee?.name ?? "Unassigned"}
-                                                </span>
-                                              </div>
+                                              )}
                                             </div>
-                                          ))}
-                                        </div>
-                                      )}
+                                            <span className="text-xs text-muted-foreground min-w-[130px] text-right">
+                                              {child.assignee?.name ?? "Unassigned"}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </Draggable>
@@ -725,7 +585,7 @@ export function BacklogView({
                           {provided.placeholder}
 
                           {/* Quick-Add Row at the bottom of the Sprint */}
-                          <div className="border-t border-slate-100 bg-slate-50/60 p-2.5">
+                          <div className="border-t border-border bg-muted/20 p-2">
                             <InlineCreateRow
                               projectId={projectId}
                               sprintId={sprint.id}
@@ -746,14 +606,14 @@ export function BacklogView({
           {/* ======================================================== */}
           <div
             data-testid="unassigned-backlog-container"
-            className="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden"
+            className="mt-6 rounded-lg border border-border bg-card overflow-hidden shadow-xs"
           >
             {/* Backlog Section Header */}
-            <div className="border-b border-slate-200 bg-slate-50/80 px-4 py-3 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
+            <div className="border-b border-border bg-muted/30 px-3.5 py-2.5 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
                 <button
                   onClick={() => toggleCollapseSection("BACKLOG")}
-                  className="rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition"
+                  className="rounded p-0.5 text-muted-foreground hover:text-foreground transition"
                 >
                   {collapsedSections["BACKLOG"] ? (
                     <ChevronRight className="h-4 w-4" />
@@ -762,35 +622,19 @@ export function BacklogView({
                   )}
                 </button>
 
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <h3 className="font-bold text-sm text-slate-900">
-                      Backlog (Unassigned)
-                    </h3>
-                    <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
-                      {backlogItems.length} issues
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    Items not yet committed to an active iteration
-                  </p>
-                </div>
+                <h3 className="font-semibold text-sm text-foreground">
+                  Backlog (Unassigned)
+                </h3>
+
+                <span className="rounded-full bg-muted border border-border px-2 py-0.2 text-[10px] font-mono font-medium text-muted-foreground">
+                  {backlogItems.length} issues
+                </span>
               </div>
 
-              <div className="flex items-center space-x-3">
-                <span className="rounded-full bg-slate-100 border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700">
+              <div className="flex items-center gap-2.5">
+                <span className="rounded-full bg-muted border border-border px-2.5 py-0.5 text-xs font-mono font-medium text-muted-foreground">
                   {backlogTotalPoints} pts
                 </span>
-
-                {onCreateItem && (
-                  <button
-                    onClick={() => onCreateItem({ sprintId: null })}
-                    className="flex items-center space-x-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    <span>Create Issue</span>
-                  </button>
-                )}
               </div>
             </div>
 
@@ -801,16 +645,13 @@ export function BacklogView({
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className={`min-h-[80px] divide-y divide-slate-100 transition-colors ${
-                      snapshot.isDraggingOver
-                        ? "bg-blue-50/40 ring-2 ring-blue-500/20 ring-inset"
-                        : "bg-white"
+                    className={`min-h-[44px] divide-y divide-border/60 transition-colors ${
+                      snapshot.isDraggingOver ? "bg-primary/5" : "bg-card"
                     }`}
                   >
                     {backlogItems.length === 0 ? (
-                      <div className="p-8 text-center text-xs text-slate-400">
-                        Backlog is currently empty. Use the quick-add bar below or
-                        AI Story Agent to create initial user stories!
+                      <div className="p-6 text-center text-xs text-muted-foreground">
+                        Backlog is currently empty. Use the quick-add bar below to create initial user stories.
                       </div>
                     ) : (
                       backlogItems.map((item, index) => (
@@ -826,174 +667,125 @@ export function BacklogView({
                               data-testid="work-item-card"
                               data-item-id={item.id}
                               data-item-key={item.key}
-                              className={`transition ${
+                              className={`transition-colors ${
                                 dragSnapshot.isDragging
-                                  ? "bg-white shadow-xl ring-2 ring-blue-500 rounded-lg z-30"
-                                  : "hover:bg-slate-50/70"
+                                  ? "bg-card shadow-lg ring-1 ring-primary z-30"
+                                  : "hover:bg-muted/40"
                               }`}
                             >
-                              {/* Level 1: Item Row */}
-                              <div className="flex items-center px-4 py-3 grid grid-cols-12 gap-3 text-xs">
-                                <div className="col-span-6 flex items-center space-x-2">
-                                  <div
-                                    {...dragProvided.dragHandleProps}
-                                    className="cursor-grab text-slate-300 hover:text-slate-600"
-                                  >
-                                    <GripVertical className="h-4 w-4" />
-                                  </div>
+                              {/* Compact Linear-Style Row */}
+                              <div className="flex items-center gap-2.5 px-3 py-2 text-xs h-10">
+                                <div
+                                  {...dragProvided.dragHandleProps}
+                                  className="cursor-grab text-muted-foreground/40 hover:text-foreground shrink-0"
+                                >
+                                  <GripVertical className="h-3.5 w-3.5" />
+                                </div>
 
-                                  {item.children.length > 0 ? (
-                                    <button
-                                      onClick={() => toggleExpandItem(item.id)}
-                                      className="rounded p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700"
-                                    >
-                                      {expandedItems[item.id] ? (
-                                        <ChevronDown className="h-3.5 w-3.5" />
-                                      ) : (
-                                        <ChevronRight className="h-3.5 w-3.5" />
-                                      )}
-                                    </button>
-                                  ) : (
-                                    <div className="w-4" />
-                                  )}
-
+                                {item.children.length > 0 ? (
                                   <button
-                                    type="button"
-                                    onClick={() => setSelectedItemId(item.id)}
-                                    className="flex items-center space-x-2 text-left truncate group/title hover:opacity-80 transition cursor-pointer"
+                                    onClick={() => toggleExpandItem(item.id)}
+                                    className="rounded p-0.5 text-muted-foreground hover:bg-muted shrink-0"
                                   >
-                                    <span className="font-mono font-bold text-blue-700 bg-blue-50 group-hover/title:bg-blue-100 px-1.5 py-0.5 rounded text-[11px]">
-                                      {item.key}
-                                    </span>
-
-                                    <span className="font-medium text-slate-900 group-hover/title:text-blue-600 truncate">
-                                      {item.title}
-                                    </span>
+                                    {expandedItems[item.id] ? (
+                                      <ChevronDown className="h-3.5 w-3.5" />
+                                    ) : (
+                                      <ChevronRight className="h-3.5 w-3.5" />
+                                    )}
                                   </button>
-                                </div>
+                                ) : (
+                                  <div className="w-4 shrink-0" />
+                                )}
 
-                                <div className="col-span-2 flex items-center space-x-1.5">
-                                  <span
-                                    className={`rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase ${
-                                      TYPE_BADGES[item.type] ?? TYPE_BADGES.STORY
-                                    }`}
-                                  >
-                                    {item.type}
-                                  </span>
-                                  <span
-                                    className={`rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${
-                                      PRIORITY_BADGES[item.priority] ??
-                                      PRIORITY_BADGES.MEDIUM
-                                    }`}
-                                  >
-                                    {item.priority}
-                                  </span>
-                                </div>
+                                <span className="font-mono text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded shrink-0">
+                                  {item.key}
+                                </span>
 
-                                <div className="col-span-1 flex items-center justify-center">
-                                  {item.storyPoints !== null && (
-                                    <span className="rounded bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-700">
-                                      {item.storyPoints}
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedItemId(item.id)}
+                                  className="flex-1 text-left truncate font-medium text-foreground hover:text-primary transition-colors cursor-pointer"
+                                >
+                                  <span className="truncate">{item.title}</span>
+                                </button>
+
+                                <Badge
+                                  variant={getTypeBadgeVariant(item.type)}
+                                  className="text-[10px] shrink-0 font-medium py-0 px-1.5"
+                                >
+                                  {item.type}
+                                </Badge>
+
+                                <Badge
+                                  variant={getPriorityBadgeVariant(item.priority)}
+                                  className="text-[10px] shrink-0 font-medium py-0 px-1.5"
+                                >
+                                  {item.priority}
+                                </Badge>
+
+                                <div className="w-12 text-center shrink-0">
+                                  {item.storyPoints !== null ? (
+                                    <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground">
+                                      {item.storyPoints} pts
                                     </span>
-                                  )}
+                                  ) : null}
                                 </div>
 
-                                <div className="col-span-3 flex items-center justify-end space-x-2">
+                                <div className="flex items-center gap-1.5 shrink-0 min-w-[130px] justify-end">
                                   {item.assignee ? (
-                                    <span className="text-[11px] text-slate-700 font-medium truncate max-w-[100px]">
-                                      {item.assignee.name}
-                                    </span>
+                                    <>
+                                      <Avatar className="h-5 w-5 ring-1 ring-border">
+                                        <AvatarImage src={item.assignee.image ?? undefined} />
+                                        <AvatarFallback className="text-[9px] font-bold">
+                                          {item.assignee.name?.slice(0, 2).toUpperCase() ?? "U"}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                        {item.assignee.name}
+                                      </span>
+                                    </>
                                   ) : (
-                                    <span className="text-[11px] text-slate-400">
+                                    <span className="text-xs text-muted-foreground/60 whitespace-nowrap">
                                       Unassigned
                                     </span>
-                                  )}
-
-                                  {/* Quick Move to Sprint Dropdown */}
-                                  <select
-                                    value="BACKLOG"
-                                    onChange={(e) => {
-                                      const val = e.target.value;
-                                      if (val !== "BACKLOG") {
-                                        updateItemMutation.mutate({
-                                          id: item.id,
-                                          sprintId: val,
-                                        });
-                                      }
-                                    }}
-                                    title="Assign to Sprint..."
-                                    className="text-[10px] font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 focus:outline-none"
-                                  >
-                                    <option value="BACKLOG">Move to Sprint...</option>
-                                    {sprints?.map((s) => (
-                                      <option key={s.id} value={s.id}>
-                                        {s.name}
-                                      </option>
-                                    ))}
-                                  </select>
-
-                                  {onCreateItem && (
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        onCreateItem({
-                                          parentId: item.id,
-                                          sprintId: null,
-                                          type: "TASK",
-                                        });
-                                      }}
-                                      title="Add child subtask"
-                                      className="rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-blue-600 transition"
-                                    >
-                                      <Plus className="h-3.5 w-3.5" />
-                                    </button>
                                   )}
                                 </div>
                               </div>
 
                               {/* Subtasks (Children) */}
-                              {expandedItems[item.id] &&
-                                item.children.length > 0 && (
-                                  <div className="bg-slate-50/50 divide-y divide-slate-100 border-t border-slate-100 pl-8">
-                                    {item.children.map((child) => (
-                                      <div
-                                        key={child.id}
-                                        className="flex items-center px-4 py-2 grid grid-cols-12 gap-3 text-xs"
+                              {expandedItems[item.id] && item.children.length > 0 && (
+                                <div className="bg-muted/15 divide-y divide-border/40 border-t border-border/40 pl-8">
+                                  {item.children.map((child) => (
+                                    <div
+                                      key={child.id}
+                                      className="flex items-center gap-2.5 px-3 py-1.5 text-xs h-8"
+                                    >
+                                      <span className="font-mono text-[10px] text-muted-foreground">
+                                        {child.key}
+                                      </span>
+                                      <span className="flex-1 text-foreground truncate">
+                                        {child.title}
+                                      </span>
+                                      <Badge
+                                        variant={getTypeBadgeVariant(child.type)}
+                                        className="text-[9px] py-0 px-1"
                                       >
-                                        <div className="col-span-6 flex items-center space-x-2">
-                                          <span className="font-mono text-[10px] font-medium text-slate-700 bg-white border border-slate-200 px-1 py-0.5 rounded">
-                                            {child.key}
+                                        {child.type}
+                                      </Badge>
+                                      <div className="w-12 text-center">
+                                        {child.storyPoints !== null && (
+                                          <span className="text-[10px] font-mono text-muted-foreground">
+                                            {child.storyPoints} pts
                                           </span>
-                                          <span className="text-slate-800 truncate">
-                                            {child.title}
-                                          </span>
-                                        </div>
-                                        <div className="col-span-2 flex items-center space-x-1.5">
-                                          <span
-                                            className={`rounded border px-1 py-0.2 text-[8px] font-bold uppercase ${
-                                              TYPE_BADGES[child.type] ??
-                                              TYPE_BADGES.TASK
-                                            }`}
-                                          >
-                                            {child.type}
-                                          </span>
-                                        </div>
-                                        <div className="col-span-1 text-center">
-                                          {child.storyPoints !== null && (
-                                            <span className="text-[10px] font-semibold text-slate-600">
-                                              {child.storyPoints}
-                                            </span>
-                                          )}
-                                        </div>
-                                        <div className="col-span-3 text-right">
-                                          <span className="text-[10px] text-slate-500">
-                                            {child.assignee?.name ?? "Unassigned"}
-                                          </span>
-                                        </div>
+                                        )}
                                       </div>
-                                    ))}
-                                  </div>
-                                )}
+                                      <span className="text-xs text-muted-foreground min-w-[130px] text-right">
+                                        {child.assignee?.name ?? "Unassigned"}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           )}
                         </Draggable>
@@ -1002,7 +794,7 @@ export function BacklogView({
                     {provided.placeholder}
 
                     {/* Quick-Add Row for Backlog */}
-                    <div className="border-t border-slate-100 bg-slate-50/60 p-2.5">
+                    <div className="border-t border-border bg-muted/20 p-2">
                       <InlineCreateRow
                         projectId={projectId}
                         sprintId={null}
@@ -1052,8 +844,8 @@ export function BacklogView({
 
       {/* Toast Banner */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center space-x-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-900 shadow-xl animate-in slide-in-from-bottom-3 duration-200">
-          <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+        <div className="fixed bottom-6 right-6 z-50 flex items-center space-x-2.5 rounded-lg border border-emerald-500/30 bg-card px-4 py-3 text-xs font-semibold text-emerald-600 shadow-lg animate-in slide-in-from-bottom-3 duration-200">
+          <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
           <span>{toastMessage}</span>
         </div>
       )}

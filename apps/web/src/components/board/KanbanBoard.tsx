@@ -55,37 +55,37 @@ const COLUMNS: ColumnDef[] = [
     id: "TODO",
     title: "To Do",
     color: "border-blue-500",
-    bgBadge: "bg-blue-100",
-    textBadge: "text-blue-800",
+    bgBadge: "bg-blue-500/10",
+    textBadge: "text-blue-600 dark:text-blue-400",
   },
   {
     id: "IN_PROGRESS",
     title: "In Progress",
     color: "border-amber-500",
-    bgBadge: "bg-amber-100",
-    textBadge: "text-amber-800",
+    bgBadge: "bg-amber-500/10",
+    textBadge: "text-amber-600 dark:text-amber-400",
   },
   {
     id: "IN_REVIEW",
     title: "In Review",
     color: "border-purple-500",
-    bgBadge: "bg-purple-100",
-    textBadge: "text-purple-800",
+    bgBadge: "bg-purple-500/10",
+    textBadge: "text-purple-600 dark:text-purple-400",
   },
   {
     id: "DONE",
     title: "Done",
     color: "border-emerald-500",
-    bgBadge: "bg-emerald-100",
-    textBadge: "text-emerald-800",
+    bgBadge: "bg-emerald-500/10",
+    textBadge: "text-emerald-600 dark:text-emerald-400",
   },
 ];
 
 const PRIORITY_STYLES: Record<string, string> = {
-  URGENT: "bg-red-50 text-red-700 border-red-200",
-  HIGH: "bg-orange-50 text-orange-700 border-orange-200",
-  MEDIUM: "bg-blue-50 text-blue-700 border-blue-200",
-  LOW: "bg-slate-50 text-slate-700 border-slate-200",
+  URGENT: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
+  HIGH: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+  MEDIUM: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+  LOW: "bg-muted text-muted-foreground border-border",
 };
 
 export function KanbanBoard({
@@ -204,47 +204,47 @@ export function KanbanBoard({
   return (
     <div className="space-y-6">
       {/* Sprint Header & Metrics Bar */}
-      <div className="flex flex-col justify-between gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center">
+      <div className="flex flex-col justify-between gap-4 rounded-lg border border-border bg-card p-4 shadow-xs sm:flex-row sm:items-center">
         <div>
           <div className="flex items-center space-x-2">
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+            <h2 className="text-lg font-semibold text-foreground tracking-tight">
               {sprint?.name ?? "No Active Sprint"}
             </h2>
             {sprint?.status && (
-              <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
+              <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                 {sprint.status}
               </span>
             )}
           </div>
-          <p className="mt-1 text-sm text-slate-500 max-w-2xl">
+          <p className="mt-1 text-xs text-muted-foreground max-w-2xl">
             {sprint?.goal ?? "Create or start a sprint in the backlog view to begin active tracking."}
           </p>
         </div>
 
         {metrics && (
-          <div className="flex items-center space-x-6 border-t border-slate-100 pt-3 sm:border-t-0 sm:pt-0">
+          <div className="flex items-center space-x-5 border-t border-border pt-3 sm:border-t-0 sm:pt-0">
             <div className="text-center">
-              <p className="text-xs text-slate-500 font-medium">Stories</p>
-              <p className="text-lg font-bold text-slate-800">
+              <p className="text-[11px] text-muted-foreground font-medium">Stories</p>
+              <p className="text-sm font-semibold text-foreground">
                 {metrics.completedItems} / {metrics.totalItems}
               </p>
             </div>
-            <div className="h-8 w-px bg-slate-200" />
+            <div className="h-6 w-px bg-border" />
             <div className="text-center">
-              <p className="text-xs text-slate-500 font-medium">Points</p>
-              <p className="text-lg font-bold text-blue-600">
+              <p className="text-[11px] text-muted-foreground font-medium">Points</p>
+              <p className="text-sm font-semibold text-primary">
                 {metrics.completedPoints} / {metrics.totalPoints}
               </p>
             </div>
-            <div className="h-8 w-px bg-slate-200" />
-            <div className="w-28">
-              <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+            <div className="h-6 w-px bg-border" />
+            <div className="w-24">
+              <div className="flex justify-between text-[11px] font-medium text-muted-foreground mb-1">
                 <span>Progress</span>
                 <span>{metrics.progressPercentage}%</span>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full bg-blue-600 transition-all duration-500 rounded-full"
+                  className="h-full bg-primary transition-all duration-500 rounded-full"
                   style={{ width: `${metrics.progressPercentage}%` }}
                 />
               </div>
@@ -254,9 +254,9 @@ export function KanbanBoard({
               <button
                 type="button"
                 onClick={() => setIsCompleteDialogOpen(true)}
-                className="flex items-center space-x-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 active:scale-95"
+                className="flex items-center space-x-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground shadow-xs transition hover:bg-muted active:scale-95"
               >
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>Complete Sprint</span>
               </button>
             )}
@@ -264,7 +264,7 @@ export function KanbanBoard({
             {onCreateItem && (
               <button
                 onClick={() => onCreateItem({ sprintId: sprint?.id })}
-                className="flex items-center space-x-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 active:scale-95"
+                className="flex items-center space-x-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-xs transition hover:bg-primary/90 active:scale-95"
               >
                 <span className="text-sm font-bold leading-none">+</span>
                 <span>Add Card</span>
@@ -305,24 +305,24 @@ export function KanbanBoard({
                 key={col.id}
                 data-testid="kanban-column"
                 data-column-id={col.id}
-                className="flex flex-col rounded-xl border border-slate-200/90 bg-slate-100/60 p-4 min-h-[580px] shadow-sm"
+                className="flex flex-col rounded-lg border border-border/80 bg-muted/40 p-3 min-h-[580px] shadow-2xs"
               >
                 {/* Column Header */}
-                <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-3">
+                <div className="flex items-center justify-between pb-2.5 border-b border-border mb-2.5">
                   <div className="flex items-center space-x-2">
                     <span
                       className={`h-2.5 w-2.5 rounded-full ${col.bgBadge} border ${col.color}`}
                     />
-                    <h3 className="font-bold text-slate-800 text-sm tracking-tight">
+                    <h3 className="font-semibold text-foreground text-sm tracking-tight">
                       {col.title}
                     </h3>
                     <span
-                      className={`rounded-full ${col.bgBadge} ${col.textBadge} px-2 py-0.5 text-xs font-semibold`}
+                      className={`rounded-full ${col.bgBadge} ${col.textBadge} px-2 py-0.5 text-xs font-medium`}
                     >
                       {cards.length}
                     </span>
                   </div>
-                  <span className="text-xs font-semibold text-slate-500">
+                  <span className="text-xs font-medium text-muted-foreground">
                     {colPoints} pts
                   </span>
                 </div>
@@ -333,9 +333,9 @@ export function KanbanBoard({
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className={`flex-1 space-y-3 transition rounded-lg p-1 ${
+                      className={`flex-1 space-y-2.5 transition rounded-lg p-0.5 ${
                         snapshot.isDraggingOver
-                          ? "bg-blue-50/70 ring-2 ring-blue-400 ring-dashed"
+                          ? "bg-primary/5 ring-1.5 ring-primary/40 ring-dashed"
                           : ""
                       }`}
                     >
@@ -360,20 +360,20 @@ export function KanbanBoard({
                                 data-item-id={card.id}
                                 data-item-key={card.key}
                                 onClick={() => setSelectedCardId(card.id)}
-                                className={`group rounded-lg border border-slate-200/90 bg-white p-4 shadow-sm transition hover:border-slate-300 hover:shadow-md cursor-pointer ${
+                                className={`group rounded-lg border border-border bg-card p-3 shadow-2xs transition hover:border-primary/40 hover:shadow-xs cursor-pointer ${
                                   dragSnapshot.isDragging
-                                    ? "rotate-1 shadow-xl ring-2 ring-blue-500 ring-offset-2"
+                                    ? "rotate-1 shadow-lg ring-2 ring-primary ring-offset-2 ring-offset-background"
                                     : ""
                                 }`}
                               >
                                 {/* Card Metadata Row */}
                                 <div className="flex items-center justify-between text-xs mb-2">
                                   <div className="flex items-center space-x-1.5">
-                                    <span className="font-mono font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded text-[11px]">
+                                    <span className="font-mono font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded text-[11px]">
                                       {card.key}
                                     </span>
                                     <span
-                                      className={`rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                                      className={`rounded border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
                                         PRIORITY_STYLES[card.priority] ??
                                         PRIORITY_STYLES.LOW
                                       }`}
@@ -383,25 +383,25 @@ export function KanbanBoard({
                                   </div>
 
                                   {card.storyPoints !== null && (
-                                    <span className="rounded bg-slate-100 px-1.5 py-0.5 font-semibold text-slate-600 text-[11px]">
+                                    <span className="rounded bg-muted px-1.5 py-0.5 font-medium text-muted-foreground text-[11px]">
                                       {card.storyPoints} pts
                                     </span>
                                   )}
                                 </div>
 
                                 {/* Title */}
-                                <h4 className="text-sm font-medium text-slate-900 group-hover:text-blue-600 transition leading-snug">
+                                <h4 className="text-sm font-medium text-foreground group-hover:text-primary transition leading-snug">
                                   {card.title}
                                 </h4>
 
                                 {/* Card Footer Row */}
-                                <div className="mt-3.5 flex items-center justify-between border-t border-slate-100 pt-2.5 text-xs text-slate-500">
+                                <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-2 text-xs text-muted-foreground">
                                   {totalChildren > 0 ? (
                                     <div className="flex items-center space-x-1">
                                       <CheckCircle2
                                         className={`h-3.5 w-3.5 ${
                                           incompleteChildren === 0
-                                            ? "text-emerald-600"
+                                            ? "text-emerald-500"
                                             : "text-amber-500"
                                         }`}
                                       />
@@ -411,7 +411,7 @@ export function KanbanBoard({
                                       </span>
                                     </div>
                                   ) : (
-                                    <span className="text-[11px] text-slate-400">
+                                    <span className="text-[11px] text-muted-foreground/70">
                                       Story
                                     </span>
                                   )}
@@ -421,13 +421,13 @@ export function KanbanBoard({
                                       className="flex items-center space-x-1.5"
                                       title={card.assignee.name ?? "Assignee"}
                                     >
-                                      <div className="h-6 w-6 overflow-hidden rounded-full bg-slate-200 border border-white shadow-sm flex items-center justify-center font-bold text-[10px] text-slate-700">
+                                      <div className="h-5 w-5 overflow-hidden rounded-full bg-secondary border border-border flex items-center justify-center font-bold text-[9px] text-secondary-foreground">
                                         {card.assignee.name?.slice(0, 2).toUpperCase() ?? "U"}
                                       </div>
                                     </div>
                                   ) : (
-                                    <div className="flex items-center space-x-1 text-slate-400">
-                                      <User className="h-3.5 w-3.5" />
+                                    <div className="flex items-center space-x-1 text-muted-foreground/70">
+                                      <User className="h-3 w-3" />
                                       <span className="text-[11px]">Unassigned</span>
                                     </div>
                                   )}

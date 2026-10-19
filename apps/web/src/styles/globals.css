@@ -8,40 +8,80 @@
     --foreground: 224 71.4% 4.1%;
     --card: 0 0% 100%;
     --card-foreground: 224 71.4% 4.1%;
-    --primary: 221.2 83.2% 53.3%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+    --primary: 245 82% 58%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 215 25% 94%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 215 25% 94%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 215 25% 94%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 224 71.4% 4.1%;
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+    --accent: 245 40% 96%;
+    --accent-foreground: 245 82% 50%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 245 82% 62%;
     --radius: 0.5rem;
+
+    /* Work Item Status Tokens (Light Mode) */
+    --status-backlog: 215 16% 47%;
+    --status-backlog-bg: 215 20% 94%;
+    --status-todo: 199 89% 48%;
+    --status-todo-bg: 199 90% 95%;
+    --status-in-progress: 38 92% 50%;
+    --status-in-progress-bg: 48 96% 93%;
+    --status-in-review: 262 83% 58%;
+    --status-in-review-bg: 262 90% 95%;
+    --status-done: 142 71% 45%;
+    --status-done-bg: 142 70% 94%;
+
+    /* Priority Tokens (Light Mode) */
+    --priority-low: 215 16% 47%;
+    --priority-medium: 217 91% 60%;
+    --priority-high: 25 95% 53%;
+    --priority-urgent: 0 84% 60%;
   }
 
   .dark {
-    --background: 224 71.4% 4.1%;
+    --background: 224 71% 4%;
     --foreground: 210 40% 98%;
-    --card: 224 71.4% 6%;
+    --card: 224 71% 6%;
     --card-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
+    --popover: 224 71% 6%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 245 82% 62%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 224 30% 12%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --muted: 224 30% 12%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+    --accent: 245 40% 16%;
+    --accent-foreground: 245 82% 75%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --border: 224 30% 14%;
+    --input: 224 30% 14%;
+    --ring: 245 82% 62%;
+
+    /* Work Item Status Tokens (Dark Mode) */
+    --status-backlog: 215 20% 65%;
+    --status-backlog-bg: 215 25% 15%;
+    --status-todo: 199 89% 65%;
+    --status-todo-bg: 199 80% 14%;
+    --status-in-progress: 43 96% 56%;
+    --status-in-progress-bg: 43 85% 15%;
+    --status-in-review: 262 83% 70%;
+    --status-in-review-bg: 262 75% 16%;
+    --status-done: 142 71% 55%;
+    --status-done-bg: 142 65% 14%;
+
+    /* Priority Tokens (Dark Mode) */
+    --priority-low: 215 20% 65%;
+    --priority-medium: 217 91% 68%;
+    --priority-high: 25 95% 62%;
+    --priority-urgent: 0 84% 65%;
   }
 }
 

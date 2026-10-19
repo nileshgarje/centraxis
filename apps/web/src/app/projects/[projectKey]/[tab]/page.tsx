@@ -1,5 +1,5 @@
 import React from "react";
-import CentraxisApp from "~/app/page";
+import { CentraxisApp } from "~/components/centraxis-app";
 
 interface ProjectTabPageProps {
   params: Promise<{

@@ -19,7 +19,8 @@ test.describe("Centraxis Agile Platform E2E Flow", () => {
     await expect(page.locator("text=Centvis")).toBeVisible();
     await expect(page.locator("text=Active Board")).toBeVisible();
     await expect(page.locator("text=Backlog")).toBeVisible();
-    await expect(page.locator("text=Sprint Burndown")).toBeVisible();
+    await expect(page.locator("text=Squads")).toBeVisible();
+    await expect(page.locator("text=Analytics")).toBeVisible();
   });
 
   test("should navigate smoothly across views", async ({ page }) => {
@@ -27,14 +28,14 @@ test.describe("Centraxis Agile Platform E2E Flow", () => {
     await page.click("text=Backlog");
     await expect(page.locator("text=Backlog Planning")).toBeVisible();
 
-    // 2. Squads & Roles
-    await page.click("text=Squads & Roles");
+    // 2. Squads
+    await page.click("text=Squads");
     await expect(
       page.locator("text=Assigned Squads & Engineering Teams"),
     ).toBeVisible();
 
-    // 3. Sprint Burndown Metrics
-    await page.click("text=Sprint Burndown");
+    // 3. Analytics
+    await page.click("text=Analytics");
     await expect(page.locator("text=Sprint Burndown Chart")).toBeVisible();
     await expect(page.locator("text=Rolling Velocity")).toBeVisible();
 
@@ -48,7 +49,8 @@ test.describe("Centraxis Agile Platform E2E Flow", () => {
   test("should open the AI Story Agent modal and preview INVEST stories", async ({
     page,
   }) => {
-    // Trigger modal via button
+    // Trigger modal via unified + Create dropdown
+    await page.click('button:has-text("Create")');
     await page.click("text=AI Story Agent");
     await expect(
       page.locator("text=Centraxis AI Story Agent"),
