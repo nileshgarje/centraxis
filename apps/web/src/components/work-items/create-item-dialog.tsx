@@ -15,12 +15,12 @@ import {
 import { api } from "~/trpc/react";
 import {
   MarkdownEditor,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
   Button,
   Input,
   Label,
@@ -204,28 +204,31 @@ export function CreateItemDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="sm:max-w-2xl p-0 overflow-hidden">
-        {/* Dialog Header */}
-        <div className="border-b border-border bg-muted/20 px-6 py-4">
-          <DialogHeader className="flex flex-row items-center space-x-2.5 space-y-0 text-left">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold shadow-sm">
+    <Sheet open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl h-full p-0 flex flex-col overflow-hidden bg-background border-border shadow-2xl"
+      >
+        {/* Sheet Header */}
+        <div className="border-b border-border bg-muted/20 px-6 py-4 shrink-0">
+          <SheetHeader className="flex flex-row items-center space-x-2.5 space-y-0 text-left">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold shadow-xs">
               <Plus className="h-4 w-4" />
             </div>
             <div>
-              <DialogTitle className="font-bold text-foreground text-base">
+              <SheetTitle className="font-bold text-foreground text-base">
                 Create Work Item
-              </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+              </SheetTitle>
+              <SheetDescription className="text-xs text-muted-foreground mt-0.5">
                 Add an Epic, Feature, Story, Task, or Bug to the project backlog
-              </DialogDescription>
+              </SheetDescription>
             </div>
-          </DialogHeader>
+          </SheetHeader>
         </div>
 
-        {/* Dialog Body */}
-        <form onSubmit={handleSubmit}>
-          <div className="max-h-[70vh] overflow-y-auto p-6 space-y-5">
+        {/* Sheet Body & Form */}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto p-6 space-y-5">
             {/* 1. Item Type Selector */}
             <div className="space-y-1.5">
               <Label className="block text-xs font-semibold text-foreground uppercase tracking-wider">
@@ -441,8 +444,8 @@ export function CreateItemDialog({
             </div>
           </div>
 
-          {/* Dialog Footer */}
-          <DialogFooter className="flex items-center justify-end space-x-2 border-t border-border bg-muted/20 px-6 py-3">
+          {/* Sheet Footer */}
+          <SheetFooter className="flex items-center justify-end space-x-2 border-t border-border bg-muted/20 px-6 py-3 shrink-0">
             <Button
               type="button"
               variant="outline"
@@ -469,9 +472,9 @@ export function CreateItemDialog({
                 </>
               )}
             </Button>
-          </DialogFooter>
+          </SheetFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

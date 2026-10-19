@@ -33,6 +33,11 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
 } from "@centraxis/ui";
 
 interface WorkItemDrawerProps {
@@ -196,15 +201,20 @@ export function WorkItemDrawer({
     setNewComment("");
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-black/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-200">
-      <div className="fixed inset-y-0 right-0 flex max-w-full pl-10">
-        <div className="w-screen max-w-3xl transform border-l border-border bg-background bg-white dark:bg-slate-950 text-foreground shadow-2xl transition ease-in-out sm:duration-300 flex flex-col h-full">
-          {/* Header Bar */}
-          <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-background bg-white dark:bg-slate-950">
-            <div className="flex items-center space-x-3">
+    <Sheet open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-2xl md:max-w-3xl h-full p-0 flex flex-col overflow-hidden bg-background border-border shadow-2xl"
+      >
+        <SheetHeader className="sr-only">
+          <SheetTitle>{item?.title ?? "Work Item Details"}</SheetTitle>
+          <SheetDescription>View and manage issue fields, subtasks, and discussion</SheetDescription>
+        </SheetHeader>
+
+        {/* Header Bar */}
+        <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-background bg-white dark:bg-slate-950 shrink-0">
+          <div className="flex items-center space-x-3">
               {item && (
                 <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
                   {item.key}
@@ -537,8 +547,7 @@ export function WorkItemDrawer({
               </div>
             </div>
           )}
-        </div>
-      </div>
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 }
