@@ -58,9 +58,10 @@ model Organization {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  users     User[]
-  teams     Team[]
-  projects  Project[]
+  users       User[]
+  teams       Team[]
+  projects    Project[]
+  invitations Invitation[]
 }
 
 model User {
@@ -77,13 +78,36 @@ model User {
   organizationId String?
   organization   Organization?   @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
-  accounts      Account[]
-  sessions      Session[]
-  memberships   TeamMembership[]
+  accounts        Account[]
+  sessions        Session[]
+  memberships     TeamMembership[]
+  sentInvitations Invitation[]    @relation("SentInvitations")
 
   assignedWorkItems WorkItem[]  @relation("AssignedWorkItems")
   reportedWorkItems WorkItem[]  @relation("ReportedWorkItems")
   aiStoryLogs       AiStoryLog[]
+}
+
+model Invitation {
+  id             String       @id @default(cuid())
+  email          String
+  role           TeamRole     @default(DEVELOPER)
+  token          String       @unique @default(cuid())
+  status         String       @default("PENDING") // PENDING, ACCEPTED, REVOKED
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  invitedById    String?
+  invitedBy      User?        @relation("SentInvitations", fields: [invitedById], references: [id], onDelete: SetNull)
+
+  teamIds        String[]     // IDs of initial squads to join
+
+  @@index([organizationId])
+  @@index([email])
 }
 
 model Account {

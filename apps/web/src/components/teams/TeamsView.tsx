@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { Users, Shield, UserCheck, Briefcase, Plus } from "lucide-react";
 import { api } from "~/trpc/react";
 import { CreateTeamDialog } from "./create-team-dialog";
@@ -85,6 +86,14 @@ export function TeamsView({ projectId }: { projectId: string }) {
               User identity and RBAC role assignments provisioned via Microsoft Entra ID SSO
             </p>
           </div>
+
+          <Link
+            href="/settings/members"
+            className="flex items-center space-x-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition"
+          >
+            <UserCheck className="h-3.5 w-3.5 text-blue-600" />
+            <span>Workspace Settings & Invites →</span>
+          </Link>
         </div>
 
         <div className="divide-y divide-slate-100 max-h-[480px] overflow-y-auto">

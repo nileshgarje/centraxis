@@ -1,4 +1,5 @@
 import { createTRPCRouter } from "./trpc";
+import { orgRouter } from "./routers/org";
 import { projectRouter } from "./routers/project";
 import { teamRouter } from "./routers/team";
 import { backlogRouter } from "./routers/backlog";
@@ -8,6 +9,7 @@ import { aiRouter } from "./routers/ai";
 import { metricsRouter } from "./routers/metrics";
 
 export const appRouter = createTRPCRouter({
+  org: orgRouter,
   project: projectRouter,
   team: teamRouter,
   backlog: backlogRouter,
