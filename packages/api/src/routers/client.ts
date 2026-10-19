@@ -91,17 +91,21 @@ export const clientRouter = createTRPCRouter({
   /**
    * Create a new Client
    */
-  create: scrumMasterProcedure
+  create: protectedProcedure
     .input(
       z.object({
-        name: z.string().min(2, "Client name must be at least 2 characters"),
+        name: z.string().min(1, "Client name is required"),
         slug: z
           .string()
-          .min(2, "Slug must be at least 2 characters")
-          .regex(/^[a-z0-9-]+$/, "Slug must only contain lowercase letters, numbers, and hyphens")
-          .optional(),
-        contactEmail: z.string().email("Invalid contact email").optional().nullable(),
-        logo: z.string().url("Invalid logo URL").optional().nullable(),
+          .optional()
+          .nullable()
+          .or(z.literal("")),
+        contactEmail: z
+          .string()
+          .optional()
+          .nullable()
+          .or(z.literal("")),
+        logo: z.string().optional().nullable().or(z.literal("")),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -115,41 +119,59 @@ export const clientRouter = createTRPCRouter({
       }
 
       if (!orgId) {
+        const firstOrg = await ctx.db.organization.findFirst({
+          orderBy: { createdAt: "asc" },
+        });
+        if (firstOrg) {
+          orgId = firstOrg.id;
+          await ctx.db.user.update({
+            where: { id: ctx.session.user.id },
+            data: { organizationId: firstOrg.id },
+          });
+        }
+      }
+
+      if (!orgId) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "User must belong to an organization to create clients.",
         });
       }
 
-      const generatedSlug =
-        input.slug ||
+      let baseSlug = (
+        input.slug?.trim() ||
         input.name
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, "");
+          .replace(/^-|-$/g, "")
+      ).toLowerCase();
 
-      const existing = await ctx.db.client.findUnique({
-        where: {
-          orgId_slug: {
-            orgId,
-            slug: generatedSlug,
+      if (!baseSlug || baseSlug.length < 2) {
+        baseSlug = `client-${Date.now().toString(36)}`;
+      }
+
+      let generatedSlug = baseSlug;
+      let counter = 1;
+      while (
+        await ctx.db.client.findUnique({
+          where: {
+            orgId_slug: {
+              orgId,
+              slug: generatedSlug,
+            },
           },
-        },
-      });
-
-      if (existing) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: `Client with slug '${generatedSlug}' already exists in your organization.`,
-        });
+        })
+      ) {
+        generatedSlug = `${baseSlug}-${counter}`;
+        counter++;
       }
 
       return ctx.db.client.create({
         data: {
-          name: input.name,
+          name: input.name.trim(),
           slug: generatedSlug,
-          contactEmail: input.contactEmail ?? null,
-          logo: input.logo ?? null,
+          contactEmail: input.contactEmail?.trim() || null,
+          logo: input.logo?.trim() || null,
           orgId,
         },
       });
@@ -158,20 +180,24 @@ export const clientRouter = createTRPCRouter({
   /**
    * Update client details
    */
-  update: scrumMasterProcedure
+  update: protectedProcedure
     .input(
       z.object({
         id: z.string(),
-        name: z.string().min(2).optional(),
-        contactEmail: z.string().email().optional().nullable(),
-        logo: z.string().url().optional().nullable(),
+        name: z.string().min(1).optional(),
+        contactEmail: z.string().optional().nullable().or(z.literal("")),
+        logo: z.string().optional().nullable().or(z.literal("")),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
       return ctx.db.client.update({
         where: { id },
-        data,
+        data: {
+          name: data.name?.trim(),
+          contactEmail: data.contactEmail?.trim() || null,
+          logo: data.logo?.trim() || null,
+        },
       });
     }),
 

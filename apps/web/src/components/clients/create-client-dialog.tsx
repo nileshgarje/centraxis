@@ -81,18 +81,14 @@ export function CreateClientDialog({
       return;
     }
 
-    const cleanSlug = slug.trim().toLowerCase();
-    if (cleanSlug.length < 2) {
-      setErrorMessage("Slug must be at least 2 characters.");
-      return;
-    }
+    const cleanSlug = slug.trim() ? slug.trim().toLowerCase() : generateClientSlug(name);
 
     setErrorMessage(null);
     createMutation.mutate({
       name: name.trim(),
-      slug: cleanSlug,
-      contactEmail: contactEmail.trim() || null,
-      logo: logo.trim() || null,
+      slug: cleanSlug || undefined,
+      contactEmail: contactEmail.trim() || undefined,
+      logo: logo.trim() || undefined,
     });
   };
 
@@ -204,7 +200,7 @@ export function CreateClientDialog({
             </label>
             <div className="relative">
               <input
-                type="url"
+                type="text"
                 value={logo}
                 onChange={(e) => setLogo(e.target.value)}
                 placeholder="https://example.com/logo.png"
