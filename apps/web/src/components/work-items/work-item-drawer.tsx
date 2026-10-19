@@ -187,14 +187,14 @@ export function WorkItemDrawer({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-slate-900/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 overflow-hidden bg-black/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-200">
       <div className="fixed inset-y-0 right-0 flex max-w-full pl-10">
-        <div className="w-screen max-w-3xl transform border-l border-slate-200 bg-white shadow-2xl transition ease-in-out sm:duration-300 flex flex-col">
+        <div className="w-screen max-w-3xl transform border-l border-border bg-background bg-white dark:bg-slate-950 text-foreground shadow-2xl transition ease-in-out sm:duration-300 flex flex-col h-full">
           {/* Header Bar */}
-          <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-slate-50/70">
+          <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-background bg-white dark:bg-slate-950">
             <div className="flex items-center space-x-3">
               {item && (
-                <span className="font-mono text-xs font-bold text-blue-700 bg-blue-100/70 px-2 py-0.5 rounded border border-blue-200">
+                <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
                   {item.key}
                 </span>
               )}
@@ -206,8 +206,8 @@ export function WorkItemDrawer({
                   setStatus(e.target.value);
                   handleSaveField({ status: e.target.value as any });
                 }}
-                className={`rounded-lg border px-2.5 py-1 text-xs font-semibold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer ${
-                  STATUS_OPTIONS.find((s) => s.value === status)?.color ?? "bg-slate-100 text-slate-700"
+                className={`rounded-md border border-input bg-background bg-white dark:bg-slate-900 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-foreground focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer shadow-xs ${
+                  STATUS_OPTIONS.find((s) => s.value === status)?.color ?? "border-border text-foreground"
                 }`}
               >
                 {STATUS_OPTIONS.map((st) => (
@@ -218,17 +218,17 @@ export function WorkItemDrawer({
               </select>
 
               {/* Auto-save status indicator */}
-              <div className="flex items-center space-x-1 text-xs text-slate-400">
+              <div className="flex items-center space-x-1 text-xs text-muted-foreground">
                 {isSaving && (
                   <>
-                    <Loader2 className="h-3 w-3 animate-spin text-blue-500" />
+                    <Loader2 className="h-3 w-3 animate-spin text-primary" />
                     <span>Saving...</span>
                   </>
                 )}
                 {saveSuccess && (
                   <>
                     <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-                    <span className="text-emerald-600 font-medium">Saved</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-medium">Saved</span>
                   </>
                 )}
               </div>
@@ -237,7 +237,7 @@ export function WorkItemDrawer({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition"
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition"
               aria-label="Close drawer"
             >
               <X className="h-5 w-5" />
@@ -246,8 +246,8 @@ export function WorkItemDrawer({
 
           {/* Drawer Body */}
           {isLoading || !item ? (
-            <div className="flex flex-1 items-center justify-center space-x-2 text-slate-400">
-              <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+            <div className="flex flex-1 items-center justify-center space-x-2 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
               <span className="text-sm">Loading work item details...</span>
             </div>
           ) : (
@@ -264,15 +264,15 @@ export function WorkItemDrawer({
                     }
                   }}
                   placeholder="Issue title..."
-                  className="w-full text-xl font-bold tracking-tight text-slate-900 border-none px-0 py-1 focus:outline-none focus:ring-0 placeholder:text-slate-300"
+                  className="w-full text-xl font-bold tracking-tight text-foreground bg-transparent border-none px-0 py-1 focus:outline-none focus:ring-0 placeholder:text-muted-foreground"
                 />
               </div>
 
-              {/* Metadata Pill Grid */}
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+              {/* Metadata Form Grid */}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 rounded-lg border border-border bg-muted/30 p-3.5">
                 {/* Assignee */}
-                <div className="space-y-1">
-                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                <div className="space-y-1.5">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
                     Assignee
                   </span>
                   <select
@@ -282,7 +282,7 @@ export function WorkItemDrawer({
                       setAssigneeId(e.target.value);
                       handleSaveField({ assigneeId: val });
                     }}
-                    className="w-full text-xs font-medium rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-slate-700 focus:outline-none focus:border-blue-500"
+                    className="w-full text-xs font-medium rounded-md border border-input bg-background bg-white dark:bg-slate-900 px-2.5 py-1.5 text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
                   >
                     <option value="">Unassigned</option>
                     {members?.map((m) => (
@@ -294,8 +294,8 @@ export function WorkItemDrawer({
                 </div>
 
                 {/* Sprint */}
-                <div className="space-y-1">
-                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                <div className="space-y-1.5">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
                     Sprint
                   </span>
                   <select
@@ -305,7 +305,7 @@ export function WorkItemDrawer({
                       setSprintId(e.target.value);
                       handleSaveField({ sprintId: val });
                     }}
-                    className="w-full text-xs font-medium rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-slate-700 focus:outline-none focus:border-blue-500"
+                    className="w-full text-xs font-medium rounded-md border border-input bg-background bg-white dark:bg-slate-900 px-2.5 py-1.5 text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
                   >
                     <option value="">Backlog (Unassigned)</option>
                     {projectSprints?.map((sp) => (
@@ -317,8 +317,8 @@ export function WorkItemDrawer({
                 </div>
 
                 {/* Priority */}
-                <div className="space-y-1">
-                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                <div className="space-y-1.5">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
                     Priority
                   </span>
                   <select
@@ -327,7 +327,7 @@ export function WorkItemDrawer({
                       setPriority(e.target.value);
                       handleSaveField({ priority: e.target.value as any });
                     }}
-                    className="w-full text-xs font-medium rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-slate-700 focus:outline-none focus:border-blue-500"
+                    className="w-full text-xs font-medium rounded-md border border-input bg-background bg-white dark:bg-slate-900 px-2.5 py-1.5 text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
                   >
                     {PRIORITIES.map((p) => (
                       <option key={p.value} value={p.value}>
@@ -338,8 +338,8 @@ export function WorkItemDrawer({
                 </div>
 
                 {/* Story Points */}
-                <div className="space-y-1">
-                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                <div className="space-y-1.5">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
                     Story Points
                   </span>
                   <select
@@ -349,7 +349,7 @@ export function WorkItemDrawer({
                       setStoryPoints(val);
                       handleSaveField({ storyPoints: val });
                     }}
-                    className="w-full text-xs font-medium rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-slate-700 focus:outline-none focus:border-blue-500"
+                    className="w-full text-xs font-medium rounded-md border border-input bg-background bg-white dark:bg-slate-900 px-2.5 py-1.5 text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
                   >
                     <option value="">None (Unestimated)</option>
                     {FIBONACCI_POINTS.map((pts) => (
@@ -364,10 +364,10 @@ export function WorkItemDrawer({
               {/* 1. Description (Developer Markdown Editor) */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
                     Description
                   </label>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-muted-foreground">
                     Supports GFM, syntax code blocks & checklists
                   </span>
                 </div>
@@ -385,10 +385,10 @@ export function WorkItemDrawer({
               {/* 2. Acceptance Criteria (Gherkin & Checklists) */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
                     Acceptance Criteria (Gherkin / Scenarios)
                   </label>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-muted-foreground">
                     Auto-highlights Given/When/Then scenarios
                   </span>
                 </div>
@@ -406,11 +406,11 @@ export function WorkItemDrawer({
               {/* Subtasks (if any) */}
               {item.children && item.children.length > 0 && (
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
                     Subtasks ({item.children.filter((c) => c.status === "DONE").length}/
                     {item.children.length})
                   </label>
-                  <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
+                  <div className="divide-y divide-border rounded-lg border border-border bg-card">
                     {item.children.map((child) => (
                       <div
                         key={child.id}
@@ -421,23 +421,23 @@ export function WorkItemDrawer({
                             className={`h-4 w-4 ${
                               child.status === "DONE"
                                 ? "text-emerald-500"
-                                : "text-slate-300"
+                                : "text-muted-foreground/40"
                             }`}
                           />
-                          <span className="font-mono text-blue-600 font-semibold">
+                          <span className="font-mono text-primary font-semibold">
                             {child.key}
                           </span>
                           <span
                             className={
                               child.status === "DONE"
-                                ? "line-through text-slate-400"
-                                : "text-slate-800"
+                                ? "line-through text-muted-foreground"
+                                : "text-foreground"
                             }
                           >
                             {child.title}
                           </span>
                         </div>
-                        <span className="text-[10px] uppercase font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                        <span className="text-[10px] uppercase font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border">
                           {child.status}
                         </span>
                       </div>
@@ -447,15 +447,15 @@ export function WorkItemDrawer({
               )}
 
               {/* Developer Comments & Activity Section */}
-              <div className="space-y-4 pt-2 border-t border-slate-200">
-                <div className="flex items-center space-x-2 text-xs font-bold text-slate-800 uppercase tracking-wider">
-                  <MessageSquare className="h-4 w-4 text-slate-500" />
+              <div className="space-y-4 pt-3 border-t border-border">
+                <div className="flex items-center space-x-2 text-xs font-semibold text-foreground uppercase tracking-wider">
+                  <MessageSquare className="h-4 w-4 text-muted-foreground" />
                   <span>Developer Comments & Activity ({comments.length})</span>
                 </div>
 
                 {/* New Comment Box using MarkdownEditor */}
-                <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/50 p-3">
-                  <span className="text-xs font-semibold text-slate-700">Leave a comment</span>
+                <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-3">
+                  <span className="text-xs font-medium text-foreground">Leave a comment</span>
                   <MarkdownEditor
                     value={newComment}
                     onChange={setNewComment}
@@ -467,7 +467,7 @@ export function WorkItemDrawer({
                       type="button"
                       disabled={!newComment.trim()}
                       onClick={handleAddComment}
-                      className="flex items-center space-x-1.5 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-40"
+                      className="flex items-center space-x-1.5 rounded-md bg-primary px-3.5 py-1.5 text-xs font-medium text-primary-foreground shadow-xs transition hover:bg-primary/90 disabled:opacity-40 active:scale-95"
                     >
                       <Send className="h-3 w-3" />
                       <span>Post Comment</span>
@@ -480,14 +480,14 @@ export function WorkItemDrawer({
                   {comments.map((comm) => (
                     <div
                       key={comm.id}
-                      className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs space-y-2"
+                      className="rounded-lg border border-border bg-card p-4 shadow-2xs space-y-2"
                     >
-                      <div className="flex items-center justify-between text-xs text-slate-500">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <div className="flex items-center space-x-2">
-                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 font-bold text-[10px] text-blue-800">
+                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 font-bold text-[10px] text-primary">
                             {comm.authorInitials}
                           </div>
-                          <span className="font-semibold text-slate-800">
+                          <span className="font-semibold text-foreground">
                             {comm.authorName}
                           </span>
                         </div>
