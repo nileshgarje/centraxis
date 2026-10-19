@@ -13,9 +13,11 @@
     "lint": "eslint . --max-warnings 0"
   },
   "dependencies": {
+    "@auth/core": "^0.37.2",
+    "@auth/prisma-adapter": "^2.7.4",
     "@centraxis/db": "workspace:*",
     "@centraxis/env": "workspace:*",
-    "@auth/prisma-adapter": "^2.7.4",
+    "next": "^15.1.7",
     "next-auth": "5.0.0-beta.25"
   },
   "devDependencies": {
