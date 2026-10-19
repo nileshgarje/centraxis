@@ -128,7 +128,7 @@ export function Header({
 
             {/* Switcher Dropdown Menu */}
             {isProjectDropdownOpen && (
-              <div className="absolute left-0 mt-1.5 w-64 rounded-lg border border-border bg-popover p-1 shadow-lg z-50 animate-in fade-in zoom-in-95 duration-100">
+              <div className="absolute left-0 mt-1.5 w-64 rounded-md border border-slate-200 bg-white p-1 text-slate-950 shadow-xl dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 z-50 animate-in fade-in zoom-in-95 duration-100">
                 <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   Projects ({projects.length})
                 </div>
