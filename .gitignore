@@ -12,6 +12,7 @@ out/
 # prisma
 *.db
 *.db-journal
+*.tsbuildinfo
 
 # environment
 .env
