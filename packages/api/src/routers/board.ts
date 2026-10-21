@@ -6,6 +6,11 @@ import {
   protectedProcedure,
   developerProcedure,
 } from "../trpc";
+import {
+  resolveWorkflowForProject,
+  mapCategoryToStatus,
+  mapStatusToDefaultSlug,
+} from "./workflow";
 
 export const boardRouter = createTRPCRouter({
   /**
@@ -177,8 +182,43 @@ export const boardRouter = createTRPCRouter({
         }
       }
 
-      // Midpoint rank reorder calculation within target column
+      // Workflow State-Machine Enforcement
       const updateData: Record<string, unknown> = { status };
+
+      if (currentItem.status !== status) {
+        const { workflow } = await resolveWorkflowForProject(
+          ctx.db,
+          currentItem.projectId,
+        );
+
+        const currentSlug =
+          currentItem.stateSlug ?? mapStatusToDefaultSlug(currentItem.status);
+        const currentState =
+          workflow.states.find((s) => s.slug === currentSlug) ??
+          workflow.states.find(
+            (s) => mapCategoryToStatus(s.category) === currentItem.status,
+          ) ??
+          workflow.states[0];
+
+        const availableTransitions = workflow.transitions.filter(
+          (t) => t.fromStateId === null || t.fromStateId === currentState?.id,
+        );
+
+        const matchingTransition = availableTransitions.find(
+          (t) => mapCategoryToStatus(t.toState.category) === status,
+        );
+
+        if (!matchingTransition) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: `Transition not permitted by workflow from "${currentState?.name ?? currentItem.status}" to "${status}". Must be submitted according to workflow.`,
+          });
+        }
+
+        updateData.stateSlug = matchingTransition.toState.slug;
+      }
+
+      // Midpoint rank reorder calculation within target column
 
       if (prevRank !== undefined || nextRank !== undefined) {
         let newRank: number;

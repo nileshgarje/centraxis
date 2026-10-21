@@ -11,6 +11,11 @@ import {
   protectedProcedure,
   developerProcedure,
 } from "../trpc";
+import {
+  resolveWorkflowForProject,
+  mapCategoryToStatus,
+  mapStatusToDefaultSlug,
+} from "./workflow";
 
 async function isUserAssignableToProject(
   db: any,
@@ -334,6 +339,47 @@ export const backlogRouter = createTRPCRouter({
             code: "BAD_REQUEST",
             message: "Selected user is not a member of this project or client.",
           });
+        }
+      }
+
+      // Workflow State-Machine Enforcement
+      if (data.status) {
+        const currentItem = await ctx.db.workItem.findUnique({
+          where: { id },
+          select: { id: true, projectId: true, status: true, stateSlug: true },
+        });
+
+        if (currentItem && currentItem.status !== data.status) {
+          const { workflow } = await resolveWorkflowForProject(
+            ctx.db,
+            currentItem.projectId,
+          );
+
+          const currentSlug =
+            currentItem.stateSlug ?? mapStatusToDefaultSlug(currentItem.status);
+          const currentState =
+            workflow.states.find((s) => s.slug === currentSlug) ??
+            workflow.states.find(
+              (s) => mapCategoryToStatus(s.category) === currentItem.status,
+            ) ??
+            workflow.states[0];
+
+          const validTransitions = workflow.transitions.filter(
+            (t) => t.fromStateId === null || t.fromStateId === currentState?.id,
+          );
+
+          const matchingTransition = validTransitions.find(
+            (t) => mapCategoryToStatus(t.toState.category) === data.status,
+          );
+
+          if (!matchingTransition) {
+            throw new TRPCError({
+              code: "PRECONDITION_FAILED",
+              message: `Transition not permitted by workflow from "${currentState?.name ?? currentItem.status}" to "${data.status}".`,
+            });
+          }
+
+          (data as any).stateSlug = matchingTransition.toState.slug;
         }
       }
 

@@ -12,6 +12,7 @@ import { clientRouter } from "./routers/client";
 import { workItemRouter } from "./routers/work-item";
 import { commentRouter } from "./routers/comment";
 import { notificationRouter } from "./routers/notification";
+import { workflowRouter } from "./routers/workflow";
 
 export const appRouter = createTRPCRouter({
   org: orgRouter,
@@ -26,6 +27,7 @@ export const appRouter = createTRPCRouter({
   board: boardRouter,
   ai: aiRouter,
   metrics: metricsRouter,
+  workflow: workflowRouter,
 });
 
 export type AppRouter = typeof appRouter;

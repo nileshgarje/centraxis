@@ -19,7 +19,7 @@ import {
 import { api } from "~/trpc/react";
 import { WorkItemDrawer } from "../work-items/work-item-drawer";
 import { CompleteSprintDialog } from "../sprints/complete-sprint-dialog";
-import { Button, Badge } from "@centraxis/ui";
+import { Button, Badge, toast } from "@centraxis/ui";
 
 interface WorkItemCard {
   id: string;
@@ -134,6 +134,7 @@ export function KanbanBoard({
     },
     onError: (err) => {
       setErrorMessage(err.message);
+      toast.error(err.message);
       // Revert optimistic update by refetching actual backend state
       void utils.board.getBoardData.invalidate();
     },

@@ -16,6 +16,20 @@ enum GlobalRole {
   USER
 }
 
+enum WorkflowScope {
+  GLOBAL
+  CLIENT
+  PROJECT
+}
+
+enum StateCategory {
+  START
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
 enum ClientRole {
   CLIENT_ADMIN
   CLIENT_MEMBER
@@ -82,20 +96,24 @@ model Organization {
 }
 
 model Client {
-  id             String       @id @default(cuid())
-  name           String
-  slug           String       // e.g. "acme-corp"
-  logo           String?
-  contactEmail   String?
-  orgId          String
-  organization   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  projects       Project[]
-  members        ClientMember[]
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id               String         @id @default(cuid())
+  name             String
+  slug             String         // e.g. "acme-corp"
+  logo             String?
+  contactEmail     String?
+  orgId            String
+  organization     Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  projects         Project[]
+  members          ClientMember[]
+  workflowId       String?
+  workflow         Workflow?      @relation("ClientWorkflow", fields: [workflowId], references: [id], onDelete: SetNull)
+  definedWorkflows Workflow[]     @relation("ClientDefinedWorkflows")
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   @@unique([orgId, slug])
   @@index([orgId])
+  @@index([workflowId])
 }
 
 model ClientMember {
@@ -260,8 +278,13 @@ model Project {
   workItems                 WorkItem[]
   members                   ProjectMember[]
 
+  workflowId                String?
+  workflow                  Workflow?     @relation("ProjectWorkflow", fields: [workflowId], references: [id], onDelete: SetNull)
+  definedWorkflows          Workflow[]    @relation("ProjectDefinedWorkflows")
+
   @@index([organizationId])
   @@index([clientId])
+  @@index([workflowId])
 }
 
 model ProjectMember {
@@ -331,6 +354,7 @@ model WorkItem {
   acceptanceCriteria String?          @db.Text
   type               WorkItemType     @default(STORY)
   status             WorkItemStatus   @default(BACKLOG)
+  stateSlug          String?          @default("todo")
   priority           WorkItemPriority @default(MEDIUM)
   storyPoints        Float?
   rankOrder          Float            @default(0)
@@ -438,5 +462,77 @@ model Notification {
   createdAt  DateTime         @default(now())
 
   @@index([userId, isRead])
+}
+
+// ------------------------------------------------------
+// Customizable & Publishable Workflow Engine
+// ------------------------------------------------------
+
+model Workflow {
+  id          String        @id @default(cuid())
+  name        String
+  description String?       @db.Text
+  scope       WorkflowScope @default(GLOBAL)
+  isPublished Boolean       @default(false)
+  version     Int           @default(1)
+
+  // Scope associations (null for GLOBAL)
+  clientId    String?
+  client      Client?       @relation("ClientDefinedWorkflows", fields: [clientId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project?      @relation("ProjectDefinedWorkflows", fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Associated entities actively using this workflow
+  activeProjects Project[]  @relation("ProjectWorkflow")
+  activeClients  Client[]   @relation("ClientWorkflow")
+
+  states      WorkflowState[]
+  transitions WorkflowTransition[]
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([scope, isPublished])
+  @@index([clientId])
+  @@index([projectId])
+}
+
+model WorkflowState {
+  id          String         @id @default(cuid())
+  name        String         // e.g. "TO DO", "IN DEVELOPMENT", "READY FOR QA", "IN QA", "REOPENED", "RESOLVED", "DONE"
+  slug        String         // e.g. "in_development"
+  category    StateCategory  @default(IN_PROGRESS)
+  color       String?        // Tailwind/Hex token (e.g. blue for dev, amber for QA, green for done)
+  orderIndex  Int            @default(0)
+  
+  workflowId  String
+  workflow    Workflow       @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  // Transitions connected to this state
+  fromTransitions WorkflowTransition[] @relation("FromState")
+  toTransitions   WorkflowTransition[] @relation("ToState")
+
+  @@unique([workflowId, slug])
+  @@index([workflowId, orderIndex])
+}
+
+model WorkflowTransition {
+  id          String         @id @default(cuid())
+  name        String         // Label: e.g. "Start Development", "Submit to QA", "QA Failed", "Close Issue"
+  
+  workflowId  String
+  workflow    Workflow       @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  fromStateId String?        // null represents "Any" state transition
+  fromState   WorkflowState? @relation("FromState", fields: [fromStateId], references: [id], onDelete: Cascade)
+
+  toStateId   String
+  toState     WorkflowState  @relation("ToState", fields: [toStateId], references: [id], onDelete: Cascade)
+
+  requiredRole ProjectRole?  // Optional guard: e.g., only QA / Lead can trigger "QA Passed"
+  createdAt   DateTime       @default(now())
+
+  @@index([workflowId, fromStateId])
+  @@index([workflowId, toStateId])
 }
 

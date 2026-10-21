@@ -8,6 +8,8 @@ import {
   WorkItemType,
   WorkItemStatus,
   WorkItemPriority,
+  WorkflowScope,
+  StateCategory,
 } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
@@ -27,6 +29,9 @@ async function main() {
   await prisma.projectTeam.deleteMany();
   await prisma.projectMember.deleteMany();
   await prisma.clientMember.deleteMany();
+  await prisma.workflowTransition.deleteMany();
+  await prisma.workflowState.deleteMany();
+  await prisma.workflow.deleteMany();
   await prisma.project.deleteMany();
   await prisma.client.deleteMany();
   await prisma.teamMembership.deleteMany();
@@ -63,6 +68,320 @@ async function main() {
       contactEmail: "nexus@centvis.com",
       orgId: org.id,
     },
+  });
+
+  // 1c. Seed Default Published Global Centvis Standard Agile Workflow
+  console.log("Creating Global Published Centvis Standard Agile Workflow...");
+  const globalWorkflow = await prisma.workflow.create({
+    data: {
+      name: "Centvis Standard Agile Workflow",
+      description:
+        "Official enterprise state-machine workflow with Dev, QA review, and resolution loops",
+      scope: WorkflowScope.GLOBAL,
+      isPublished: true,
+      version: 1,
+    },
+  });
+
+  const stateTodo = await prisma.workflowState.create({
+    data: {
+      workflowId: globalWorkflow.id,
+      name: "TO DO",
+      slug: "todo",
+      category: StateCategory.TODO,
+      color: "#64748b",
+      orderIndex: 0,
+    },
+  });
+
+  const stateInDev = await prisma.workflowState.create({
+    data: {
+      workflowId: globalWorkflow.id,
+      name: "IN DEVELOPMENT",
+      slug: "in_development",
+      category: StateCategory.IN_PROGRESS,
+      color: "#3b82f6",
+      orderIndex: 1,
+    },
+  });
+
+  const stateReadyQa = await prisma.workflowState.create({
+    data: {
+      workflowId: globalWorkflow.id,
+      name: "READY FOR QA",
+      slug: "ready_for_qa",
+      category: StateCategory.IN_REVIEW,
+      color: "#8b5cf6",
+      orderIndex: 2,
+    },
+  });
+
+  const stateInQa = await prisma.workflowState.create({
+    data: {
+      workflowId: globalWorkflow.id,
+      name: "IN QA",
+      slug: "in_qa",
+      category: StateCategory.IN_REVIEW,
+      color: "#f59e0b",
+      orderIndex: 3,
+    },
+  });
+
+  const stateReopened = await prisma.workflowState.create({
+    data: {
+      workflowId: globalWorkflow.id,
+      name: "REOPENED",
+      slug: "reopened",
+      category: StateCategory.TODO,
+      color: "#ef4444",
+      orderIndex: 4,
+    },
+  });
+
+  const stateResolved = await prisma.workflowState.create({
+    data: {
+      workflowId: globalWorkflow.id,
+      name: "RESOLVED",
+      slug: "resolved",
+      category: StateCategory.IN_REVIEW,
+      color: "#10b981",
+      orderIndex: 5,
+    },
+  });
+
+  const stateDone = await prisma.workflowState.create({
+    data: {
+      workflowId: globalWorkflow.id,
+      name: "DONE",
+      slug: "done",
+      category: StateCategory.DONE,
+      color: "#22c55e",
+      orderIndex: 6,
+    },
+  });
+
+  // Seed Transitions
+  // 1. Create -> TO DO (fromStateId: null)
+  await prisma.workflowTransition.create({
+    data: {
+      workflowId: globalWorkflow.id,
+      name: "Create",
+      fromStateId: null,
+      toStateId: stateTodo.id,
+    },
+  });
+
+  // 2. TO DO --(Start Development)--> IN DEVELOPMENT
+  await prisma.workflowTransition.create({
+    data: {
+      workflowId: globalWorkflow.id,
+      name: "Start Development",
+      fromStateId: stateTodo.id,
+      toStateId: stateInDev.id,
+    },
+  });
+
+  // 3. IN DEVELOPMENT --(Submit to QA)--> READY FOR QA
+  await prisma.workflowTransition.create({
+    data: {
+      workflowId: globalWorkflow.id,
+      name: "Submit to QA",
+      fromStateId: stateInDev.id,
+      toStateId: stateReadyQa.id,
+    },
+  });
+
+  // 4. READY FOR QA --(Start Testing)--> IN QA
+  await prisma.workflowTransition.create({
+    data: {
+      workflowId: globalWorkflow.id,
+      name: "Start Testing",
+      fromStateId: stateReadyQa.id,
+      toStateId: stateInQa.id,
+    },
+  });
+
+  // 5. IN QA --(QA Failed)--> REOPENED
+  await prisma.workflowTransition.create({
+    data: {
+      workflowId: globalWorkflow.id,
+      name: "QA Failed",
+      fromStateId: stateInQa.id,
+      toStateId: stateReopened.id,
+    },
+  });
+
+  // 6. IN QA --(Passed)--> RESOLVED
+  await prisma.workflowTransition.create({
+    data: {
+      workflowId: globalWorkflow.id,
+      name: "Passed",
+      fromStateId: stateInQa.id,
+      toStateId: stateResolved.id,
+    },
+  });
+
+  // 7. REOPENED --(Move to Development)--> IN DEVELOPMENT
+  await prisma.workflowTransition.create({
+    data: {
+      workflowId: globalWorkflow.id,
+      name: "Move to Development",
+      fromStateId: stateReopened.id,
+      toStateId: stateInDev.id,
+    },
+  });
+
+  // 8. REOPENED --(Close Issue)--> DONE
+  await prisma.workflowTransition.create({
+    data: {
+      workflowId: globalWorkflow.id,
+      name: "Close Issue",
+      fromStateId: stateReopened.id,
+      toStateId: stateDone.id,
+    },
+  });
+
+  // 9. RESOLVED --(Reopen Issue)--> REOPENED
+  await prisma.workflowTransition.create({
+    data: {
+      workflowId: globalWorkflow.id,
+      name: "Reopen Issue",
+      fromStateId: stateResolved.id,
+      toStateId: stateReopened.id,
+    },
+  });
+
+  // 10. RESOLVED --(Close Issue)--> DONE
+  await prisma.workflowTransition.create({
+    data: {
+      workflowId: globalWorkflow.id,
+      name: "Close Issue",
+      fromStateId: stateResolved.id,
+      toStateId: stateDone.id,
+    },
+  });
+
+  // 11. Any State --(Close Issue)--> DONE
+  await prisma.workflowTransition.create({
+    data: {
+      workflowId: globalWorkflow.id,
+      name: "Close Issue",
+      fromStateId: null,
+      toStateId: stateDone.id,
+    },
+  });
+
+  // 1d. Seed Client-Scoped Custom Workflow for Client Apex
+  console.log("Creating Client-Scoped Workflow for Client Apex...");
+  const apexClientWorkflow = await prisma.workflow.create({
+    data: {
+      name: "Apex Fast-Track Delivery Workflow",
+      description: "Dedicated client workflow with direct dev-to-resolution routing",
+      scope: WorkflowScope.CLIENT,
+      clientId: clientApex.id,
+      isPublished: true,
+      version: 1,
+    },
+  });
+
+  const apexTodo = await prisma.workflowState.create({
+    data: {
+      workflowId: apexClientWorkflow.id,
+      name: "TO DO",
+      slug: "todo",
+      category: StateCategory.TODO,
+      color: "#64748b",
+      orderIndex: 0,
+    },
+  });
+
+  const apexInDev = await prisma.workflowState.create({
+    data: {
+      workflowId: apexClientWorkflow.id,
+      name: "IN DEVELOPMENT",
+      slug: "in_development",
+      category: StateCategory.IN_PROGRESS,
+      color: "#3b82f6",
+      orderIndex: 1,
+    },
+  });
+
+  const apexReadyQa = await prisma.workflowState.create({
+    data: {
+      workflowId: apexClientWorkflow.id,
+      name: "READY FOR QA",
+      slug: "ready_for_qa",
+      category: StateCategory.IN_REVIEW,
+      color: "#8b5cf6",
+      orderIndex: 2,
+    },
+  });
+
+  const apexInQa = await prisma.workflowState.create({
+    data: {
+      workflowId: apexClientWorkflow.id,
+      name: "IN QA",
+      slug: "in_qa",
+      category: StateCategory.IN_REVIEW,
+      color: "#f59e0b",
+      orderIndex: 3,
+    },
+  });
+
+  const apexReopened = await prisma.workflowState.create({
+    data: {
+      workflowId: apexClientWorkflow.id,
+      name: "REOPENED",
+      slug: "reopened",
+      category: StateCategory.TODO,
+      color: "#ef4444",
+      orderIndex: 4,
+    },
+  });
+
+  const apexResolved = await prisma.workflowState.create({
+    data: {
+      workflowId: apexClientWorkflow.id,
+      name: "RESOLVED",
+      slug: "resolved",
+      category: StateCategory.IN_REVIEW,
+      color: "#10b981",
+      orderIndex: 5,
+    },
+  });
+
+  const apexDone = await prisma.workflowState.create({
+    data: {
+      workflowId: apexClientWorkflow.id,
+      name: "DONE",
+      slug: "done",
+      category: StateCategory.DONE,
+      color: "#22c55e",
+      orderIndex: 6,
+    },
+  });
+
+  // Apex Transitions:
+  await prisma.workflowTransition.createMany({
+    data: [
+      { workflowId: apexClientWorkflow.id, name: "Create", fromStateId: null, toStateId: apexTodo.id },
+      { workflowId: apexClientWorkflow.id, name: "Start Development", fromStateId: apexTodo.id, toStateId: apexInDev.id },
+      { workflowId: apexClientWorkflow.id, name: "Submit to QA", fromStateId: apexInDev.id, toStateId: apexReadyQa.id },
+      { workflowId: apexClientWorkflow.id, name: "Start Testing", fromStateId: apexReadyQa.id, toStateId: apexInQa.id },
+      { workflowId: apexClientWorkflow.id, name: "QA Failed", fromStateId: apexInQa.id, toStateId: apexReopened.id },
+      { workflowId: apexClientWorkflow.id, name: "Passed", fromStateId: apexInQa.id, toStateId: apexResolved.id },
+      { workflowId: apexClientWorkflow.id, name: "Move to Development", fromStateId: apexReopened.id, toStateId: apexInDev.id },
+      { workflowId: apexClientWorkflow.id, name: "Close Issue", fromStateId: apexReopened.id, toStateId: apexDone.id },
+      { workflowId: apexClientWorkflow.id, name: "Reopen Issue", fromStateId: apexResolved.id, toStateId: apexReopened.id },
+      { workflowId: apexClientWorkflow.id, name: "Close Issue", fromStateId: apexResolved.id, toStateId: apexDone.id },
+      { workflowId: apexClientWorkflow.id, name: "Close Issue", fromStateId: null, toStateId: apexDone.id },
+    ],
+  });
+
+  // Associate the client workflow to clientApex
+  await prisma.client.update({
+    where: { id: clientApex.id },
+    data: { workflowId: apexClientWorkflow.id },
   });
 
   // 2. Seed 3 Squads / Teams
@@ -517,6 +836,7 @@ async function main() {
       description: "Enterprise SSO with Microsoft Entra ID and RBAC matrix",
       type: WorkItemType.EPIC,
       status: WorkItemStatus.IN_PROGRESS,
+      stateSlug: "in_development",
       priority: WorkItemPriority.URGENT,
       storyPoints: 21,
       rankOrder: 1000,
@@ -536,6 +856,7 @@ async function main() {
         "Integrate @auth/prisma-adapter and Azure AD provider with tenant validation",
       type: WorkItemType.FEATURE,
       status: WorkItemStatus.IN_PROGRESS,
+      stateSlug: "in_development",
       priority: WorkItemPriority.HIGH,
       storyPoints: 8,
       rankOrder: 2000,
@@ -557,7 +878,8 @@ async function main() {
       acceptanceCriteria:
         "Scenario: Successful login\nGiven valid Entra ID tenant token\nWhen redirected to /api/auth/callback/microsoft-entra-id\nThen create user if not exists and populate session.user.role",
       type: WorkItemType.STORY,
-      status: WorkItemStatus.IN_PROGRESS,
+      status: WorkItemStatus.IN_REVIEW,
+      stateSlug: "in_qa",
       priority: WorkItemPriority.HIGH,
       storyPoints: 5,
       rankOrder: 3000,
@@ -580,6 +902,7 @@ async function main() {
         "Scenario: INVEST generation\nGiven raw prompt 'Export burndown chart to PDF'\nWhen AI agent executes\nThen output matches UserStoryOutputSchema and suggested story points",
       type: WorkItemType.STORY,
       status: WorkItemStatus.TODO,
+      stateSlug: "todo",
       priority: WorkItemPriority.MEDIUM,
       storyPoints: 5,
       rankOrder: 4000,
@@ -599,6 +922,7 @@ async function main() {
         "Verify Account, Session, and User tables handle Azure tokens cleanly",
       type: WorkItemType.TASK,
       status: WorkItemStatus.DONE,
+      stateSlug: "done",
       priority: WorkItemPriority.HIGH,
       storyPoints: 2,
       rankOrder: 5000,
@@ -619,6 +943,7 @@ async function main() {
         "Ensure JWT token persists active organization slug for multitenant queries",
       type: WorkItemType.BUG,
       status: WorkItemStatus.TODO,
+      stateSlug: "reopened",
       priority: WorkItemPriority.URGENT,
       storyPoints: 1,
       rankOrder: 6000,
@@ -639,6 +964,7 @@ async function main() {
         "Build 4-lane Kanban with optimistic state sync using @hello-pangea/dnd",
       type: WorkItemType.STORY,
       status: WorkItemStatus.BACKLOG,
+      stateSlug: "todo",
       priority: WorkItemPriority.HIGH,
       storyPoints: 8,
       rankOrder: 7000,
@@ -657,6 +983,7 @@ async function main() {
       description: "Verify claims and refresh token rotation handlers",
       type: WorkItemType.TASK,
       status: WorkItemStatus.TODO,
+      stateSlug: "todo",
       priority: WorkItemPriority.MEDIUM,
       storyPoints: 2,
       rankOrder: 8000,

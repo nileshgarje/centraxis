@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, User, Building2, Users, ShieldCheck } from "lucide-react";
+import { ArrowLeft, User, Building2, Users, ShieldCheck, GitFork } from "lucide-react";
 import { CentvisLogo, ThemeToggle } from "@centraxis/ui";
 
 const SETTINGS_NAV = [
@@ -24,6 +24,12 @@ const SETTINGS_NAV = [
     href: "/settings/members",
     icon: Users,
     description: "RBAC permissions, roles, and member invitations",
+  },
+  {
+    name: "Workflow Schemes",
+    href: "/settings/workflows",
+    icon: GitFork,
+    description: "Publishable state machines (Global, Client, Project)",
   },
 ];
 

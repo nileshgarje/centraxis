@@ -18,8 +18,10 @@ import {
   MessageSquare,
   ChevronRight,
   ExternalLink,
+  GitFork,
 } from "lucide-react";
 import { api } from "~/trpc/react";
+import { WorkflowViewerDialog } from "../workflow/workflow-viewer-dialog";
 import {
   MarkdownEditor,
   MarkdownRenderer,
@@ -171,6 +173,33 @@ export function WorkItemDrawer({
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isWorkflowModalOpen, setIsWorkflowModalOpen] = useState(false);
+
+  // Workflow transitions query
+  const { data: workflowData } = api.workflow.getAvailableTransitions.useQuery(
+    { workItemId: itemId! },
+    { enabled: !!itemId && isOpen },
+  );
+
+  // Filter status options to only valid target statuses according to workflow
+  const allowedStatusOptions = React.useMemo(() => {
+    if (!workflowData?.availableTransitions) {
+      return STATUS_OPTIONS;
+    }
+    const targetStatusSet = new Set<string>();
+    if (status) targetStatusSet.add(status);
+
+    for (const tr of workflowData.availableTransitions) {
+      const cat = tr.toState.category;
+      if (cat === "TODO") targetStatusSet.add("TODO");
+      else if (cat === "IN_PROGRESS") targetStatusSet.add("IN_PROGRESS");
+      else if (cat === "IN_REVIEW") targetStatusSet.add("IN_REVIEW");
+      else if (cat === "DONE") targetStatusSet.add("DONE");
+      else if (cat === "START") targetStatusSet.add("BACKLOG");
+    }
+
+    return STATUS_OPTIONS.filter((s) => targetStatusSet.has(s.value));
+  }, [workflowData, status]);
 
   // Sync state when item data loads
   useEffect(() => {
@@ -264,7 +293,7 @@ export function WorkItemDrawer({
               </span>
             )}
 
-            {/* Status Selector Dropdown */}
+            {/* Status Selector Dropdown (Enforced by Workflow Engine) */}
             <Select
               value={status}
               onValueChange={(val) => {
@@ -276,13 +305,26 @@ export function WorkItemDrawer({
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                {STATUS_OPTIONS.map((st) => (
+                {allowedStatusOptions.map((st) => (
                   <SelectItem key={st.value} value={st.value}>
                     {st.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+
+            {/* View Workflow Action Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              type="button"
+              onClick={() => setIsWorkflowModalOpen(true)}
+              className="h-7 text-xs font-medium gap-1.5 border-dashed hover:border-primary hover:text-primary transition shrink-0"
+              title="Open task state-machine workflow viewer"
+            >
+              <GitFork className="h-3.5 w-3.5 text-primary" />
+              <span>View Workflow</span>
+            </Button>
 
             {/* Auto-save status indicator */}
             <div className="flex items-center space-x-1 text-xs text-muted-foreground">
@@ -526,6 +568,21 @@ export function WorkItemDrawer({
             {/* Real Comments Stream with @Mentions & In-App Notifications */}
             <CommentSection workItemId={item.id} projectId={targetProjectId!} />
           </div>
+        )}
+
+        {/* Task Workflow Interactive Graph Viewer Dialog */}
+        {itemId && (
+          <WorkflowViewerDialog
+            open={isWorkflowModalOpen}
+            onOpenChange={setIsWorkflowModalOpen}
+            workItemId={itemId}
+            itemKey={item?.key}
+            onTransitionSuccess={() => {
+              void utils.backlog.getItem.invalidate({ id: itemId });
+              void utils.backlog.getItems.invalidate();
+              void utils.board.getBoardData.invalidate();
+            }}
+          />
         )}
       </SheetContent>
     </Sheet>
