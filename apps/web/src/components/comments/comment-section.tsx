@@ -40,10 +40,11 @@ export function CommentSection({ workItemId, projectId }: CommentSectionProps) {
   const [commentText, setCommentText] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const { data: comments = [], isLoading } = api.comment.listByWorkItem.useQuery(
-    { workItemId },
-    { enabled: !!workItemId },
-  );
+  const { data: comments = [], isLoading } =
+    api.comment.listByWorkItem.useQuery(
+      { workItemId },
+      { enabled: !!workItemId },
+    );
 
   const createMutation = api.comment.create.useMutation({
     onSuccess: async () => {
@@ -85,7 +86,8 @@ export function CommentSection({ workItemId, projectId }: CommentSectionProps) {
           <span>Discussion & Comments ({comments.length})</span>
         </div>
         <span className="text-[11px] text-muted-foreground">
-          Type <span className="font-mono text-primary font-bold">@</span> to mention team members
+          Type <span className="font-mono text-primary font-bold">@</span> to
+          mention team members
         </span>
       </div>
 
@@ -101,7 +103,9 @@ export function CommentSection({ workItemId, projectId }: CommentSectionProps) {
         />
 
         {errorMessage && (
-          <p className="text-[11px] text-destructive font-medium">{errorMessage}</p>
+          <p className="text-[11px] text-destructive font-medium">
+            {errorMessage}
+          </p>
         )}
 
         <div className="flex items-center justify-between pt-1">
@@ -135,7 +139,8 @@ export function CommentSection({ workItemId, projectId }: CommentSectionProps) {
           <MessageSquare className="h-6 w-6 text-muted-foreground/40 mx-auto mb-2" />
           <p className="text-xs font-medium text-foreground">No comments yet</p>
           <p className="text-[11px] text-muted-foreground mt-0.5">
-            Start the conversation by posting an update or mentioning a teammate with @.
+            Start the conversation by posting an update or mentioning a teammate
+            with @.
           </p>
         </div>
       ) : (
@@ -190,7 +195,9 @@ export function CommentSection({ workItemId, projectId }: CommentSectionProps) {
                   {canDelete && (
                     <button
                       type="button"
-                      onClick={() => deleteMutation.mutate({ commentId: comment.id })}
+                      onClick={() =>
+                        deleteMutation.mutate({ commentId: comment.id })
+                      }
                       disabled={deleteMutation.isPending}
                       className="opacity-0 group-hover:opacity-100 transition p-1 text-muted-foreground hover:text-destructive rounded hover:bg-destructive/10"
                       title="Delete comment"

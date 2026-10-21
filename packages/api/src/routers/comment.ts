@@ -86,7 +86,8 @@ export const commentRouter = createTRPCRouter({
       }
 
       // Also scan for plain @id format if any
-      const plainRegex = /(?:^|\s)@([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/g;
+      const plainRegex =
+        /(?:^|\s)@([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/g;
       let plainMatch: RegExpExecArray | null;
       while ((plainMatch = plainRegex.exec(input.body)) !== null) {
         if (plainMatch[1]) {
@@ -127,8 +128,10 @@ export const commentRouter = createTRPCRouter({
         const isScoped =
           targetUser.globalRole === "SYSTEM_ADMIN" ||
           targetUser.role === TeamRole.ORG_ADMIN ||
-          (targetUser.projectMemberships && targetUser.projectMemberships.length > 0) ||
-          (targetUser.clientMemberships && targetUser.clientMemberships.length > 0) ||
+          (targetUser.projectMemberships &&
+            targetUser.projectMemberships.length > 0) ||
+          (targetUser.clientMemberships &&
+            targetUser.clientMemberships.length > 0) ||
           targetUser.organizationId === workItem.project.organizationId;
 
         if (isScoped) {

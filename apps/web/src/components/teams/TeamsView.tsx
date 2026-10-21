@@ -19,7 +19,9 @@ export function TeamsView({ projectId }: { projectId: string }) {
       <div className="flex h-96 items-center justify-center">
         <div className="flex flex-col items-center space-y-3">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-          <p className="text-sm font-medium text-slate-500">Loading squads and team roster...</p>
+          <p className="text-sm font-medium text-slate-500">
+            Loading squads and team roster...
+          </p>
         </div>
       </div>
     );
@@ -68,7 +70,8 @@ export function TeamsView({ projectId }: { projectId: string }) {
                 </div>
               </div>
               <p className="mt-3 text-xs text-slate-600 leading-relaxed">
-                {team.description ?? "Engineering squad handling core platform delivery."}
+                {team.description ??
+                  "Engineering squad handling core platform delivery."}
               </p>
             </div>
           ))}
@@ -83,7 +86,8 @@ export function TeamsView({ projectId }: { projectId: string }) {
               Team Roster ({members?.length ?? 0} Members)
             </h3>
             <p className="text-xs text-slate-500">
-              User identity and RBAC role assignments provisioned via Microsoft Entra ID SSO
+              User identity and RBAC role assignments provisioned via Microsoft
+              Entra ID SSO
             </p>
           </div>
 

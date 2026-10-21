@@ -61,7 +61,10 @@ export const metricsRouter = createTRPCRouter({
       const idealStep = totalPoints / durationDays;
 
       for (let day = 0; day <= durationDays; day++) {
-        const idealRemaining = Math.max(0, Math.round(totalPoints - idealStep * day));
+        const idealRemaining = Math.max(
+          0,
+          Math.round(totalPoints - idealStep * day),
+        );
 
         // Actual points calculation:
         // Day 0 starts at totalPoints; as sprint progresses towards current day, subtract completed points

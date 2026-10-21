@@ -1,7 +1,15 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Plus, Check, X, Loader2, Bookmark, CheckSquare, Bug } from "lucide-react";
+import {
+  Plus,
+  Check,
+  X,
+  Loader2,
+  Bookmark,
+  CheckSquare,
+  Bug,
+} from "lucide-react";
 import { api } from "~/trpc/react";
 
 interface InlineCreateRowProps {
@@ -174,9 +182,13 @@ export function InlineCreateRow({
       </div>
 
       <div className="flex items-center justify-between px-1 text-[10px] text-slate-400">
-        <span>Press <strong>Enter</strong> to create, <strong>Esc</strong> to cancel</span>
+        <span>
+          Press <strong>Enter</strong> to create, <strong>Esc</strong> to cancel
+        </span>
         {createMutation.isError && (
-          <span className="text-red-600 font-medium">{createMutation.error.message}</span>
+          <span className="text-red-600 font-medium">
+            {createMutation.error.message}
+          </span>
         )}
       </div>
     </div>

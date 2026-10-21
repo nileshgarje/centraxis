@@ -110,7 +110,10 @@ export function NotificationPopover() {
               Notifications
             </span>
             {unreadCount > 0 && (
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-bold">
+              <Badge
+                variant="secondary"
+                className="text-[10px] px-1.5 py-0 font-bold"
+              >
                 {unreadCount} new
               </Badge>
             )}
@@ -145,7 +148,8 @@ export function NotificationPopover() {
                 No notifications right now
               </p>
               <p className="text-[11px] text-muted-foreground mt-0.5">
-                When teammates mention you in comments or assign tasks, you'll see them here.
+                When teammates mention you in comments or assign tasks, you'll
+                see them here.
               </p>
             </div>
           ) : (
@@ -169,7 +173,9 @@ export function NotificationPopover() {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-1">
-                    <p className={`text-xs truncate ${!item.isRead ? "font-bold text-foreground" : "font-medium text-foreground/80"}`}>
+                    <p
+                      className={`text-xs truncate ${!item.isRead ? "font-bold text-foreground" : "font-medium text-foreground/80"}`}
+                    >
                       {item.title}
                     </p>
                     <span className="text-[10px] text-muted-foreground shrink-0 flex items-center gap-1">

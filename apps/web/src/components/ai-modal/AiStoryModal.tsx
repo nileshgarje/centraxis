@@ -119,7 +119,8 @@ export function AiStoryModal({
                 Centraxis AI Story Agent
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
-                Generate INVEST-compliant user stories with Gherkin acceptance criteria
+                Generate INVEST-compliant user stories with Gherkin acceptance
+                criteria
               </DialogDescription>
             </div>
           </div>
@@ -182,7 +183,9 @@ export function AiStoryModal({
           {generateMutation.isError && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{generateMutation.error.message}</AlertDescription>
+              <AlertDescription>
+                {generateMutation.error.message}
+              </AlertDescription>
             </Alert>
           )}
 
@@ -228,14 +231,16 @@ export function AiStoryModal({
                   <span>Acceptance Criteria (Gherkin Scenarios)</span>
                 </div>
                 <div className="space-y-1.5">
-                  {generatedStory.acceptanceCriteria.map((scenario: string, i: number) => (
-                    <div
-                      key={i}
-                      className="rounded-lg border border-border bg-background p-2.5 text-xs font-mono text-foreground"
-                    >
-                      {scenario}
-                    </div>
-                  ))}
+                  {generatedStory.acceptanceCriteria.map(
+                    (scenario: string, i: number) => (
+                      <div
+                        key={i}
+                        className="rounded-lg border border-border bg-background p-2.5 text-xs font-mono text-foreground"
+                      >
+                        {scenario}
+                      </div>
+                    ),
+                  )}
                 </div>
               </div>
 
@@ -243,7 +248,10 @@ export function AiStoryModal({
               <div>
                 <div className="flex items-center space-x-1.5 text-xs font-bold text-foreground mb-2">
                   <ListTodo className="h-3.5 w-3.5 text-primary" />
-                  <span>Technical Subtasks Breakdown ({generatedStory.subTasks.length})</span>
+                  <span>
+                    Technical Subtasks Breakdown (
+                    {generatedStory.subTasks.length})
+                  </span>
                 </div>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {generatedStory.subTasks.map((task: string, i: number) => (
@@ -267,7 +275,8 @@ export function AiStoryModal({
         {generatedStory && (
           <DialogFooter className="flex items-center justify-between border-t border-border bg-muted/30 px-6 py-3">
             <p className="text-xs text-muted-foreground">
-              Will insert 1 parent Story and {generatedStory.subTasks.length} child technical tasks into backlog.
+              Will insert 1 parent Story and {generatedStory.subTasks.length}{" "}
+              child technical tasks into backlog.
             </p>
 
             <Button
@@ -275,7 +284,11 @@ export function AiStoryModal({
               disabled={commitMutation.isPending || commitSuccess}
               variant={commitSuccess ? "default" : "default"}
               size="sm"
-              className={commitSuccess ? "bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5" : "gap-1.5"}
+              className={
+                commitSuccess
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
+                  : "gap-1.5"
+              }
             >
               {commitMutation.isPending ? (
                 <>

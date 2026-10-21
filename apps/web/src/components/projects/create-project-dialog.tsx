@@ -72,7 +72,9 @@ export function CreateProjectDialog({
   const [isKeyManuallyEdited, setIsKeyManuallyEdited] = useState(false);
   const [description, setDescription] = useState("");
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
-  const [selectedClientId, setSelectedClientId] = useState<string>(defaultClientId ?? "");
+  const [selectedClientId, setSelectedClientId] = useState<string>(
+    defaultClientId ?? "",
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Query clients for client assignment
@@ -88,13 +90,11 @@ export function CreateProjectDialog({
 
   // Key availability verification query
   const cleanKey = key.trim().toUpperCase();
-  const {
-    data: keyCheckData,
-    isLoading: isCheckingKey,
-  } = api.project.checkKey.useQuery(
-    { key: cleanKey },
-    { enabled: isOpen && cleanKey.length >= 2 },
-  );
+  const { data: keyCheckData, isLoading: isCheckingKey } =
+    api.project.checkKey.useQuery(
+      { key: cleanKey },
+      { enabled: isOpen && cleanKey.length >= 2 },
+    );
 
   const isKeyAvailable = keyCheckData?.available;
 
@@ -169,14 +169,22 @@ export function CreateProjectDialog({
     createMutation.mutate({
       name: name.trim(),
       key: cleanKey,
-      clientId: selectedClientId && selectedClientId !== "none" ? selectedClientId : undefined,
+      clientId:
+        selectedClientId && selectedClientId !== "none"
+          ? selectedClientId
+          : undefined,
       description: description.trim() || undefined,
       teamIds: selectedTeamIds.length > 0 ? selectedTeamIds : undefined,
     });
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
         {/* Header */}
         <div className="border-b border-border px-6 py-4 bg-muted/20">
@@ -206,10 +214,16 @@ export function CreateProjectDialog({
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 pt-4 max-h-[75vh] overflow-y-auto">
+        <form
+          onSubmit={handleSubmit}
+          className="p-6 space-y-4 pt-4 max-h-[75vh] overflow-y-auto"
+        >
           {/* Project Name */}
           <div className="space-y-1.5">
-            <Label htmlFor="project-name" className="text-xs font-semibold text-foreground">
+            <Label
+              htmlFor="project-name"
+              className="text-xs font-semibold text-foreground"
+            >
               Project Name <span className="text-destructive">*</span>
             </Label>
             <Input
@@ -227,20 +241,32 @@ export function CreateProjectDialog({
           {/* Client Tenant Selection */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="project-client" className="text-xs font-semibold text-foreground">
+              <Label
+                htmlFor="project-client"
+                className="text-xs font-semibold text-foreground"
+              >
                 Client Tenant
               </Label>
-              <span className="text-[11px] text-muted-foreground">Optional</span>
+              <span className="text-[11px] text-muted-foreground">
+                Optional
+              </span>
             </div>
             <Select
               value={selectedClientId || "none"}
-              onValueChange={(val) => setSelectedClientId(val === "none" ? "" : val)}
+              onValueChange={(val) =>
+                setSelectedClientId(val === "none" ? "" : val)
+              }
             >
-              <SelectTrigger id="project-client" className="w-full h-9 text-xs font-medium">
+              <SelectTrigger
+                id="project-client"
+                className="w-full h-9 text-xs font-medium"
+              >
                 <SelectValue placeholder="-- No Client (Internal Project) --" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">-- No Client (Internal Project) --</SelectItem>
+                <SelectItem value="none">
+                  -- No Client (Internal Project) --
+                </SelectItem>
                 {clients?.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name} ({c.slug})
@@ -253,7 +279,10 @@ export function CreateProjectDialog({
           {/* Project Key */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="project-key" className="text-xs font-semibold text-foreground">
+              <Label
+                htmlFor="project-key"
+                className="text-xs font-semibold text-foreground"
+              >
                 Project Key <span className="text-destructive">*</span>
               </Label>
               {cleanKey.length >= 2 && (
@@ -285,7 +314,9 @@ export function CreateProjectDialog({
                 maxLength={5}
                 onChange={(e) => {
                   setIsKeyManuallyEdited(true);
-                  setKey(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""));
+                  setKey(
+                    e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""),
+                  );
                 }}
                 placeholder="e.g. CCM"
                 required
@@ -337,7 +368,9 @@ export function CreateProjectDialog({
                               : "border-border bg-background"
                           }`}
                         >
-                          {isSelected && <CheckCircle2 className="h-3.5 w-3.5" />}
+                          {isSelected && (
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                          )}
                         </div>
                         <span className="font-semibold">{team.name}</span>
                       </div>
@@ -358,10 +391,15 @@ export function CreateProjectDialog({
           {/* Description */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="project-desc" className="text-xs font-semibold text-foreground">
+              <Label
+                htmlFor="project-desc"
+                className="text-xs font-semibold text-foreground"
+              >
                 Description
               </Label>
-              <span className="text-[10px] text-muted-foreground">Optional</span>
+              <span className="text-[10px] text-muted-foreground">
+                Optional
+              </span>
             </div>
             <Textarea
               id="project-desc"

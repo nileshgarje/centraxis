@@ -86,7 +86,9 @@ export const boardRouter = createTRPCRouter({
       // Group cards into Kanban lanes
       const columns = {
         [WorkItemStatus.TODO]: items.filter(
-          (item) => item.status === WorkItemStatus.TODO || item.status === WorkItemStatus.BACKLOG,
+          (item) =>
+            item.status === WorkItemStatus.TODO ||
+            item.status === WorkItemStatus.BACKLOG,
         ),
         [WorkItemStatus.IN_PROGRESS]: items.filter(
           (item) => item.status === WorkItemStatus.IN_PROGRESS,
@@ -180,7 +182,10 @@ export const boardRouter = createTRPCRouter({
 
       if (prevRank !== undefined || nextRank !== undefined) {
         let newRank: number;
-        if ((prevRank === null || prevRank === undefined) && (nextRank === null || nextRank === undefined)) {
+        if (
+          (prevRank === null || prevRank === undefined) &&
+          (nextRank === null || nextRank === undefined)
+        ) {
           newRank = currentItem.rankOrder;
         } else if (prevRank === null || prevRank === undefined) {
           newRank = (nextRank ?? 1000) / 2;

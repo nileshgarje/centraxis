@@ -32,7 +32,8 @@ function createTransport() {
 const transport = createTransport();
 
 export async function sendEmail({ to, subject, html, text }: SendMailOptions) {
-  const from = process.env.EMAIL_FROM || "Centraxis <notifications@centvis.com>";
+  const from =
+    process.env.EMAIL_FROM || "Centraxis <notifications@centvis.com>";
 
   if (transport) {
     try {
@@ -171,14 +172,18 @@ export function renderSprintStartedEmail({
           ${startDate || "Today"} &ndash; ${endDate || "Next 2 weeks"}
         </div>
       </div>
-      ${totalPoints !== undefined ? `
+      ${
+        totalPoints !== undefined
+          ? `
       <div>
         <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Committed Points</div>
         <div style="font-size: 14px; font-weight: 700; color: #818cf8; margin-top: 4px;">
           ${totalPoints} pts
         </div>
       </div>
-      ` : ""}
+      `
+          : ""
+      }
     </div>
 
     <div style="text-align: center; margin-bottom: 12px;">

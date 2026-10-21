@@ -155,7 +155,10 @@ export const sprintRouter = createTRPCRouter({
     .input(
       z.object({
         sprintId: z.string(),
-        name: z.string().min(2, "Sprint name must be at least 2 characters").optional(),
+        name: z
+          .string()
+          .min(2, "Sprint name must be at least 2 characters")
+          .optional(),
         goal: z.string().nullable().optional(),
         startDate: z.coerce.date().nullable().optional(),
         endDate: z.coerce.date().nullable().optional(),
@@ -175,7 +178,10 @@ export const sprintRouter = createTRPCRouter({
     .input(
       z.object({
         sprintId: z.string(),
-        name: z.string().min(2, "Sprint name must be at least 2 characters").optional(),
+        name: z
+          .string()
+          .min(2, "Sprint name must be at least 2 characters")
+          .optional(),
         goal: z.string().nullable().optional(),
         startDate: z.coerce.date().nullable().optional(),
         endDate: z.coerce.date().nullable().optional(),

@@ -51,8 +51,7 @@ export function MentionInput({
     if (!mentionQuery.trim()) return true;
     const q = mentionQuery.toLowerCase();
     return (
-      u.name?.toLowerCase().includes(q) ||
-      u.email?.toLowerCase().includes(q)
+      u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)
     );
   });
 
@@ -104,7 +103,9 @@ export function MentionInput({
     [value, mentionIndex, onChange],
   );
 
-  const handleKeyDownInternal = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDownInternal = (
+    e: React.KeyboardEvent<HTMLTextAreaElement>,
+  ) => {
     if (isOpen && filteredUsers.length > 0) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -183,7 +184,9 @@ export function MentionInput({
               <AtSign className="h-3 w-3 text-primary" />
               <span>Mention Project Member</span>
             </span>
-            <span className="text-[9px] font-normal lowercase">↑↓ navigate ↵ select</span>
+            <span className="text-[9px] font-normal lowercase">
+              ↑↓ navigate ↵ select
+            </span>
           </div>
 
           <div className="space-y-0.5">
@@ -224,7 +227,10 @@ export function MentionInput({
                         {u.name || "Anonymous Member"}
                       </span>
                       {u.globalRole === "SYSTEM_ADMIN" ? (
-                        <Badge variant="outline" className="text-[9px] px-1 py-0 border-purple-300 text-purple-700 bg-purple-50 dark:bg-purple-950/40 dark:text-purple-300">
+                        <Badge
+                          variant="outline"
+                          className="text-[9px] px-1 py-0 border-purple-300 text-purple-700 bg-purple-50 dark:bg-purple-950/40 dark:text-purple-300"
+                        >
                           Admin
                         </Badge>
                       ) : (

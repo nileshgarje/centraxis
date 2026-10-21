@@ -33,27 +33,32 @@ Thank you for your interest in contributing to **Centraxis** by Centvis! This gu
 ## Development Setup
 
 1. **Clone the repository**:
+
    ```bash
    git clone https://github.com/centvis/centraxis.git
    cd centraxis
    ```
 
 2. **Install dependencies**:
+
    ```bash
    pnpm install
    ```
 
 3. **Configure environment variables**:
+
    ```bash
    cp .env.example .env
    ```
 
 4. **Start Docker services**:
+
    ```bash
    pnpm docker:up
    ```
 
 5. **Sync Database Schema & Seed**:
+
    ```bash
    pnpm db:push
    pnpm db:seed
@@ -70,17 +75,22 @@ Thank you for your interest in contributing to **Centraxis** by Centvis! This gu
 ## Branching & Commit Conventions
 
 ### Branch Naming
+
 - `feature/<client-or-scope>-<short-description>` (e.g. `feature/multi-client-routing`)
 - `fix/<scope>-<bug-description>` (e.g. `fix/assignee-select-isolation`)
 - `docs/<description>` (e.g. `docs/add-features-guide`)
 
 ### Conventional Commits
+
 All commits should follow [Conventional Commits](https://www.conventionalcommits.org/):
+
 - `feat(web): add path-based multi-client routing`
+- `feat(subtasks): add checklist progress roll-up and quality gate enforcement`
+- `feat(mentions): add scoped user mention autocomplete and notification hub`
 - `fix(api): strictly scope assignee query to client and project members`
 - `refactor(ui): standardize form inputs with official shadcn primitives`
 - `docs: add comprehensive architecture and features specifications`
-- `test(e2e): add playwright integration tests for cross-client 404 blocks`
+- `test(e2e): add playwright integration tests for subtasks and mentions`
 
 ---
 
@@ -88,15 +98,15 @@ All commits should follow [Conventional Commits](https://www.conventionalcommits
 
 When adding or modifying code, ensure changes are scoped to the correct package:
 
-| Package | Path | Responsibility |
-|:---|:---|:---|
-| `@centraxis/web` | `apps/web` | Next.js 15 App Router pages, layouts, and feature components |
-| `@centraxis/api` | `packages/api` | tRPC v11 routers, context, procedure auth, and business logic |
-| `@centraxis/ui` | `packages/ui` | shadcn/ui components, Tailwind theme tokens, icons, and dialogs |
-| `@centraxis/auth` | `packages/auth` | NextAuth.js v5 handlers, credentials provider, Entra ID SSO |
-| `@centraxis/db` | `packages/db` | Prisma schema, database client, and seed scripts |
-| `@centraxis/ai` | `packages/ai` | Vercel AI SDK integration, INVEST prompt definitions |
-| `@centraxis/env` | `packages/env` | Type-safe environment variable parsing with `@t3-oss/env-nextjs` |
+| Package           | Path            | Responsibility                                                   |
+| :---------------- | :-------------- | :--------------------------------------------------------------- |
+| `@centraxis/web`  | `apps/web`      | Next.js 15 App Router pages, layouts, and feature components     |
+| `@centraxis/api`  | `packages/api`  | tRPC v11 routers, context, procedure auth, and business logic    |
+| `@centraxis/ui`   | `packages/ui`   | shadcn/ui components, Tailwind theme tokens, icons, and dialogs  |
+| `@centraxis/auth` | `packages/auth` | NextAuth.js v5 handlers, credentials provider, Entra ID SSO      |
+| `@centraxis/db`   | `packages/db`   | Prisma schema, database client, and seed scripts                 |
+| `@centraxis/ai`   | `packages/ai`   | Vercel AI SDK integration, INVEST prompt definitions             |
+| `@centraxis/env`  | `packages/env`  | Type-safe environment variable parsing with `@t3-oss/env-nextjs` |
 
 ---
 
@@ -135,6 +145,7 @@ pnpm dlx shadcn@latest add command
 ```
 
 When importing or creating components in `packages/ui`:
+
 - Export the component from `packages/ui/src/index.ts`.
 - Ensure high-contrast HSL tokens are used for backgrounds, borders, and popovers.
 - Never use inline raw hex colors; always use Tailwind semantic classes (`bg-card`, `text-foreground`, `border-border`, `bg-popover`).
@@ -144,12 +155,15 @@ When importing or creating components in `packages/ui`:
 ## Writing and Running Tests
 
 ### Type Checking
+
 Run type checks across all 9 packages concurrently:
+
 ```bash
 pnpm type-check
 ```
 
 ### E2E Testing (Playwright)
+
 Ensure the development server and database are running, then run:
 
 ```bash
@@ -157,11 +171,13 @@ Ensure the development server and database are running, then run:
 pnpm test:e2e --workers=1
 
 # Or target a specific test suite
+npx playwright test apps/web/e2e/subtasks-and-mentions.spec.ts --workers=1
 npx playwright test apps/web/e2e/multi-client-routing.spec.ts --workers=1
 npx playwright test apps/web/e2e/rbac-assignee-isolation.spec.ts --workers=1
 ```
 
 ### Unit Testing (Vitest)
+
 ```bash
 pnpm test
 ```
@@ -171,6 +187,7 @@ pnpm test
 ## Linting and Formatting
 
 Run formatting before committing:
+
 ```bash
 # Check formatting
 pnpm format:check

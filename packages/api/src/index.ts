@@ -16,4 +16,3 @@ import type { AppRouter } from "./root";
 
 export type RouterOutputs = inferRouterOutputs<AppRouter>;
 export type RouterInputs = inferRouterInputs<AppRouter>;
-

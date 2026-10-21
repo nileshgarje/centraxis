@@ -32,7 +32,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       profile(profile) {
         return {
           id: profile.sub,
-          name: profile.name || `${profile.given_name ?? ""} ${profile.family_name ?? ""}`.trim() || profile.email,
+          name:
+            profile.name ||
+            `${profile.given_name ?? ""} ${profile.family_name ?? ""}`.trim() ||
+            profile.email,
           email: profile.email || profile.preferred_username,
           image: profile.picture ?? null,
           globalRole: GlobalRole.USER,
@@ -81,7 +84,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 where: {
                   OR: [
                     { email: input },
-                    ...(isInputBootstrapMatch ? [{ email: bootstrapEmail }] : []),
+                    ...(isInputBootstrapMatch
+                      ? [{ email: bootstrapEmail }]
+                      : []),
                   ],
                 },
                 select: {
@@ -111,9 +116,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     });
                   }
                   const passStr = credentials.password as string;
-                  const initialPass = isInputBootstrapMatch ? bootstrapPassword : passStr;
-                  const hashedPassword = await bcrypt.hash(initialPass || "password123", 10);
-                  const nameParts = input.split("@")[0]?.split(".") || ["admin"];
+                  const initialPass = isInputBootstrapMatch
+                    ? bootstrapPassword
+                    : passStr;
+                  const hashedPassword = await bcrypt.hash(
+                    initialPass || "password123",
+                    10,
+                  );
+                  const nameParts = input.split("@")[0]?.split(".") || [
+                    "admin",
+                  ];
                   const baseName = nameParts
                     .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
                     .join(" ");
@@ -151,14 +163,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
               const passStr = credentials.password as string;
               const isBootstrapMatch =
-                (user.email?.toLowerCase() === bootstrapEmail || user.isTemporary) &&
+                (user.email?.toLowerCase() === bootstrapEmail ||
+                  user.isTemporary) &&
                 passStr === bootstrapPassword;
               const isFallbackMatch =
                 passStr === "AdminPassword123!" || passStr === "password123";
               const isValid =
                 isBootstrapMatch ||
                 isFallbackMatch ||
-                (user.password ? await bcrypt.compare(passStr, user.password) : false);
+                (user.password
+                  ? await bcrypt.compare(passStr, user.password)
+                  : false);
 
               if (!isValid) {
                 return null;
@@ -184,11 +199,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (account?.provider === "microsoft-entra-id" && user.email) {
         // Restrict auto-provisioning to allowed tenant domains if specified
         const allowedDomains = process.env.ALLOWED_EMAIL_DOMAINS
-          ? process.env.ALLOWED_EMAIL_DOMAINS.split(",").map((d) => d.trim().toLowerCase())
+          ? process.env.ALLOWED_EMAIL_DOMAINS.split(",").map((d) =>
+              d.trim().toLowerCase(),
+            )
           : ["centvis.com"]; // Default allowed domain
 
         const userDomain = user.email.split("@")[1]?.toLowerCase();
-        if (allowedDomains.length > 0 && userDomain && !allowedDomains.includes(userDomain)) {
+        if (
+          allowedDomains.length > 0 &&
+          userDomain &&
+          !allowedDomains.includes(userDomain)
+        ) {
           const pendingInvite = await db.invitation.findFirst({
             where: {
               email: user.email.toLowerCase(),
@@ -196,7 +217,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             },
           });
           if (!pendingInvite) {
-            console.warn(`[Auth] Blocked Entra ID signin from uninvited external domain: ${userDomain}`);
+            console.warn(
+              `[Auth] Blocked Entra ID signin from uninvited external domain: ${userDomain}`,
+            );
             return false;
           }
         }

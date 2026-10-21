@@ -30,11 +30,11 @@ function Calendar({
         nav: "space-x-1 flex items-center",
         button_previous: cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute left-1"
+          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute left-1",
         ),
         button_next: cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute right-1"
+          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute right-1",
         ),
         month_grid: "w-full border-collapse space-y-1",
         weekdays: "flex",
@@ -44,7 +44,7 @@ function Calendar({
         day: cn(
           "relative p-0 text-center text-sm focus-within:relative focus-within:z-20",
           buttonVariants({ variant: "ghost" }),
-          "h-8 w-8 p-0 font-normal aria-selected:opacity-100"
+          "h-8 w-8 p-0 font-normal aria-selected:opacity-100",
         ),
         day_button: "h-8 w-8 p-0 font-normal",
         range_start: "rounded-l-md bg-accent text-accent-foreground",

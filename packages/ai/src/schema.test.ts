@@ -31,8 +31,11 @@ describe("UserStoryOutputSchema (INVEST principles validation)", () => {
   it("rejects non-Fibonacci complexity estimates", () => {
     const invalidStory = {
       title: "Add real-time card move animations",
-      story: "As a developer, I want animations, So that state updates feel responsive.",
-      acceptanceCriteria: ["Given a card move, When dropped, Then animate smoothly."],
+      story:
+        "As a developer, I want animations, So that state updates feel responsive.",
+      acceptanceCriteria: [
+        "Given a card move, When dropped, Then animate smoothly.",
+      ],
       estimatedPoints: "4", // Invalid! Must be 1, 2, 3, 5, 8, 13
       estimationRationale: "CSS transforms",
       subTasks: ["Add CSS keyframes"],
@@ -45,8 +48,11 @@ describe("UserStoryOutputSchema (INVEST principles validation)", () => {
     const longTitleStory = {
       title:
         "This title is intentionally written to exceed eighty characters in length to verify our strict INVEST constraint",
-      story: "As a user, I want concise titles, So that cards fit on Kanban lanes.",
-      acceptanceCriteria: ["Given any story, When rendered, Then title is brief."],
+      story:
+        "As a user, I want concise titles, So that cards fit on Kanban lanes.",
+      acceptanceCriteria: [
+        "Given any story, When rendered, Then title is brief.",
+      ],
       estimatedPoints: "2",
       estimationRationale: "Simple validation",
       subTasks: ["Add max length validator"],

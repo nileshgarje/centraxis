@@ -53,10 +53,7 @@ export function CompleteSprintDialog({
 }: CompleteSprintDialogProps) {
   const utils = api.useUtils();
 
-  const {
-    data: summary,
-    isLoading,
-  } = api.sprint.getSprintSummary.useQuery(
+  const { data: summary, isLoading } = api.sprint.getSprintSummary.useQuery(
     { sprintId: sprintId! },
     { enabled: !!sprintId && isOpen },
   );
@@ -146,7 +143,9 @@ export function CompleteSprintDialog({
         {isLoading || !summary ? (
           <div className="flex h-64 items-center justify-center space-x-2 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            <span className="text-sm">Calculating sprint completion metrics...</span>
+            <span className="text-sm">
+              Calculating sprint completion metrics...
+            </span>
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
@@ -202,7 +201,8 @@ export function CompleteSprintDialog({
                     {summary.metrics.burnedPercentage}%
                   </div>
                   <div className="text-xs text-blue-700 dark:text-blue-400 font-medium">
-                    {summary.metrics.completedPoints} / {summary.metrics.totalPoints} pts
+                    {summary.metrics.completedPoints} /{" "}
+                    {summary.metrics.totalPoints} pts
                   </div>
                 </div>
               </div>
@@ -211,7 +211,10 @@ export function CompleteSprintDialog({
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-muted-foreground font-medium">
                   <span>Sprint Completion Rate</span>
-                  <span>{summary.metrics.burnedPercentage}% of total committed points</span>
+                  <span>
+                    {summary.metrics.burnedPercentage}% of total committed
+                    points
+                  </span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
                   <div
@@ -226,9 +229,14 @@ export function CompleteSprintDialog({
                 <div className="flex items-start space-x-2.5 rounded-xl border border-blue-200 bg-blue-50/70 dark:border-blue-900 dark:bg-blue-950/40 p-3.5 text-xs text-blue-900 dark:text-blue-200">
                   <HelpCircle className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                   <div className="space-y-1">
-                    <p className="font-semibold">Subtasks Retained with Parent Story</p>
+                    <p className="font-semibold">
+                      Subtasks Retained with Parent Story
+                    </p>
                     <p className="text-blue-800/90 dark:text-blue-300/90 leading-relaxed">
-                      Some incomplete user stories have finished subtasks. During rollover, completed subtasks will remain attached to their parent story to preserve audit logs and prevent orphaned items.
+                      Some incomplete user stories have finished subtasks.
+                      During rollover, completed subtasks will remain attached
+                      to their parent story to preserve audit logs and prevent
+                      orphaned items.
                     </p>
                   </div>
                 </div>
@@ -238,7 +246,9 @@ export function CompleteSprintDialog({
               {summary.metrics.incompleteCount > 0 ? (
                 <div className="space-y-3">
                   <label className="block text-xs font-bold text-foreground uppercase tracking-wider">
-                    Where should {summary.metrics.incompleteCount} incomplete item{summary.metrics.incompleteCount > 1 ? "s" : ""} be moved?
+                    Where should {summary.metrics.incompleteCount} incomplete
+                    item{summary.metrics.incompleteCount > 1 ? "s" : ""} be
+                    moved?
                   </label>
 
                   <div className="space-y-2.5">
@@ -256,16 +266,22 @@ export function CompleteSprintDialog({
                           name="rolloverTarget"
                           value="MOVE_TO_NEXT_SPRINT"
                           checked={targetAction === "MOVE_TO_NEXT_SPRINT"}
-                          onChange={() => setTargetAction("MOVE_TO_NEXT_SPRINT")}
+                          onChange={() =>
+                            setTargetAction("MOVE_TO_NEXT_SPRINT")
+                          }
                           className="mt-0.5 h-4 w-4 text-primary focus:ring-primary"
                         />
                         <div className="flex-1 space-y-1">
                           <div className="flex items-center space-x-1.5 font-semibold text-xs text-foreground">
                             <Layers className="h-3.5 w-3.5 text-primary" />
-                            <span>Next Planned Sprint: {summary.nextPlannedSprint.name}</span>
+                            <span>
+                              Next Planned Sprint:{" "}
+                              {summary.nextPlannedSprint.name}
+                            </span>
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            Automatically place rollover items at the top of the next planned iteration
+                            Automatically place rollover items at the top of the
+                            next planned iteration
                           </p>
 
                           {/* Planned Sprint Select (if multiple planned sprints exist) */}
@@ -351,10 +367,13 @@ export function CompleteSprintDialog({
                       <div className="flex-1 space-y-1">
                         <div className="flex items-center space-x-1.5 font-semibold text-xs text-foreground">
                           <Inbox className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span>Move incomplete items back to unassigned Backlog</span>
+                          <span>
+                            Move incomplete items back to unassigned Backlog
+                          </span>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Removes sprint binding, allowing items to be reprioritized at will
+                          Removes sprint binding, allowing items to be
+                          reprioritized at will
                         </p>
                       </div>
                     </label>
@@ -367,7 +386,8 @@ export function CompleteSprintDialog({
                     Perfect Sprint Execution!
                   </h4>
                   <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">
-                    All {summary.metrics.totalItems} committed work items were marked as DONE. No rollover needed.
+                    All {summary.metrics.totalItems} committed work items were
+                    marked as DONE. No rollover needed.
                   </p>
                 </div>
               )}

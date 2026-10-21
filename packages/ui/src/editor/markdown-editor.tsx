@@ -129,8 +129,10 @@ const CustomCodeBlockLowlight = CodeBlockLowlight.extend({
   },
   addKeyboardShortcuts() {
     return {
-      "Mod-Shift-c": () => this.editor.commands.toggleCodeBlock({ language: "typescript" }),
-      "Mod-Shift-C": () => this.editor.commands.toggleCodeBlock({ language: "typescript" }),
+      "Mod-Shift-c": () =>
+        this.editor.commands.toggleCodeBlock({ language: "typescript" }),
+      "Mod-Shift-C": () =>
+        this.editor.commands.toggleCodeBlock({ language: "typescript" }),
     };
   },
 }).configure({
@@ -244,7 +246,9 @@ export function MarkdownEditor({
     );
   }
 
-  const currentMarkdown = editor ? ((editor.storage as any).markdown?.getMarkdown() || "") : value;
+  const currentMarkdown = editor
+    ? (editor.storage as any).markdown?.getMarkdown() || ""
+    : value;
 
   return (
     <div
@@ -286,30 +290,42 @@ export function MarkdownEditor({
             {/* Headings */}
             <button
               type="button"
-              onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 1 }).run()
+              }
               title="Heading 1"
               className={`p-1.5 rounded hover:bg-slate-200/70 transition ${
-                editor.isActive("heading", { level: 1 }) ? "bg-slate-200 text-blue-600 font-bold" : ""
+                editor.isActive("heading", { level: 1 })
+                  ? "bg-slate-200 text-blue-600 font-bold"
+                  : ""
               }`}
             >
               <Heading1 className="h-3.5 w-3.5" />
             </button>
             <button
               type="button"
-              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 2 }).run()
+              }
               title="Heading 2"
               className={`p-1.5 rounded hover:bg-slate-200/70 transition ${
-                editor.isActive("heading", { level: 2 }) ? "bg-slate-200 text-blue-600 font-bold" : ""
+                editor.isActive("heading", { level: 2 })
+                  ? "bg-slate-200 text-blue-600 font-bold"
+                  : ""
               }`}
             >
               <Heading2 className="h-3.5 w-3.5" />
             </button>
             <button
               type="button"
-              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 3 }).run()
+              }
               title="Heading 3"
               className={`p-1.5 rounded hover:bg-slate-200/70 transition ${
-                editor.isActive("heading", { level: 3 }) ? "bg-slate-200 text-blue-600 font-bold" : ""
+                editor.isActive("heading", { level: 3 })
+                  ? "bg-slate-200 text-blue-600 font-bold"
+                  : ""
               }`}
             >
               <Heading3 className="h-3.5 w-3.5" />
@@ -323,7 +339,9 @@ export function MarkdownEditor({
               onClick={() => editor.chain().focus().toggleBold().run()}
               title="Bold (Cmd+B)"
               className={`p-1.5 rounded hover:bg-slate-200/70 transition ${
-                editor.isActive("bold") ? "bg-slate-200 text-blue-600 font-bold" : ""
+                editor.isActive("bold")
+                  ? "bg-slate-200 text-blue-600 font-bold"
+                  : ""
               }`}
             >
               <Bold className="h-3.5 w-3.5" />
@@ -357,7 +375,9 @@ export function MarkdownEditor({
               onClick={() => editor.chain().focus().toggleCode().run()}
               title="Inline Code (Cmd+E)"
               className={`p-1.5 rounded hover:bg-slate-200/70 transition ${
-                editor.isActive("code") ? "bg-slate-200 text-blue-600 font-mono" : ""
+                editor.isActive("code")
+                  ? "bg-slate-200 text-blue-600 font-mono"
+                  : ""
               }`}
             >
               <Code className="h-3.5 w-3.5" />
@@ -365,7 +385,11 @@ export function MarkdownEditor({
             <button
               type="button"
               onClick={() =>
-                editor.chain().focus().toggleCodeBlock({ language: "typescript" }).run()
+                editor
+                  .chain()
+                  .focus()
+                  .toggleCodeBlock({ language: "typescript" })
+                  .run()
               }
               title="Code Block (Cmd+Shift+C)"
               className={`p-1.5 rounded hover:bg-slate-200/70 transition ${
@@ -383,7 +407,9 @@ export function MarkdownEditor({
               onClick={() => editor.chain().focus().toggleBulletList().run()}
               title="Bullet List"
               className={`p-1.5 rounded hover:bg-slate-200/70 transition ${
-                editor.isActive("bulletList") ? "bg-slate-200 text-blue-600" : ""
+                editor.isActive("bulletList")
+                  ? "bg-slate-200 text-blue-600"
+                  : ""
               }`}
             >
               <List className="h-3.5 w-3.5" />
@@ -403,7 +429,9 @@ export function MarkdownEditor({
               onClick={() => editor.chain().focus().toggleBlockquote().run()}
               title="Quote"
               className={`p-1.5 rounded hover:bg-slate-200/70 transition ${
-                editor.isActive("blockquote") ? "bg-slate-200 text-blue-600" : ""
+                editor.isActive("blockquote")
+                  ? "bg-slate-200 text-blue-600"
+                  : ""
               }`}
             >
               <Quote className="h-3.5 w-3.5" />

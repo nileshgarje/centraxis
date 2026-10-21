@@ -5,7 +5,8 @@ import { BacklogView } from "~/components/backlog/BacklogView";
 import { useProject } from "~/context/project-context";
 
 export default function ProjectBacklogPage() {
-  const { project, openCreateItem, openCreateSprint, openAiModal } = useProject();
+  const { project, openCreateItem, openCreateSprint, openAiModal } =
+    useProject();
 
   return (
     <BacklogView

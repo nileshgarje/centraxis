@@ -70,7 +70,9 @@ export default function ClientHomePage() {
         activeTab="board"
         onTabChange={(tab) => {
           if (firstProject) {
-            router.push(`/${clientSlug}/${firstProject.key}/${tab === "board" ? "board" : tab}`);
+            router.push(
+              `/${clientSlug}/${firstProject.key}/${tab === "board" ? "board" : tab}`,
+            );
           }
         }}
         onOpenAiModal={() => setIsAiModalOpen(true)}
@@ -137,7 +139,8 @@ export default function ClientHomePage() {
                 Assigned Projects
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Select a project below to open its Kanban board or sprint backlog
+                Select a project below to open its Kanban board or sprint
+                backlog
               </p>
             </div>
           </div>
@@ -151,7 +154,8 @@ export default function ClientHomePage() {
                 No projects assigned to this client yet
               </h3>
               <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-                Create a new project workspace under {client.name} to start tracking sprints and issues.
+                Create a new project workspace under {client.name} to start
+                tracking sprints and issues.
               </p>
               <Button
                 onClick={() => setIsCreateProjectOpen(true)}
@@ -175,7 +179,10 @@ export default function ClientHomePage() {
                         {project.key}
                       </span>
                       {project.sprints && project.sprints.length > 0 && (
-                        <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300"
+                        >
                           Active Sprint
                         </Badge>
                       )}
@@ -270,7 +277,9 @@ export default function ClientHomePage() {
         onOpenInviteMember={() => setIsInviteUserOpen(true)}
         onNavigateTab={(tab) => {
           if (firstProject) {
-            router.push(`/${clientSlug}/${firstProject.key}/${tab === "board" ? "board" : tab}`);
+            router.push(
+              `/${clientSlug}/${firstProject.key}/${tab === "board" ? "board" : tab}`,
+            );
           }
         }}
       />

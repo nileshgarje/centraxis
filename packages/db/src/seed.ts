@@ -83,7 +83,8 @@ async function main() {
   const platformAiTeam = await prisma.team.create({
     data: {
       name: "Platform & AI Squad",
-      description: "Vercel AI SDK story generation, LLM prompts, and cloud infrastructure",
+      description:
+        "Vercel AI SDK story generation, LLM prompts, and cloud infrastructure",
       organizationId: org.id,
     },
   });
@@ -105,7 +106,8 @@ async function main() {
     data: {
       name: "Centraxis Mobile App",
       key: "MOB",
-      description: "Companion iOS/Android application for sprint planning and review",
+      description:
+        "Companion iOS/Android application for sprint planning and review",
       defaultSprintDurationDays: 14,
       organizationId: org.id,
       clientId: clientNexus.id,
@@ -125,7 +127,7 @@ async function main() {
 
   // 5. Seed 25 Test Users
   console.log("Creating 25 Test Users with RBAC roles...");
-  
+
   interface UserSeedSpec {
     name: string;
     email: string;
@@ -371,58 +373,98 @@ async function main() {
   // Client Apex Memberships
   if (rachel) {
     await prisma.clientMember.create({
-      data: { userId: rachel.id, clientId: clientApex.id, role: ClientRole.CLIENT_ADMIN },
+      data: {
+        userId: rachel.id,
+        clientId: clientApex.id,
+        role: ClientRole.CLIENT_ADMIN,
+      },
     });
   }
   for (const u of [liam, sophia, ethan, olivia, emily].filter(Boolean)) {
     await prisma.clientMember.create({
-      data: { userId: u.id, clientId: clientApex.id, role: ClientRole.CLIENT_MEMBER },
+      data: {
+        userId: u.id,
+        clientId: clientApex.id,
+        role: ClientRole.CLIENT_MEMBER,
+      },
     });
   }
 
   // Client Nexus Memberships
   if (marcus) {
     await prisma.clientMember.create({
-      data: { userId: marcus.id, clientId: clientNexus.id, role: ClientRole.CLIENT_ADMIN },
+      data: {
+        userId: marcus.id,
+        clientId: clientNexus.id,
+        role: ClientRole.CLIENT_ADMIN,
+      },
     });
   }
   for (const u of [lucas, aria, olivia, david].filter(Boolean)) {
     await prisma.clientMember.create({
-      data: { userId: u.id, clientId: clientNexus.id, role: ClientRole.CLIENT_MEMBER },
+      data: {
+        userId: u.id,
+        clientId: clientNexus.id,
+        role: ClientRole.CLIENT_MEMBER,
+      },
     });
   }
 
   // Centraxis Core (Project 1) Memberships
   if (rachel) {
     await prisma.projectMember.create({
-      data: { userId: rachel.id, projectId: coreProject.id, role: ProjectRole.PROJECT_LEAD },
+      data: {
+        userId: rachel.id,
+        projectId: coreProject.id,
+        role: ProjectRole.PROJECT_LEAD,
+      },
     });
   }
   for (const u of [liam, sophia, ethan, olivia].filter(Boolean)) {
     await prisma.projectMember.create({
-      data: { userId: u.id, projectId: coreProject.id, role: ProjectRole.MEMBER },
+      data: {
+        userId: u.id,
+        projectId: coreProject.id,
+        role: ProjectRole.MEMBER,
+      },
     });
   }
   if (emily) {
     await prisma.projectMember.create({
-      data: { userId: emily.id, projectId: coreProject.id, role: ProjectRole.VIEWER },
+      data: {
+        userId: emily.id,
+        projectId: coreProject.id,
+        role: ProjectRole.VIEWER,
+      },
     });
   }
 
   // Centraxis Mobile App (Project 2) Memberships
   if (marcus) {
     await prisma.projectMember.create({
-      data: { userId: marcus.id, projectId: mobileProject.id, role: ProjectRole.PROJECT_LEAD },
+      data: {
+        userId: marcus.id,
+        projectId: mobileProject.id,
+        role: ProjectRole.PROJECT_LEAD,
+      },
     });
   }
   for (const u of [lucas, aria, olivia].filter(Boolean)) {
     await prisma.projectMember.create({
-      data: { userId: u.id, projectId: mobileProject.id, role: ProjectRole.MEMBER },
+      data: {
+        userId: u.id,
+        projectId: mobileProject.id,
+        role: ProjectRole.MEMBER,
+      },
     });
   }
   if (david) {
     await prisma.projectMember.create({
-      data: { userId: david.id, projectId: mobileProject.id, role: ProjectRole.VIEWER },
+      data: {
+        userId: david.id,
+        projectId: mobileProject.id,
+        role: ProjectRole.VIEWER,
+      },
     });
   }
 
@@ -482,7 +524,8 @@ async function main() {
     data: {
       key: "CTX-2",
       title: "Microsoft Entra ID OAuth 2.0 Provider",
-      description: "Integrate @auth/prisma-adapter and Azure AD provider with tenant validation",
+      description:
+        "Integrate @auth/prisma-adapter and Azure AD provider with tenant validation",
       type: WorkItemType.FEATURE,
       status: WorkItemStatus.IN_PROGRESS,
       priority: WorkItemPriority.HIGH,
@@ -501,8 +544,10 @@ async function main() {
     data: {
       key: "CTX-3",
       title: "As an engineer, I want SSO sign-in via Microsoft Entra ID",
-      description: "Given corporate Azure credentials, When I click 'Sign in with Microsoft', Then my session is provisioned with organization and team roles.",
-      acceptanceCriteria: "Scenario: Successful login\nGiven valid Entra ID tenant token\nWhen redirected to /api/auth/callback/microsoft-entra-id\nThen create user if not exists and populate session.user.role",
+      description:
+        "Given corporate Azure credentials, When I click 'Sign in with Microsoft', Then my session is provisioned with organization and team roles.",
+      acceptanceCriteria:
+        "Scenario: Successful login\nGiven valid Entra ID tenant token\nWhen redirected to /api/auth/callback/microsoft-entra-id\nThen create user if not exists and populate session.user.role",
       type: WorkItemType.STORY,
       status: WorkItemStatus.IN_PROGRESS,
       priority: WorkItemPriority.HIGH,
@@ -519,9 +564,12 @@ async function main() {
   const story2 = await prisma.workItem.create({
     data: {
       key: "CTX-4",
-      title: "As a Scrum Master, I want an AI agent to draft INVEST user stories",
-      description: "Given a feature description prompt, the AI agent returns structured stories with Gherkin acceptance criteria.",
-      acceptanceCriteria: "Scenario: INVEST generation\nGiven raw prompt 'Export burndown chart to PDF'\nWhen AI agent executes\nThen output matches UserStoryOutputSchema and suggested story points",
+      title:
+        "As a Scrum Master, I want an AI agent to draft INVEST user stories",
+      description:
+        "Given a feature description prompt, the AI agent returns structured stories with Gherkin acceptance criteria.",
+      acceptanceCriteria:
+        "Scenario: INVEST generation\nGiven raw prompt 'Export burndown chart to PDF'\nWhen AI agent executes\nThen output matches UserStoryOutputSchema and suggested story points",
       type: WorkItemType.STORY,
       status: WorkItemStatus.TODO,
       priority: WorkItemPriority.MEDIUM,
@@ -539,7 +587,8 @@ async function main() {
     data: {
       key: "CTX-5",
       title: "Configure NextAuth Prisma adapter mapping",
-      description: "Verify Account, Session, and User tables handle Azure tokens cleanly",
+      description:
+        "Verify Account, Session, and User tables handle Azure tokens cleanly",
       type: WorkItemType.TASK,
       status: WorkItemStatus.DONE,
       priority: WorkItemPriority.HIGH,
@@ -558,7 +607,8 @@ async function main() {
     data: {
       key: "CTX-6",
       title: "Fix session callback missing active organizationId",
-      description: "Ensure JWT token persists active organization slug for multitenant queries",
+      description:
+        "Ensure JWT token persists active organization slug for multitenant queries",
       type: WorkItemType.BUG,
       status: WorkItemStatus.TODO,
       priority: WorkItemPriority.URGENT,
@@ -577,7 +627,8 @@ async function main() {
     data: {
       key: "CTX-7",
       title: "Interactive drag-and-drop sprint board lanes",
-      description: "Build 4-lane Kanban with optimistic state sync using @hello-pangea/dnd",
+      description:
+        "Build 4-lane Kanban with optimistic state sync using @hello-pangea/dnd",
       type: WorkItemType.STORY,
       status: WorkItemStatus.BACKLOG,
       priority: WorkItemPriority.HIGH,
@@ -594,17 +645,21 @@ async function main() {
   console.log("Creating AI Story Audit Log...");
   await prisma.aiStoryLog.create({
     data: {
-      rawPrompt: "As a Scrum Master, I want an AI agent to draft INVEST user stories",
+      rawPrompt:
+        "As a Scrum Master, I want an AI agent to draft INVEST user stories",
       generatedPayload: {
-        title: "As a Scrum Master, I want an AI agent to draft INVEST user stories",
-        story: "As a Scrum Master, I want an automated AI Story Agent so that backlog grooming velocity is doubled.",
+        title:
+          "As a Scrum Master, I want an AI agent to draft INVEST user stories",
+        story:
+          "As a Scrum Master, I want an automated AI Story Agent so that backlog grooming velocity is doubled.",
         acceptanceCriteria: [
           "Given a product manager enters a feature brief",
           "When the prompt is submitted to the AI agent",
           "Then return an INVEST-compliant user story with Gherkin criteria and Fibonacci estimate",
         ],
         estimatedPoints: "5",
-        estimationRationale: "Requires Vercel AI SDK integration, Zod schema validation, and tRPC mutation endpoint.",
+        estimationRationale:
+          "Requires Vercel AI SDK integration, Zod schema validation, and tRPC mutation endpoint.",
         subTasks: [
           "Define UserStoryOutputSchema in packages/ai",
           "Create tRPC ai.generateStoryFromPrompt procedure",
@@ -619,8 +674,12 @@ async function main() {
 
   console.log("✅ Centraxis seed completed successfully!");
   console.log(`- 1 Organization: ${org.name}`);
-  console.log(`- 3 Squads: ${frontendTeam.name}, ${backendTeam.name}, ${platformAiTeam.name}`);
-  console.log(`- 2 Projects: ${coreProject.name} (${coreProject.key}), ${mobileProject.name} (${mobileProject.key})`);
+  console.log(
+    `- 3 Squads: ${frontendTeam.name}, ${backendTeam.name}, ${platformAiTeam.name}`,
+  );
+  console.log(
+    `- 2 Projects: ${coreProject.name} (${coreProject.key}), ${mobileProject.name} (${mobileProject.key})`,
+  );
   console.log(`- 25 Users seeded with roles`);
   console.log(`- 2 Sprints (1 Active, 1 Planned)`);
   console.log(`- 7 Work Items (Epics, Features, Stories, Tasks, Bugs)`);

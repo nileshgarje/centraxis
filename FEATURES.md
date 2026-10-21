@@ -18,6 +18,9 @@ This document provides a comprehensive overview of all features and architectura
 - [10. Official shadcn/ui Design System & Tokens](#10-official-shadcnui-design-system--tokens)
 - [11. Dual Authentication: Entra ID SSO & Local Bypass](#11-dual-authentication-entra-id-sso--local-bypass)
 - [12. Global Keyboard Shortcuts](#12-global-keyboard-shortcuts)
+- [13. Deep Sub-Tasks Management & Quality Gates](#13-deep-sub-tasks-management--quality-gates)
+- [14. Discussion Feeds, @Mentions & Notifications](#14-discussion-feeds-mentions--notifications)
+- [15. Zero-Touch Bootstrap Administration](#15-zero-touch-bootstrap-administration)
 
 ---
 
@@ -42,6 +45,7 @@ Centraxis leverages the Next.js 15 App Router to enforce path-based tenancy wher
   - High-level tenant overview reserved exclusively for `SYSTEM_ADMIN` users.
 
 ### Slug Validation & Enforceability
+
 - Client slugs are auto-slugified during client creation (e.g. `"Acme Corp"` -> `"acme-corp"`).
 - Strict regex validation: `^[a-z0-9-]+$` with a minimum length of 2 characters.
 - Database uniqueness constraint: `@@unique([orgId, slug])` prevents duplicate slugs within an organization.
@@ -91,7 +95,9 @@ Centraxis features a fine-grained, 3-tier Role-Based Access Control (RBAC) archi
    - `VIEWER`: Read-only stakeholder access to boards and backlogs.
 
 ### Strict Assignee Scoping Enforcement
+
 To prevent cross-tenant data leakage:
+
 - When creating or editing an issue within a project, the **Assignee** selector strictly filters and displays only users who:
   1. Hold a global `SYSTEM_ADMIN` or `ORG_ADMIN` role, OR
   2. Hold a direct `ClientMember` record for the parent client, OR
@@ -151,7 +157,7 @@ Accessible via `Cmd+J` / `Ctrl+J` or the **AI Story Agent** button in the top na
   - **S**mall: Sized appropriately for completion within a single sprint.
   - **T**estable: Formulates verifiable acceptance criteria in Given-When-Then format.
 - **Automated Outputs**:
-  - Title in standard agile syntax: *"As a [user], I want to [action], so that [outcome]"*.
+  - Title in standard agile syntax: _"As a [user], I want to [action], so that [outcome]"_.
   - Detailed description and context.
   - Acceptance Criteria checklist.
   - Suggested Fibonacci story points (`1, 2, 3, 5, 8, 13`).
@@ -196,10 +202,12 @@ Centraxis supports matrixed organizations where cross-functional squads work acr
 ## 9. Client Settings & Global System Administration
 
 ### Client Settings (`/[clientSlug]/settings`)
+
 - **Client Profile**: Update client display name, primary contact email, and branding.
 - **Client Members**: Inspect all users allocated to this client space alongside their client-level roles (`CLIENT_ADMIN`, `CLIENT_MEMBER`).
 
 ### Global Admin Hub (`/admin`)
+
 - Accessible exclusively by users holding the `SYSTEM_ADMIN` global role.
 - **Tenant Overview**: High-level telemetry showing all active clients, total projects, and member headcounts.
 - **Client Creation**: Launch the `CreateClientDialog` to scaffold new client workspaces with slug validation.
@@ -221,11 +229,13 @@ Centraxis is built exclusively with official components from [ui.shadcn.com](htt
 ## 11. Dual Authentication: Entra ID SSO & Local Bypass
 
 ### 1. Microsoft Entra ID (Azure AD) SSO
+
 - Enterprise single sign-on leveraging `@auth/microsoft-entra-id`.
 - Scopes: `openid profile email User.Read`.
 - Maps Azure AD corporate credentials directly to Centraxis user records.
 
 ### 2. Local Development Credentials Bypass
+
 - In development mode (`NODE_ENV !== 'production'`), credentials login is enabled.
 - All seed accounts are accessible with password `password123` (or `AdminPassword123!`).
 - Auto-redirects users from login to their requested `callbackUrl`.
@@ -234,9 +244,77 @@ Centraxis is built exclusively with official components from [ui.shadcn.com](htt
 
 ## 12. Global Keyboard Shortcuts
 
-| Shortcut | Action | Scope |
-|:---|:---|:---|
-| `Cmd + K` / `Ctrl + K` | Open Spotlight Command Palette | Global |
-| `Cmd + J` / `Ctrl + J` | Launch AI Story Generation Agent | Global |
-| `C` | Open Create Work Item modal | Global (outside input fields) |
-| `Escape` | Dismiss modal, sheet drawer, or dropdown | Global |
+| Shortcut               | Action                                   | Scope                         |
+| :--------------------- | :--------------------------------------- | :---------------------------- |
+| `Cmd + K` / `Ctrl + K` | Open Spotlight Command Palette           | Global                        |
+| `Cmd + J` / `Ctrl + J` | Launch AI Story Generation Agent         | Global                        |
+| `C`                    | Open Create Work Item modal              | Global (outside input fields) |
+| `Escape`               | Dismiss modal, sheet drawer, or dropdown | Global                        |
+
+---
+
+## 13. Deep Sub-Tasks Management & Quality Gates
+
+Centraxis provides comprehensive sub-task lifecycle management directly within the `WorkItemDrawer`:
+
+### Sub-Task Hierarchy & Execution
+
+- **Parent-Child Linkage**: Any Story, Feature, or Epic can nest multiple child sub-tasks linked via the `parentId` relational hierarchy in Prisma.
+- **Roll-Up Metrics**: Header progress bar visually displays completion percentage (`X/Y Done (Z%)`) alongside an animated fill bar that transitions smoothly from slate to emerald.
+- **Interactive Checkbox Controls**: Click checkbox icons to instantaneously toggle sub-tasks between `TODO` and `DONE`, automatically striking through text and updating roll-up counts.
+- **Inline Title Editing**: Click on any sub-task title to enter inline edit mode and modify the title with instant keyboard confirmation (`Enter` to save, `Escape` to cancel).
+- **Scoped Assignee Reassignment**: Quick avatar dropdown allows assigning or re-assigning sub-tasks exclusively to users authorized on that project or client.
+- **Rapid Keyboard Entry**: Type in the `+ Add a subtask (press Enter)...` input and hit `Enter` to create sub-tasks seamlessly without losing focus.
+
+### Quality Gate Enforcement
+
+To prevent premature closure of user stories:
+
+- **Server-Side Validation**: When transitioning any work item to `DONE` or `RESOLVED`, the `backlog.updateItem` tRPC mutation checks for any child sub-tasks where `status !== 'DONE'`.
+- **Precondition Check (HTTP 412)**: If uncompleted child sub-tasks remain, the mutation rejects the request with `PRECONDITION_FAILED`:
+  > _"Cannot resolve work item while child sub-tasks are incomplete. Please complete all sub-tasks first."_
+- **Visual Alert Banner**: The `WorkItemDrawer` displays a high-visibility warning banner at the top of the drawer when the quality gate is triggered, keeping the user in full control.
+
+---
+
+## 14. Discussion Feeds, @Mentions & Notifications
+
+Centraxis features a real-time, team-centric collaboration engine built directly into issue workflows:
+
+### Discussion Feeds
+
+- **Rich Markdown Formatting**: Supports GitHub Flavored Markdown (GFM), inline code, fenced code blocks, checklists, and bulleted lists.
+- **Author Information**: Shows author avatar, name, and relative timestamps (e.g., _"Just now"_, _"2 hours ago"_).
+- **Author Permissions**: Comment authors or administrators can delete comments with confirmation.
+
+### Rich @Mention Engine
+
+- **Trigger Autocomplete**: Typing `@` in any comment textarea displays a floating popover of project-scoped members matching the search query.
+- **Keyboard Navigation**: Navigate the user suggestions using `ArrowUp` / `ArrowDown` and confirm with `Enter` or `Tab`.
+- **Structured Token Syntax**: Embeds mentions using `@` or `@[User Name](userId)` tokens, parsed into database `Mention` records.
+- **Rendered Mention Pills**: Formats mentioned users as interactive indigo pills (`@User Name`) with subtle hover states.
+- **Strict Scope Validation**: Prevents unauthorized tagging of cross-tenant users. Only users associated with the target client or project can be notified.
+
+### In-App Notification Hub
+
+- **Top Navigation Bell**: Positioned in the global header with a real-time unread counter badge.
+- **Notification Types**:
+  - `MENTION`: Tagged in a work item discussion.
+  - `ASSIGNED`: Assigned to a work item or subtask.
+  - `STATUS_CHANGED`: Updates on tracked issues.
+- **Interactive Flyout**: Displays recent notifications with message snippets and direct 1-click navigation to the target work item on the board (`?item=CTX-101`).
+- **Batch Actions**: Single-click **Mark all read** clears pending unread notifications across the account.
+
+---
+
+## 15. Zero-Touch Bootstrap Administration
+
+To support automated container deployments, CI pipelines, and cold-start installations with an empty database:
+
+- **Environment-Driven Setup**: Reads credentials from `.env`:
+  ```env
+  KC_BOOTSTRAP_ADMIN_USERNAME="admin@centvis.com"
+  KC_BOOTSTRAP_ADMIN_PASSWORD="AdminPassword123!"
+  ```
+- **Cold-Start Auto-Creation**: During server initialization or database seeding, if no administrative account exists matching the configured username, Centraxis automatically creates a `SYSTEM_ADMIN` user with `isTemporary = true`.
+- **Temporary User Banner**: When logged in via the bootstrap administrator, the UI prominently displays a **Temporary User** warning badge in the user profile menu and top header, reminding administrators to configure permanent identity providers (such as Microsoft Entra ID) and secure their deployment.

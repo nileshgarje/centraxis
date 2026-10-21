@@ -138,7 +138,8 @@ export function CreateSprintDialog({
       setDuration("2_WEEKS");
       setGoal("");
 
-      const initialTeamId = defaultTeamId ?? (teams && teams.length > 0 ? teams[0]?.id : "");
+      const initialTeamId =
+        defaultTeamId ?? (teams && teams.length > 0 ? teams[0]?.id : "");
       if (initialTeamId) {
         setTeamId(initialTeamId);
       }
@@ -174,7 +175,7 @@ export function CreateSprintDialog({
       }
     });
 
-    const nextNumber = maxNumber > 0 ? maxNumber + 1 : (teamSprints.length + 1);
+    const nextNumber = maxNumber > 0 ? maxNumber + 1 : teamSprints.length + 1;
     return `${teamPrefix} Sprint ${nextNumber}`;
   }, [isEditing, sprintToEdit, teams, teamId, sprints]);
 
@@ -280,7 +281,12 @@ export function CreateSprintDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
         {/* Header */}
         <div className="border-b border-border px-6 py-4 bg-muted/20">
@@ -312,10 +318,16 @@ export function CreateSprintDialog({
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 pt-4 max-h-[75vh] overflow-y-auto">
+        <form
+          onSubmit={handleSubmit}
+          className="p-6 space-y-4 pt-4 max-h-[75vh] overflow-y-auto"
+        >
           {/* Sprint Name */}
           <div className="space-y-1.5">
-            <Label htmlFor="sprint-name" className="text-xs font-semibold text-foreground">
+            <Label
+              htmlFor="sprint-name"
+              className="text-xs font-semibold text-foreground"
+            >
               Sprint Name <span className="text-destructive">*</span>
             </Label>
             <Input
@@ -388,7 +400,10 @@ export function CreateSprintDialog({
           {/* Interactive Date Pickers */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="start-date" className="text-xs font-semibold text-foreground">
+              <Label
+                htmlFor="start-date"
+                className="text-xs font-semibold text-foreground"
+              >
                 Start Date
               </Label>
               <Input
@@ -400,7 +415,10 @@ export function CreateSprintDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="end-date" className="text-xs font-semibold text-foreground">
+              <Label
+                htmlFor="end-date"
+                className="text-xs font-semibold text-foreground"
+              >
                 End Date
               </Label>
               <Input
@@ -419,10 +437,15 @@ export function CreateSprintDialog({
           {/* Sprint Goal */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="sprint-goal" className="text-xs font-semibold text-foreground">
+              <Label
+                htmlFor="sprint-goal"
+                className="text-xs font-semibold text-foreground"
+              >
                 Sprint Goal
               </Label>
-              <span className="text-[10px] text-muted-foreground">Optional</span>
+              <span className="text-[10px] text-muted-foreground">
+                Optional
+              </span>
             </div>
             <Textarea
               id="sprint-goal"

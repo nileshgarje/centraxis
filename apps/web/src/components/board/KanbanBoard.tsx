@@ -97,8 +97,11 @@ export function KanbanBoard({
   onCreateItem?: (defaults?: { sprintId?: string | null }) => void;
 }) {
   const utils = api.useUtils();
-  const { data: boardData, isLoading, error: queryError } =
-    api.board.getBoardData.useQuery({ projectId });
+  const {
+    data: boardData,
+    isLoading,
+    error: queryError,
+  } = api.board.getBoardData.useQuery({ projectId });
 
   const [columns, setColumns] = useState<Record<string, WorkItemCard[]>>({
     TODO: [],
@@ -184,7 +187,9 @@ export function KanbanBoard({
       <div className="flex h-96 items-center justify-center">
         <div className="flex flex-col items-center space-y-3">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-          <p className="text-sm font-medium text-slate-500">Loading active sprint board...</p>
+          <p className="text-sm font-medium text-slate-500">
+            Loading active sprint board...
+          </p>
         </div>
       </div>
     );
@@ -218,21 +223,26 @@ export function KanbanBoard({
             )}
           </div>
           <p className="mt-1 text-xs text-muted-foreground max-w-2xl">
-            {sprint?.goal ?? "Create or start a sprint in the backlog view to begin active tracking."}
+            {sprint?.goal ??
+              "Create or start a sprint in the backlog view to begin active tracking."}
           </p>
         </div>
 
         {metrics && (
           <div className="flex items-center space-x-5 border-t border-border pt-3 sm:border-t-0 sm:pt-0">
             <div className="text-center">
-              <p className="text-[11px] text-muted-foreground font-medium">Stories</p>
+              <p className="text-[11px] text-muted-foreground font-medium">
+                Stories
+              </p>
               <p className="text-sm font-semibold text-foreground">
                 {metrics.completedItems} / {metrics.totalItems}
               </p>
             </div>
             <div className="h-6 w-px bg-border" />
             <div className="text-center">
-              <p className="text-[11px] text-muted-foreground font-medium">Points</p>
+              <p className="text-[11px] text-muted-foreground font-medium">
+                Points
+              </p>
               <p className="text-sm font-semibold text-primary">
                 {metrics.completedPoints} / {metrics.totalPoints}
               </p>
@@ -426,13 +436,17 @@ export function KanbanBoard({
                                       title={card.assignee.name ?? "Assignee"}
                                     >
                                       <div className="h-5 w-5 overflow-hidden rounded-full bg-secondary border border-border flex items-center justify-center font-bold text-[9px] text-secondary-foreground">
-                                        {card.assignee.name?.slice(0, 2).toUpperCase() ?? "U"}
+                                        {card.assignee.name
+                                          ?.slice(0, 2)
+                                          .toUpperCase() ?? "U"}
                                       </div>
                                     </div>
                                   ) : (
                                     <div className="flex items-center space-x-1 text-muted-foreground/70">
                                       <User className="h-3 w-3" />
-                                      <span className="text-[11px]">Unassigned</span>
+                                      <span className="text-[11px]">
+                                        Unassigned
+                                      </span>
                                     </div>
                                   )}
                                 </div>
@@ -465,7 +479,7 @@ export function KanbanBoard({
         projectId={projectId}
         onSprintCompleted={(res) => {
           setToastMessage(
-            `Sprint "${res.sprintName}" completed. ${res.rolledOverCount} item(s) moved to ${res.targetDestination}.`
+            `Sprint "${res.sprintName}" completed. ${res.rolledOverCount} item(s) moved to ${res.targetDestination}.`,
           );
           setTimeout(() => setToastMessage(null), 6000);
         }}

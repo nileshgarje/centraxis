@@ -38,6 +38,10 @@
 
 - **Path-Based Multi-Client Tenancy (`/[clientSlug]/[projectKey]/...`)**: Complete URL-driven workspace isolation supporting multiple enterprise clients, each housing dedicated projects and sprint boards.
 - **Strict Assignee & Role Scoping**: Multi-tier RBAC (`SYSTEM_ADMIN`, `CLIENT_ADMIN`, `PROJECT_LEAD`, `MEMBER`, `VIEWER`). Issue assignees are strictly scoped to users associated with the target client or project.
+- **Deep Sub-Tasks Management & Progress Roll-Up**: Link child sub-tasks to parent stories with live visual progress bars (`X/Y Done (Z%)`), inline title editing, toggleable completion checkboxes, and quick keyboard entry.
+- **Quality Gate Completion Enforcement**: Enforces that parent stories cannot transition to `DONE` / `RESOLVED` while child sub-tasks remain incomplete, raising HTTP 412 Precondition Failed with clear user alerts.
+- **Discussion Feed, @Mentions & Notifications**: Rich comment feeds supporting Markdown and `@` autocomplete mentions for project members. In-app notification hub with live unread badge counters and 1-click item links.
+- **Keycloak-Style Cold-Start Bootstrap Admin**: Zero-touch initial administration via `KC_BOOTSTRAP_ADMIN_USERNAME` and `KC_BOOTSTRAP_ADMIN_PASSWORD` from `.env`, with clear `Temporary User` UI badges.
 - **Interactive Drag-and-Drop Kanban Board**: Real-time card reordering, swimlanes, column WIP counters, and active sprint management powered by `@hello-pangea/dnd`.
 - **Sprint Backlog & Hierarchy**: Full-fidelity backlog planning with Epics, Features, Stories, Tasks, and Bugs. Rank reordering and drag-into-sprint capabilities.
 - **AI Story Generation Agent (`Cmd+J` / `Ctrl+J`)**: Vercel AI SDK integration drafting structured user stories following the INVEST framework, complete with acceptance criteria and Fibonacci story points.
@@ -89,17 +93,17 @@ jira/
 
 Centraxis provides an intuitive, bookmarkable URL routing hierarchy:
 
-| Route Path | Description | Access Level |
-|:---|:---|:---|
-| `http://localhost:3001/` | Root auto-resolver: redirects authenticated users to their first client workspace | Authenticated |
-| `http://localhost:3001/[clientSlug]` | Client workspace home: client overview, active projects list, quick links | Assigned Client Member or `SYSTEM_ADMIN` |
-| `http://localhost:3001/[clientSlug]/[projectKey]/board` | Interactive Kanban Sprint Board for the target project | Project/Client Member or `SYSTEM_ADMIN` |
-| `http://localhost:3001/[clientSlug]/[projectKey]/backlog` | Sprint backlog planning, epic tracking, and rank ordering | Project/Client Member or `SYSTEM_ADMIN` |
-| `http://localhost:3001/[clientSlug]/[projectKey]/teams` | Squad allocations and cross-functional team breakdown | Project/Client Member or `SYSTEM_ADMIN` |
-| `http://localhost:3001/[clientSlug]/[projectKey]/metrics` | Sprint burndown charts, velocity analytics, and delivery distribution | Project/Client Member or `SYSTEM_ADMIN` |
-| `http://localhost:3001/[clientSlug]/settings` | Client profile, branding, contact email, and allocated client members | `CLIENT_ADMIN` or `SYSTEM_ADMIN` |
-| `http://localhost:3001/admin` | Global System Administration: tenant allocations, organizations, and global RBAC | `SYSTEM_ADMIN` only |
-| `http://localhost:3001/login` | Authentication gateway (Microsoft Entra ID SSO & local development login) | Public |
+| Route Path                                                | Description                                                                       | Access Level                             |
+| :-------------------------------------------------------- | :-------------------------------------------------------------------------------- | :--------------------------------------- |
+| `http://localhost:3001/`                                  | Root auto-resolver: redirects authenticated users to their first client workspace | Authenticated                            |
+| `http://localhost:3001/[clientSlug]`                      | Client workspace home: client overview, active projects list, quick links         | Assigned Client Member or `SYSTEM_ADMIN` |
+| `http://localhost:3001/[clientSlug]/[projectKey]/board`   | Interactive Kanban Sprint Board for the target project                            | Project/Client Member or `SYSTEM_ADMIN`  |
+| `http://localhost:3001/[clientSlug]/[projectKey]/backlog` | Sprint backlog planning, epic tracking, and rank ordering                         | Project/Client Member or `SYSTEM_ADMIN`  |
+| `http://localhost:3001/[clientSlug]/[projectKey]/teams`   | Squad allocations and cross-functional team breakdown                             | Project/Client Member or `SYSTEM_ADMIN`  |
+| `http://localhost:3001/[clientSlug]/[projectKey]/metrics` | Sprint burndown charts, velocity analytics, and delivery distribution             | Project/Client Member or `SYSTEM_ADMIN`  |
+| `http://localhost:3001/[clientSlug]/settings`             | Client profile, branding, contact email, and allocated client members             | `CLIENT_ADMIN` or `SYSTEM_ADMIN`         |
+| `http://localhost:3001/admin`                             | Global System Administration: tenant allocations, organizations, and global RBAC  | `SYSTEM_ADMIN` only                      |
+| `http://localhost:3001/login`                             | Authentication gateway (Microsoft Entra ID SSO & local development login)         | Public                                   |
 
 ---
 
@@ -150,6 +154,10 @@ REDIS_URL="redis://localhost:6380"
 AUTH_SECRET="centraxis-super-secret-auth-key-32-chars-minimum"
 NEXTAUTH_URL="http://localhost:3001"
 
+# Keycloak-Style Bootstrap Admin (Optional cold-start initial user)
+KC_BOOTSTRAP_ADMIN_USERNAME="admin@centvis.com"
+KC_BOOTSTRAP_ADMIN_PASSWORD="AdminPassword123!"
+
 # Microsoft Entra ID (Azure AD) SSO (Optional in local dev mode)
 AZURE_AD_CLIENT_ID="placeholder-entra-client-id"
 AZURE_AD_CLIENT_SECRET="placeholder-entra-client-secret"
@@ -168,6 +176,7 @@ pnpm docker:up
 ```
 
 Verify that the containers are healthy:
+
 ```bash
 docker ps
 ```
@@ -200,16 +209,16 @@ Open [http://localhost:3001](http://localhost:3001) in your browser.
 
 The database seed provisions realistic enterprise accounts. You can sign in using any of the following accounts with the password **`password123`** (or **`AdminPassword123!`**):
 
-| Name | Email | Global Role | Assigned Client | Project Access | Permissions |
-|:---|:---|:---|:---|:---|:---|
-| **System Administrator** | `admin@centvis.com` | `SYSTEM_ADMIN` | All Clients | All Projects | Global root admin; unrestricted access to all tenants and `/admin` hub |
-| **Alex Morgan** | `alex.morgan@centvis.com` | `SYSTEM_ADMIN` | All Clients | All Projects | Org Administrator & platform lead |
-| **Rachel Green** | `rachel.green@centvis.com` | `USER` | `client-apex` | `CTX` (`Centraxis Core`) | `CLIENT_ADMIN` on Apex; `PROJECT_LEAD` on Core |
-| **Marcus Vance** | `marcus.vance@centvis.com` | `USER` | `client-nexus` | `MOB` (`Mobile App`) | `CLIENT_ADMIN` on Nexus; `PROJECT_LEAD` on Mobile |
-| **Liam Chen** | `liam.chen@centvis.com` | `USER` | `client-apex` | `CTX` (`Centraxis Core`) | `MEMBER` on Core project (cannot access Nexus/MOB) |
-| **Lucas Silva** | `lucas.silva@centvis.com` | `USER` | `client-nexus` | `MOB` (`Mobile App`) | `MEMBER` on Mobile project (cannot access Apex/CTX) |
-| **Olivia Patel** | `olivia.patel@centvis.com` | `USER` | `client-apex`, `client-nexus` | `CTX`, `MOB` | Cross-client & cross-project shared member |
-| **Emily Watson** | `emily.watson@centvis.com` | `USER` | `client-apex` | `CTX` (`Centraxis Core`) | `VIEWER` (Read-only contributor on Core) |
+| Name                     | Email                      | Global Role    | Assigned Client               | Project Access           | Permissions                                                            |
+| :----------------------- | :------------------------- | :------------- | :---------------------------- | :----------------------- | :--------------------------------------------------------------------- |
+| **System Administrator** | `admin@centvis.com`        | `SYSTEM_ADMIN` | All Clients                   | All Projects             | Global root admin; unrestricted access to all tenants and `/admin` hub |
+| **Alex Morgan**          | `alex.morgan@centvis.com`  | `SYSTEM_ADMIN` | All Clients                   | All Projects             | Org Administrator & platform lead                                      |
+| **Rachel Green**         | `rachel.green@centvis.com` | `USER`         | `client-apex`                 | `CTX` (`Centraxis Core`) | `CLIENT_ADMIN` on Apex; `PROJECT_LEAD` on Core                         |
+| **Marcus Vance**         | `marcus.vance@centvis.com` | `USER`         | `client-nexus`                | `MOB` (`Mobile App`)     | `CLIENT_ADMIN` on Nexus; `PROJECT_LEAD` on Mobile                      |
+| **Liam Chen**            | `liam.chen@centvis.com`    | `USER`         | `client-apex`                 | `CTX` (`Centraxis Core`) | `MEMBER` on Core project (cannot access Nexus/MOB)                     |
+| **Lucas Silva**          | `lucas.silva@centvis.com`  | `USER`         | `client-nexus`                | `MOB` (`Mobile App`)     | `MEMBER` on Mobile project (cannot access Apex/CTX)                    |
+| **Olivia Patel**         | `olivia.patel@centvis.com` | `USER`         | `client-apex`, `client-nexus` | `CTX`, `MOB`             | Cross-client & cross-project shared member                             |
+| **Emily Watson**         | `emily.watson@centvis.com` | `USER`         | `client-apex`                 | `CTX` (`Centraxis Core`) | `VIEWER` (Read-only contributor on Core)                               |
 
 ---
 
@@ -217,21 +226,21 @@ The database seed provisions realistic enterprise accounts. You can sign in usin
 
 Run these scripts from the repository root:
 
-| Command | Action |
-|:---|:---|
-| `pnpm dev` | Starts Next.js development server on port 3001 with Turborepo watching all packages |
-| `pnpm build` | Compiles all monorepo packages and builds the production Next.js output |
-| `pnpm type-check` | Runs `tsc --noEmit` across all 9 monorepo packages concurrently |
-| `pnpm lint` | Runs ESLint across all apps and packages |
-| `pnpm format` | Formats all TypeScript, TSX, Markdown, and JSON files via Prettier |
-| `pnpm test` | Runs unit and integration test suites with Vitest |
-| `pnpm test:e2e` | Executes Playwright end-to-end browser test suites |
-| `pnpm db:generate` | Regenerates Prisma Client types |
-| `pnpm db:push` | Synchronizes Prisma schema directly with the connected PostgreSQL database |
-| `pnpm db:seed` | Seeds the database with clients, projects, users, work items, and sprint data |
-| `pnpm docker:up` | Starts Docker PostgreSQL and Redis background containers |
-| `pnpm docker:down` | Stops Docker containers |
-| `pnpm clean` | Cleans Turbo caches and deletes `node_modules` |
+| Command            | Action                                                                              |
+| :----------------- | :---------------------------------------------------------------------------------- |
+| `pnpm dev`         | Starts Next.js development server on port 3001 with Turborepo watching all packages |
+| `pnpm build`       | Compiles all monorepo packages and builds the production Next.js output             |
+| `pnpm type-check`  | Runs `tsc --noEmit` across all 9 monorepo packages concurrently                     |
+| `pnpm lint`        | Runs ESLint across all apps and packages                                            |
+| `pnpm format`      | Formats all TypeScript, TSX, Markdown, and JSON files via Prettier                  |
+| `pnpm test`        | Runs unit and integration test suites with Vitest                                   |
+| `pnpm test:e2e`    | Executes Playwright end-to-end browser test suites                                  |
+| `pnpm db:generate` | Regenerates Prisma Client types                                                     |
+| `pnpm db:push`     | Synchronizes Prisma schema directly with the connected PostgreSQL database          |
+| `pnpm db:seed`     | Seeds the database with clients, projects, users, work items, and sprint data       |
+| `pnpm docker:up`   | Starts Docker PostgreSQL and Redis background containers                            |
+| `pnpm docker:down` | Stops Docker containers                                                             |
+| `pnpm clean`       | Cleans Turbo caches and deletes `node_modules`                                      |
 
 ---
 
@@ -240,12 +249,17 @@ Run these scripts from the repository root:
 Centraxis has rigorous automated test suites covering unit logic, RBAC matrix security, and browser E2E workflows.
 
 ### Run Type Checking
+
 ```bash
 pnpm type-check
 ```
 
 ### Run Playwright E2E Tests
+
 ```bash
+# Run subtasks management, quality gates, and @mentions notification test suite
+npx playwright test apps/web/e2e/subtasks-and-mentions.spec.ts --workers=1
+
 # Run multi-client path routing test suite
 npx playwright test apps/web/e2e/multi-client-routing.spec.ts --workers=1
 

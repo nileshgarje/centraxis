@@ -240,7 +240,11 @@ export const projectRouter = createTRPCRouter({
             { globalRole: "SYSTEM_ADMIN" },
             { role: TeamRole.ORG_ADMIN },
             ...(project.clientId
-              ? [{ clientMemberships: { some: { clientId: project.clientId } } }]
+              ? [
+                  {
+                    clientMemberships: { some: { clientId: project.clientId } },
+                  },
+                ]
               : []),
             { projectMemberships: { some: { projectId: input.projectId } } },
           ],
@@ -363,7 +367,10 @@ export const projectRouter = createTRPCRouter({
         });
 
         // Deduplicate users belonging to multiple squads
-        const userMap = new Map<string, typeof memberships[0]["user"] & { teamRole: string }>();
+        const userMap = new Map<
+          string,
+          (typeof memberships)[0]["user"] & { teamRole: string }
+        >();
         for (const m of memberships) {
           if (!userMap.has(m.user.id)) {
             userMap.set(m.user.id, { ...m.user, teamRole: m.role });

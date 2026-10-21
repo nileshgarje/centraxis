@@ -132,13 +132,22 @@ export function Header({
     session?.user?.email?.toLowerCase().endsWith("@centvis.com") || false;
 
   // Group projects by Client
-  const clientMap = new Map<string, { client: { id: string; name: string; slug: string }; items: HeaderProjectItem[] }>();
+  const clientMap = new Map<
+    string,
+    {
+      client: { id: string; name: string; slug: string };
+      items: HeaderProjectItem[];
+    }
+  >();
   const internalProjects: HeaderProjectItem[] = [];
 
   // Initialize clients from API
   if (clientList) {
     for (const c of clientList) {
-      clientMap.set(c.id, { client: { id: c.id, name: c.name, slug: c.slug }, items: [] });
+      clientMap.set(c.id, {
+        client: { id: c.id, name: c.name, slug: c.slug },
+        items: [],
+      });
     }
   }
 
@@ -224,7 +233,8 @@ export function Header({
                         ) : (
                           <div className="space-y-0.5 pl-2 pr-1">
                             {items.map((project) => {
-                              const isSelected = project.id === selectedProjectId;
+                              const isSelected =
+                                project.id === selectedProjectId;
                               return (
                                 <button
                                   key={project.id}
@@ -233,7 +243,9 @@ export function Header({
                                     onSelectProject(project.id);
                                     setIsProjectDropdownOpen(false);
                                     if (client.slug && project.key) {
-                                      router.push(`/${client.slug}/${project.key}/${activeTab || "board"}`);
+                                      router.push(
+                                        `/${client.slug}/${project.key}/${activeTab || "board"}`,
+                                      );
                                     }
                                   }}
                                   className={`flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs transition ${
@@ -244,7 +256,9 @@ export function Header({
                                 >
                                   <div className="flex items-center gap-2 truncate">
                                     <FolderGit2 className="h-3 w-3 text-muted-foreground shrink-0" />
-                                    <span className="truncate">{project.name}</span>
+                                    <span className="truncate">
+                                      {project.name}
+                                    </span>
                                     <span className="rounded bg-muted px-1 py-0.2 font-mono text-[10px] text-muted-foreground font-semibold">
                                       {project.key}
                                     </span>
@@ -290,7 +304,9 @@ export function Header({
                               >
                                 <div className="flex items-center gap-2 truncate">
                                   <FolderGit2 className="h-3 w-3 text-muted-foreground shrink-0" />
-                                  <span className="truncate">{project.name}</span>
+                                  <span className="truncate">
+                                    {project.name}
+                                  </span>
                                   <span className="rounded bg-muted px-1 py-0.2 font-mono text-[10px] text-muted-foreground font-semibold">
                                     {project.key}
                                   </span>
@@ -428,15 +444,23 @@ export function Header({
                   <Plus className="h-4 w-4 text-primary" />
                   <div className="flex flex-1 items-center justify-between">
                     <span>Issue / Work Item</span>
-                    <kbd className="text-[10px] font-mono text-muted-foreground">C</kbd>
+                    <kbd className="text-[10px] font-mono text-muted-foreground">
+                      C
+                    </kbd>
                   </div>
                 </DropdownMenuItem>
 
-                <DropdownMenuItem onClick={onOpenAiModal} className="gap-2" data-testid="action-ai-story">
+                <DropdownMenuItem
+                  onClick={onOpenAiModal}
+                  className="gap-2"
+                  data-testid="action-ai-story"
+                >
                   <Sparkles className="h-4 w-4 text-indigo-400" />
                   <div className="flex flex-1 items-center justify-between">
                     <span>AI Story Agent</span>
-                    <kbd className="text-[10px] font-mono text-muted-foreground">⌘J</kbd>
+                    <kbd className="text-[10px] font-mono text-muted-foreground">
+                      ⌘J
+                    </kbd>
                   </div>
                 </DropdownMenuItem>
 
@@ -533,7 +557,8 @@ export function Header({
                           <span>Temporary Account</span>
                         </div>
                         <p className="text-[10px] text-muted-foreground leading-tight">
-                          Provisioned via KC_BOOTSTRAP_ADMIN. Create a permanent admin in Workspace Members and remove this user.
+                          Provisioned via KC_BOOTSTRAP_ADMIN. Create a permanent
+                          admin in Workspace Members and remove this user.
                         </p>
                       </div>
                     )}
@@ -543,7 +568,10 @@ export function Header({
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem asChild>
-                  <Link href="/settings/profile" className="flex items-center gap-2 cursor-pointer">
+                  <Link
+                    href="/settings/profile"
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
                     <User className="h-4 w-4 text-muted-foreground" />
                     <span>Account & Profile</span>
                   </Link>
@@ -551,7 +579,10 @@ export function Header({
 
                 {clientSlug && (
                   <DropdownMenuItem asChild>
-                    <Link href={`/${clientSlug}/settings`} className="flex items-center gap-2 cursor-pointer">
+                    <Link
+                      href={`/${clientSlug}/settings`}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
                       <Settings className="h-4 w-4 text-muted-foreground" />
                       <span>Client Settings</span>
                     </Link>
@@ -559,22 +590,32 @@ export function Header({
                 )}
 
                 <DropdownMenuItem asChild>
-                  <Link href="/settings/clients" className="flex items-center gap-2 cursor-pointer">
+                  <Link
+                    href="/settings/clients"
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
                     <Building2 className="h-4 w-4 text-muted-foreground" />
                     <span>Clients & Tenancy</span>
                   </Link>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem asChild>
-                  <Link href="/settings/members" className="flex items-center gap-2 cursor-pointer">
+                  <Link
+                    href="/settings/members"
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
                     <Users className="h-4 w-4 text-muted-foreground" />
                     <span>Workspace Members</span>
                   </Link>
                 </DropdownMenuItem>
 
-                {(session?.user?.globalRole === "SYSTEM_ADMIN" || session?.user?.role === "ORG_ADMIN") && (
+                {(session?.user?.globalRole === "SYSTEM_ADMIN" ||
+                  session?.user?.role === "ORG_ADMIN") && (
                   <DropdownMenuItem asChild>
-                    <Link href="/admin" className="flex items-center gap-2 cursor-pointer font-medium text-indigo-600 dark:text-indigo-400">
+                    <Link
+                      href="/admin"
+                      className="flex items-center gap-2 cursor-pointer font-medium text-indigo-600 dark:text-indigo-400"
+                    >
                       <Shield className="h-4 w-4" />
                       <span>Admin Hub</span>
                     </Link>

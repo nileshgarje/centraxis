@@ -55,27 +55,37 @@ export function EditUserAccessDialog({
   onSuccess,
 }: EditUserAccessDialogProps) {
   const [globalRole, setGlobalRole] = useState<"SYSTEM_ADMIN" | "USER">("USER");
-  const [clientRoles, setClientRoles] = useState<Record<string, "CLIENT_ADMIN" | "CLIENT_MEMBER">>({});
-  const [projectRoles, setProjectRoles] = useState<Record<string, "PROJECT_LEAD" | "MEMBER" | "VIEWER">>({});
+  const [clientRoles, setClientRoles] = useState<
+    Record<string, "CLIENT_ADMIN" | "CLIENT_MEMBER">
+  >({});
+  const [projectRoles, setProjectRoles] = useState<
+    Record<string, "PROJECT_LEAD" | "MEMBER" | "VIEWER">
+  >({});
 
-  const { data: clients, isLoading: clientsLoading } = api.clients.list.useQuery(undefined, {
-    enabled: isOpen,
-  });
-  const { data: projects, isLoading: projectsLoading } = api.project.list.useQuery(undefined, {
-    enabled: isOpen,
-  });
+  const { data: clients, isLoading: clientsLoading } =
+    api.clients.list.useQuery(undefined, {
+      enabled: isOpen,
+    });
+  const { data: projects, isLoading: projectsLoading } =
+    api.project.list.useQuery(undefined, {
+      enabled: isOpen,
+    });
 
   useEffect(() => {
     if (member && isOpen) {
       setGlobalRole(member.globalRole ?? "USER");
 
-      const initialClients: Record<string, "CLIENT_ADMIN" | "CLIENT_MEMBER"> = {};
+      const initialClients: Record<string, "CLIENT_ADMIN" | "CLIENT_MEMBER"> =
+        {};
       member.clientMemberships?.forEach((cm) => {
         initialClients[cm.clientId] = cm.role;
       });
       setClientRoles(initialClients);
 
-      const initialProjects: Record<string, "PROJECT_LEAD" | "MEMBER" | "VIEWER"> = {};
+      const initialProjects: Record<
+        string,
+        "PROJECT_LEAD" | "MEMBER" | "VIEWER"
+      > = {};
       member.projectMemberships?.forEach((pm) => {
         initialProjects[pm.projectId] = pm.role;
       });
@@ -97,15 +107,19 @@ export function EditUserAccessDialog({
   const handleSave = () => {
     if (!member) return;
 
-    const clientMemberships = Object.entries(clientRoles).map(([clientId, role]) => ({
-      clientId,
-      role,
-    }));
+    const clientMemberships = Object.entries(clientRoles).map(
+      ([clientId, role]) => ({
+        clientId,
+        role,
+      }),
+    );
 
-    const projectMemberships = Object.entries(projectRoles).map(([projectId, role]) => ({
-      projectId,
-      role,
-    }));
+    const projectMemberships = Object.entries(projectRoles).map(
+      ([projectId, role]) => ({
+        projectId,
+        role,
+      }),
+    );
 
     updateMutation.mutate({
       userId: member.id,
@@ -142,7 +156,12 @@ export function EditUserAccessDialog({
   if (!member) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden bg-background border-border">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
           <div className="flex items-center space-x-3">
@@ -154,8 +173,12 @@ export function EditUserAccessDialog({
                 Edit User Access Matrix
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
-                Configure global role, client memberships, and project contributor scopes for{" "}
-                <span className="font-semibold text-foreground">{member.name || member.email}</span>.
+                Configure global role, client memberships, and project
+                contributor scopes for{" "}
+                <span className="font-semibold text-foreground">
+                  {member.name || member.email}
+                </span>
+                .
               </DialogDescription>
             </div>
           </div>
@@ -171,12 +194,15 @@ export function EditUserAccessDialog({
                   Global RBAC Role
                 </Label>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
-                  SYSTEM_ADMIN gives unrestricted administrative visibility across all clients and projects.
+                  SYSTEM_ADMIN gives unrestricted administrative visibility
+                  across all clients and projects.
                 </p>
               </div>
               <Select
                 value={globalRole}
-                onValueChange={(val: "SYSTEM_ADMIN" | "USER") => setGlobalRole(val)}
+                onValueChange={(val: "SYSTEM_ADMIN" | "USER") =>
+                  setGlobalRole(val)
+                }
               >
                 <SelectTrigger className="w-40 h-8 text-xs font-semibold">
                   <SelectValue />
@@ -199,7 +225,8 @@ export function EditUserAccessDialog({
                 </h4>
               </div>
               <span className="text-[11px] text-muted-foreground">
-                {Object.keys(clientRoles).length} of {clients?.length ?? 0} assigned
+                {Object.keys(clientRoles).length} of {clients?.length ?? 0}{" "}
+                assigned
               </span>
             </div>
 
@@ -208,7 +235,9 @@ export function EditUserAccessDialog({
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
               </div>
             ) : !clients || clients.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic">No clients configured.</p>
+              <p className="text-xs text-muted-foreground italic">
+                No clients configured.
+              </p>
             ) : (
               <div className="space-y-2 rounded-lg border border-border bg-card p-3">
                 {clients.map((c) => {
@@ -244,7 +273,9 @@ export function EditUserAccessDialog({
                       {isAssigned && (
                         <Select
                           value={currentRole}
-                          onValueChange={(val: "CLIENT_ADMIN" | "CLIENT_MEMBER") =>
+                          onValueChange={(
+                            val: "CLIENT_ADMIN" | "CLIENT_MEMBER",
+                          ) =>
                             setClientRoles((prev) => ({ ...prev, [c.id]: val }))
                           }
                         >
@@ -252,8 +283,12 @@ export function EditUserAccessDialog({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="CLIENT_MEMBER">Client Member</SelectItem>
-                            <SelectItem value="CLIENT_ADMIN">Client Admin</SelectItem>
+                            <SelectItem value="CLIENT_MEMBER">
+                              Client Member
+                            </SelectItem>
+                            <SelectItem value="CLIENT_ADMIN">
+                              Client Admin
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       )}
@@ -274,7 +309,8 @@ export function EditUserAccessDialog({
                 </h4>
               </div>
               <span className="text-[11px] text-muted-foreground">
-                {Object.keys(projectRoles).length} of {projects?.length ?? 0} assigned
+                {Object.keys(projectRoles).length} of {projects?.length ?? 0}{" "}
+                assigned
               </span>
             </div>
 
@@ -283,7 +319,9 @@ export function EditUserAccessDialog({
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
               </div>
             ) : !projects || projects.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic">No projects configured.</p>
+              <p className="text-xs text-muted-foreground italic">
+                No projects configured.
+              </p>
             ) : (
               <div className="space-y-2 rounded-lg border border-border bg-card p-3">
                 {projects.map((p) => {
@@ -324,8 +362,13 @@ export function EditUserAccessDialog({
                       {isAssigned && (
                         <Select
                           value={currentRole}
-                          onValueChange={(val: "PROJECT_LEAD" | "MEMBER" | "VIEWER") =>
-                            setProjectRoles((prev) => ({ ...prev, [p.id]: val }))
+                          onValueChange={(
+                            val: "PROJECT_LEAD" | "MEMBER" | "VIEWER",
+                          ) =>
+                            setProjectRoles((prev) => ({
+                              ...prev,
+                              [p.id]: val,
+                            }))
                           }
                         >
                           <SelectTrigger className="w-36 h-7 text-[11px] font-semibold bg-background">
@@ -333,7 +376,9 @@ export function EditUserAccessDialog({
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="MEMBER">Member</SelectItem>
-                            <SelectItem value="PROJECT_LEAD">Project Lead</SelectItem>
+                            <SelectItem value="PROJECT_LEAD">
+                              Project Lead
+                            </SelectItem>
                             <SelectItem value="VIEWER">Viewer</SelectItem>
                           </SelectContent>
                         </Select>
@@ -347,10 +392,19 @@ export function EditUserAccessDialog({
         </div>
 
         <DialogFooter className="px-6 py-3 border-t border-border bg-muted/20">
-          <Button variant="outline" size="sm" onClick={onClose} disabled={updateMutation.isPending}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onClose}
+            disabled={updateMutation.isPending}
+          >
             Cancel
           </Button>
-          <Button size="sm" onClick={handleSave} disabled={updateMutation.isPending}>
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={updateMutation.isPending}
+          >
             {updateMutation.isPending ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />

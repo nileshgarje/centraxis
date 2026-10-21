@@ -118,7 +118,9 @@ export const scrumMasterProcedure = protectedProcedure.use(({ ctx, next }) => {
     user.globalRole === "SYSTEM_ADMIN" ||
     user.role === TeamRole.ORG_ADMIN ||
     user.role === TeamRole.SCRUM_MASTER;
-  const isSquadLead = (user.memberships as UserTeamMembership[] | undefined)?.some(
+  const isSquadLead = (
+    user.memberships as UserTeamMembership[] | undefined
+  )?.some(
     (m: UserTeamMembership) =>
       m.role === TeamRole.SCRUM_MASTER || m.role === TeamRole.ORG_ADMIN,
   );
@@ -126,7 +128,8 @@ export const scrumMasterProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (!isGlobalLead && !isSquadLead) {
     throw new TRPCError({
       code: "FORBIDDEN",
-      message: "Requires Scrum Master or Organization Administrator privileges.",
+      message:
+        "Requires Scrum Master or Organization Administrator privileges.",
     });
   }
 

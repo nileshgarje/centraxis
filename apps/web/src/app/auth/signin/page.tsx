@@ -56,13 +56,17 @@ function SignInForm() {
       });
 
       if (result?.error) {
-        setErrorMessage("Invalid email or password. Verify credentials and try again.");
+        setErrorMessage(
+          "Invalid email or password. Verify credentials and try again.",
+        );
       } else {
         router.push(callbackUrl);
         router.refresh();
       }
     } catch (err: any) {
-      setErrorMessage(err?.message || "An unexpected authentication error occurred.");
+      setErrorMessage(
+        err?.message || "An unexpected authentication error occurred.",
+      );
     } finally {
       setIsLoading(false);
     }

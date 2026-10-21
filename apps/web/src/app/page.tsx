@@ -10,13 +10,11 @@ export default function RootPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
 
-  const { data: clients, isLoading: clientsLoading } = api.clients.list.useQuery(
-    undefined,
-    {
+  const { data: clients, isLoading: clientsLoading } =
+    api.clients.list.useQuery(undefined, {
       enabled: status === "authenticated",
       retry: false,
-    },
-  );
+    });
 
   useEffect(() => {
     if (status === "unauthenticated") {

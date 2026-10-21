@@ -19,7 +19,9 @@ export const notificationRouter = createTRPCRouter({
    * List recent notifications for active user
    */
   listRecent: protectedProcedure
-    .input(z.object({ limit: z.number().min(1).max(50).default(15) }).optional())
+    .input(
+      z.object({ limit: z.number().min(1).max(50).default(15) }).optional(),
+    )
     .query(async ({ ctx, input }) => {
       const limit = input?.limit ?? 15;
       return ctx.db.notification.findMany({

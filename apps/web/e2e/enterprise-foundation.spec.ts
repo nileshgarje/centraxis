@@ -15,9 +15,14 @@ async function authenticateAsAdmin(page: Page) {
   await passwordInput.fill("AdminPassword123!");
   await page.locator('button[type="submit"]').click();
 
-  await page.waitForURL((url) => !url.pathname.includes("/login") && !url.pathname.includes("/auth/signin"), {
-    timeout: 15000,
-  });
+  await page.waitForURL(
+    (url) =>
+      !url.pathname.includes("/login") &&
+      !url.pathname.includes("/auth/signin"),
+    {
+      timeout: 15000,
+    },
+  );
 }
 
 test.describe("Enterprise Foundation E2E Flow", () => {
@@ -25,12 +30,18 @@ test.describe("Enterprise Foundation E2E Flow", () => {
     await authenticateAsAdmin(page);
   });
 
-  test("should display 2-level multi-client hierarchy in project switcher dropdown", async ({ page }) => {
+  test("should display 2-level multi-client hierarchy in project switcher dropdown", async ({
+    page,
+  }) => {
     await page.goto("/");
     await expect(page.locator("text=Centraxis")).toBeVisible();
 
     // Open project switcher
-    const projectSwitcherBtn = page.locator("button:has-text('Select Project'), button:has-text('Centraxis')").first();
+    const projectSwitcherBtn = page
+      .locator(
+        "button:has-text('Select Project'), button:has-text('Centraxis')",
+      )
+      .first();
     await projectSwitcherBtn.click();
 
     // Verify 2-level dropdown header & client spaces
@@ -43,7 +54,9 @@ test.describe("Enterprise Foundation E2E Flow", () => {
     await expect(page.locator("button:has-text('+ Project')")).toBeVisible();
   });
 
-  test("should render user avatar menu with Entra ID SSO badge and settings links", async ({ page }) => {
+  test("should render user avatar menu with Entra ID SSO badge and settings links", async ({
+    page,
+  }) => {
     await page.goto("/");
 
     // Locate the user profile avatar button in the header
@@ -61,22 +74,34 @@ test.describe("Enterprise Foundation E2E Flow", () => {
     await expect(page.locator("text=Sign out")).toBeVisible();
   });
 
-  test("should navigate Settings Hub across Profile, Clients, and Members", async ({ page }) => {
+  test("should navigate Settings Hub across Profile, Clients, and Members", async ({
+    page,
+  }) => {
     // 1. Profile Settings
     await page.goto("/settings/profile");
-    await expect(page.locator("h1:has-text('Account & Profile')")).toBeVisible();
-    await expect(page.locator("text=Microsoft Entra ID Authentication")).toBeVisible();
-    await expect(page.locator("text=Transactional Email Notifications")).toBeVisible();
+    await expect(
+      page.locator("h1:has-text('Account & Profile')"),
+    ).toBeVisible();
+    await expect(
+      page.locator("text=Microsoft Entra ID Authentication"),
+    ).toBeVisible();
+    await expect(
+      page.locator("text=Transactional Email Notifications"),
+    ).toBeVisible();
 
     // 2. Clients & Tenancy Settings
     await page.click("text=Clients & Tenancy");
-    await expect(page.locator("h1:has-text('Clients & Multi-Tenancy')")).toBeVisible();
+    await expect(
+      page.locator("h1:has-text('Clients & Multi-Tenancy')"),
+    ).toBeVisible();
     await expect(page.locator("text=Client Apex")).toBeVisible();
     await expect(page.locator("text=Client Nexus")).toBeVisible();
 
     // 3. Workspace Members Settings
     await page.click("text=Workspace Members");
-    await expect(page.locator("h1:has-text('Team Members & Access Management')")).toBeVisible();
+    await expect(
+      page.locator("h1:has-text('Team Members & Access Management')"),
+    ).toBeVisible();
     await expect(page.locator("text=Active Members")).toBeVisible();
   });
 });

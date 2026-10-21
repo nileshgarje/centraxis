@@ -35,9 +35,12 @@ export default function AdminOverviewPage() {
   const { data: session } = useSession();
   const [isCreateClientOpen, setIsCreateClientOpen] = useState(false);
 
-  const { data: clients, isLoading: clientsLoading } = api.clients.list.useQuery();
-  const { data: members, isLoading: membersLoading } = api.org.listMembers.useQuery();
-  const { data: projects, isLoading: projectsLoading } = api.project.list.useQuery();
+  const { data: clients, isLoading: clientsLoading } =
+    api.clients.list.useQuery();
+  const { data: members, isLoading: membersLoading } =
+    api.org.listMembers.useQuery();
+  const { data: projects, isLoading: projectsLoading } =
+    api.project.list.useQuery();
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -96,7 +99,8 @@ export default function AdminOverviewPage() {
                   Global Enterprise Administration
                 </h1>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Manage multi-client tenant allocations, projects, and global RBAC matrices across Centraxis.
+                  Manage multi-client tenant allocations, projects, and global
+                  RBAC matrices across Centraxis.
                 </p>
               </div>
             </div>
@@ -132,7 +136,10 @@ export default function AdminOverviewPage() {
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5 max-w-2xl">
-                  This account was provisioned via environment credentials for initial configuration. Set up a permanent administrator account in Workspace Members and remove this temporary account.
+                  This account was provisioned via environment credentials for
+                  initial configuration. Set up a permanent administrator
+                  account in Workspace Members and remove this temporary
+                  account.
                 </p>
               </div>
             </div>
@@ -215,7 +222,8 @@ export default function AdminOverviewPage() {
                 No client workspaces configured yet
               </h3>
               <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-                Create your first client workspace to start allocating projects, sprints, and team members.
+                Create your first client workspace to start allocating projects,
+                sprints, and team members.
               </p>
               <Button
                 onClick={() => setIsCreateClientOpen(true)}
@@ -229,7 +237,10 @@ export default function AdminOverviewPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {clients.map((c) => (
-                <Card key={c.id} className="hover:border-primary/50 transition duration-150">
+                <Card
+                  key={c.id}
+                  className="hover:border-primary/50 transition duration-150"
+                >
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <span className="font-mono text-xs font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded">
@@ -247,12 +258,21 @@ export default function AdminOverviewPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardFooter className="pt-2 border-t border-border/60 flex items-center justify-between">
-                    <Button variant="ghost" size="sm" asChild className="h-7 text-xs font-semibold gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                      className="h-7 text-xs font-semibold gap-1"
+                    >
                       <Link href={`/${c.slug}/settings`}>
                         <span>Settings</span>
                       </Link>
                     </Button>
-                    <Button size="sm" asChild className="h-7 text-xs font-semibold gap-1">
+                    <Button
+                      size="sm"
+                      asChild
+                      className="h-7 text-xs font-semibold gap-1"
+                    >
                       <Link href={`/${c.slug}`}>
                         <span>Enter Workspace</span>
                         <ArrowRight className="h-3 w-3" />

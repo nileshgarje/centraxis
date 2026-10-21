@@ -386,7 +386,9 @@ export function CommandMenu({
                           <div className="truncate">
                             <p
                               className={`font-semibold truncate ${
-                                isSelected ? "text-primary-foreground" : "text-foreground"
+                                isSelected
+                                  ? "text-primary-foreground"
+                                  : "text-foreground"
                               }`}
                             >
                               {item.title}
@@ -394,7 +396,9 @@ export function CommandMenu({
                             {item.subtitle && (
                               <p
                                 className={`text-[11px] truncate ${
-                                  isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
+                                  isSelected
+                                    ? "text-primary-foreground/80"
+                                    : "text-muted-foreground"
                                 }`}
                               >
                                 {item.subtitle}

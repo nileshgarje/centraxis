@@ -20,14 +20,20 @@ interface ProjectLayoutProps {
   params: Promise<{ clientSlug: string; projectKey: string }>;
 }
 
-export default function ProjectLayout({ children, params }: ProjectLayoutProps) {
+export default function ProjectLayout({
+  children,
+  params,
+}: ProjectLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
 
   const { clientSlug, projectKey } = use(params);
 
-
-  const { data: project, isLoading, error } = api.project.getByClientAndKey.useQuery(
+  const {
+    data: project,
+    isLoading,
+    error,
+  } = api.project.getByClientAndKey.useQuery(
     { clientSlug, projectKey },
     { retry: false },
   );
@@ -47,7 +53,8 @@ export default function ProjectLayout({ children, params }: ProjectLayoutProps) 
   const [isInviteUserOpen, setIsInviteUserOpen] = useState(false);
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
 
-  const [createItemDefaults, setCreateItemDefaults] = useState<CreateItemDefaults>({});
+  const [createItemDefaults, setCreateItemDefaults] =
+    useState<CreateItemDefaults>({});
 
   const handleOpenCreateItem = (defaults?: CreateItemDefaults) => {
     setCreateItemDefaults(defaults ?? { sprintId: activeSprint?.id });
@@ -130,8 +137,15 @@ export default function ProjectLayout({ children, params }: ProjectLayoutProps) 
             Project Not Found or Access Denied
           </h1>
           <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-            Project <span className="font-mono font-bold text-primary">[{projectKey.toUpperCase()}]</span> under client{" "}
-            <span className="font-semibold text-foreground font-mono">"{clientSlug}"</span> was not found or you do not have permission to access it.
+            Project{" "}
+            <span className="font-mono font-bold text-primary">
+              [{projectKey.toUpperCase()}]
+            </span>{" "}
+            under client{" "}
+            <span className="font-semibold text-foreground font-mono">
+              "{clientSlug}"
+            </span>{" "}
+            was not found or you do not have permission to access it.
           </p>
           <div className="mt-6 flex flex-col gap-2">
             <Button

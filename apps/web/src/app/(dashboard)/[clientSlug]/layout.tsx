@@ -17,8 +17,11 @@ export default function ClientLayout({ children, params }: ClientLayoutProps) {
   const router = useRouter();
   const { clientSlug } = use(params);
 
-
-  const { data: client, isLoading, error } = api.clients.getBySlug.useQuery(
+  const {
+    data: client,
+    isLoading,
+    error,
+  } = api.clients.getBySlug.useQuery(
     { slug: clientSlug },
     {
       retry: false,

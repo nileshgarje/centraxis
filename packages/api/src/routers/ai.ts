@@ -15,9 +15,7 @@ export const aiRouter = createTRPCRouter({
   generateStoryFromPrompt: protectedProcedure
     .input(
       z.object({
-        prompt: z
-          .string()
-          .min(5, "Prompt must be at least 5 characters long"),
+        prompt: z.string().min(5, "Prompt must be at least 5 characters long"),
         projectId: z.string().optional(),
       }),
     )

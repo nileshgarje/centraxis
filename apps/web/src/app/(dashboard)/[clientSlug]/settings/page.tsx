@@ -87,7 +87,12 @@ export default function ClientSettingsPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild className="gap-1.5 text-xs">
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="gap-1.5 text-xs"
+            >
               <Link href={`/${clientSlug}`}>
                 <ArrowLeft className="h-3.5 w-3.5" />
                 <span>Back to {client.name}</span>
@@ -105,7 +110,8 @@ export default function ClientSettingsPage() {
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
             Configure profile, identity, and membership permissions for{" "}
-            <span className="font-semibold text-foreground">{client.name}</span>.
+            <span className="font-semibold text-foreground">{client.name}</span>
+            .
           </p>
         </div>
 
@@ -126,7 +132,10 @@ export default function ClientSettingsPage() {
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="client-name" className="text-xs font-semibold">
+                  <Label
+                    htmlFor="client-name"
+                    className="text-xs font-semibold"
+                  >
                     Client Name
                   </Label>
                   <Input
@@ -139,7 +148,10 @@ export default function ClientSettingsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="client-slug" className="text-xs font-semibold">
+                  <Label
+                    htmlFor="client-slug"
+                    className="text-xs font-semibold"
+                  >
                     Workspace Slug (Immutable)
                   </Label>
                   <Input
@@ -152,7 +164,10 @@ export default function ClientSettingsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="contact-email" className="text-xs font-semibold">
+                <Label
+                  htmlFor="contact-email"
+                  className="text-xs font-semibold"
+                >
                   Primary Contact Email
                 </Label>
                 <Input
@@ -201,13 +216,15 @@ export default function ClientSettingsPage() {
               </div>
             </div>
             <CardDescription className="text-xs text-muted-foreground">
-              Users assigned to this client tenant can access client projects and be assigned to issues.
+              Users assigned to this client tenant can access client projects
+              and be assigned to issues.
             </CardDescription>
           </CardHeader>
           <CardContent>
             {!client.members || client.members.length === 0 ? (
               <p className="text-xs text-muted-foreground italic py-4">
-                No members assigned directly to this client. Use Organization Settings to allocate users.
+                No members assigned directly to this client. Use Organization
+                Settings to allocate users.
               </p>
             ) : (
               <div className="divide-y divide-border rounded-lg border border-border">

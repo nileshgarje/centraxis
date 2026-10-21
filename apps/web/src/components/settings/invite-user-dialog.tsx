@@ -1,13 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  Mail,
-  CheckCircle2,
-  AlertCircle,
-  Loader2,
-  Info,
-} from "lucide-react";
+import { Mail, CheckCircle2, AlertCircle, Loader2, Info } from "lucide-react";
 import { api } from "~/trpc/react";
 import {
   Dialog,
@@ -159,7 +153,12 @@ export function InviteUserDialog({
   const currentRole = ROLES.find((r) => r.id === role) ?? ROLES[0]!;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
         {/* Header */}
         <div className="border-b border-border px-6 py-4 bg-muted/20">
@@ -189,11 +188,17 @@ export function InviteUserDialog({
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 pt-4 max-h-[75vh] overflow-y-auto">
+        <form
+          onSubmit={handleSubmit}
+          className="p-6 space-y-4 pt-4 max-h-[75vh] overflow-y-auto"
+        >
           {/* Email Input (Single or Bulk comma-separated) */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="invite-emails" className="text-xs font-semibold text-foreground">
+              <Label
+                htmlFor="invite-emails"
+                className="text-xs font-semibold text-foreground"
+              >
                 Email Address(es) <span className="text-destructive">*</span>
               </Label>
               <span className="text-[10px] text-muted-foreground">
@@ -211,17 +216,27 @@ export function InviteUserDialog({
               className="text-xs resize-none"
             />
             <p className="text-[11px] text-muted-foreground">
-              Paste multiple emails separated by commas or line breaks for bulk onboarding.
+              Paste multiple emails separated by commas or line breaks for bulk
+              onboarding.
             </p>
           </div>
 
           {/* Organization Role Selector */}
           <div className="space-y-1.5">
-            <Label htmlFor="invite-role" className="text-xs font-semibold text-foreground">
+            <Label
+              htmlFor="invite-role"
+              className="text-xs font-semibold text-foreground"
+            >
               Organization Role <span className="text-destructive">*</span>
             </Label>
-            <Select value={role} onValueChange={(val) => setRole(val as RoleType)}>
-              <SelectTrigger id="invite-role" className="w-full h-9 text-xs font-semibold">
+            <Select
+              value={role}
+              onValueChange={(val) => setRole(val as RoleType)}
+            >
+              <SelectTrigger
+                id="invite-role"
+                className="w-full h-9 text-xs font-semibold"
+              >
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
@@ -298,7 +313,9 @@ export function InviteUserDialog({
                 })}
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground italic">No squads created yet.</p>
+              <p className="text-xs text-muted-foreground italic">
+                No squads created yet.
+              </p>
             )}
           </div>
 
@@ -306,10 +323,11 @@ export function InviteUserDialog({
           <div className="flex items-start space-x-2.5 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-foreground">
             <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
             <p className="leading-relaxed">
-              <span className="font-semibold">Authentication Notice:</span> Users
-              with <span className="font-mono font-semibold">@centvis.com</span>{" "}
-              Microsoft accounts can log in directly; external contractors can use
-              temporary credentials.
+              <span className="font-semibold">Authentication Notice:</span>{" "}
+              Users with{" "}
+              <span className="font-mono font-semibold">@centvis.com</span>{" "}
+              Microsoft accounts can log in directly; external contractors can
+              use temporary credentials.
             </p>
           </div>
 

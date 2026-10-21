@@ -15,7 +15,7 @@ import {
 async function isUserAssignableToProject(
   db: any,
   projectId: string,
-  userId: string
+  userId: string,
 ): Promise<boolean> {
   const project = await db.project.findUnique({
     where: { id: projectId },
@@ -37,9 +37,16 @@ async function isUserAssignableToProject(
   });
 
   if (!user) return false;
-  if (user.globalRole === "SYSTEM_ADMIN" || user.role === TeamRole.ORG_ADMIN) return true;
-  if (project.clientId && user.clientMemberships && user.clientMemberships.length > 0) return true;
-  if (user.projectMemberships && user.projectMemberships.length > 0) return true;
+  if (user.globalRole === "SYSTEM_ADMIN" || user.role === TeamRole.ORG_ADMIN)
+    return true;
+  if (
+    project.clientId &&
+    user.clientMemberships &&
+    user.clientMemberships.length > 0
+  )
+    return true;
+  if (user.projectMemberships && user.projectMemberships.length > 0)
+    return true;
 
   return false;
 }
@@ -168,9 +175,7 @@ export const backlogRouter = createTRPCRouter({
         where: {
           projectId: input.projectId,
           parentId: null,
-          ...(input.sprintId !== undefined
-            ? { sprintId: input.sprintId }
-            : {}),
+          ...(input.sprintId !== undefined ? { sprintId: input.sprintId } : {}),
         },
         include: {
           assignee: {
@@ -210,7 +215,9 @@ export const backlogRouter = createTRPCRouter({
         description: z.string().optional(),
         acceptanceCriteria: z.string().optional(),
         type: z.nativeEnum(WorkItemType).default(WorkItemType.STORY),
-        priority: z.nativeEnum(WorkItemPriority).default(WorkItemPriority.MEDIUM),
+        priority: z
+          .nativeEnum(WorkItemPriority)
+          .default(WorkItemPriority.MEDIUM),
         status: z.nativeEnum(WorkItemStatus).default(WorkItemStatus.BACKLOG),
         storyPoints: z.number().nullable().optional(),
         parentId: z.string().nullable().optional(),

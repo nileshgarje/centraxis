@@ -111,7 +111,9 @@ export const orgRouter = createTRPCRouter({
   inviteUser: scrumMasterProcedure
     .input(
       z.object({
-        emails: z.array(z.string().email()).min(1, "At least one email is required"),
+        emails: z
+          .array(z.string().email())
+          .min(1, "At least one email is required"),
         role: z.nativeEnum(TeamRole).default(TeamRole.DEVELOPER),
         teamIds: z.array(z.string()).optional(),
       }),
@@ -349,15 +351,15 @@ export const orgRouter = createTRPCRouter({
           z.object({
             clientId: z.string(),
             role: z.nativeEnum(ClientRole),
-          })
+          }),
         ),
         projectMemberships: z.array(
           z.object({
             projectId: z.string(),
             role: z.nativeEnum(ProjectRole),
-          })
+          }),
         ),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       return ctx.db.$transaction(async (tx) => {

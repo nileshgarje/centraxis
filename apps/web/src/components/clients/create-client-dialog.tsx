@@ -93,10 +93,14 @@ export function CreateClientDialog({
       return;
     }
 
-    const cleanSlug = slug.trim() ? slug.trim().toLowerCase() : generateClientSlug(name);
+    const cleanSlug = slug.trim()
+      ? slug.trim().toLowerCase()
+      : generateClientSlug(name);
 
     if (cleanSlug && !/^[a-z0-9-]+$/.test(cleanSlug)) {
-      setErrorMessage("Slug must contain only lowercase alphanumeric characters and hyphens.");
+      setErrorMessage(
+        "Slug must contain only lowercase alphanumeric characters and hyphens.",
+      );
       return;
     }
 
@@ -110,7 +114,12 @@ export function CreateClientDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogContent className="sm:max-w-md p-0 overflow-hidden">
         {/* Header */}
         <div className="border-b border-border px-6 py-4 bg-muted/20">
@@ -141,7 +150,10 @@ export function CreateClientDialog({
         <form onSubmit={handleSubmit} className="p-6 space-y-4 pt-4">
           {/* Client Name */}
           <div className="space-y-1.5">
-            <Label htmlFor="client-name" className="text-xs font-semibold text-foreground">
+            <Label
+              htmlFor="client-name"
+              className="text-xs font-semibold text-foreground"
+            >
               Client / Account Name <span className="text-destructive">*</span>
             </Label>
             <Input
@@ -158,7 +170,10 @@ export function CreateClientDialog({
 
           {/* Client Slug */}
           <div className="space-y-1.5">
-            <Label htmlFor="client-slug" className="text-xs font-semibold text-foreground">
+            <Label
+              htmlFor="client-slug"
+              className="text-xs font-semibold text-foreground"
+            >
               Client Slug <span className="text-destructive">*</span>
             </Label>
             <Input
@@ -167,20 +182,26 @@ export function CreateClientDialog({
               value={slug}
               onChange={(e) => {
                 setIsSlugManuallyEdited(true);
-                setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
+                setSlug(
+                  e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
+                );
               }}
               placeholder="e.g. acme-corporation"
               required
               className="h-9 font-mono text-xs"
             />
             <p className="text-[11px] text-muted-foreground">
-              Unique URL identifier for this client tenant (lowercase letters, numbers, and hyphens).
+              Unique URL identifier for this client tenant (lowercase letters,
+              numbers, and hyphens).
             </p>
           </div>
 
           {/* Contact Email */}
           <div className="space-y-1.5">
-            <Label htmlFor="client-email" className="text-xs font-semibold text-foreground">
+            <Label
+              htmlFor="client-email"
+              className="text-xs font-semibold text-foreground"
+            >
               Primary Client Contact Email
             </Label>
             <div className="relative">
@@ -198,7 +219,10 @@ export function CreateClientDialog({
 
           {/* Logo URL */}
           <div className="space-y-1.5">
-            <Label htmlFor="client-logo" className="text-xs font-semibold text-foreground">
+            <Label
+              htmlFor="client-logo"
+              className="text-xs font-semibold text-foreground"
+            >
               Client Logo URL
             </Label>
             <div className="relative">
@@ -228,7 +252,11 @@ export function CreateClientDialog({
             <Button
               type="submit"
               size="sm"
-              disabled={createMutation.isPending || !name.trim() || slug.trim().length < 2}
+              disabled={
+                createMutation.isPending ||
+                !name.trim() ||
+                slug.trim().length < 2
+              }
               className="gap-1.5"
             >
               {createMutation.isPending && (

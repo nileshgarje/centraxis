@@ -47,7 +47,7 @@ export function CentraxisLogo({
       <div
         className={cn(
           "relative flex items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 text-white shadow-md shadow-indigo-500/25 ring-1 ring-white/20 shrink-0",
-          sizeStyles.box
+          sizeStyles.box,
         )}
       >
         <svg
@@ -93,7 +93,7 @@ export function CentraxisLogo({
           <span
             className={cn(
               "font-bold tracking-tight text-foreground",
-              sizeStyles.text
+              sizeStyles.text,
             )}
           >
             Centraxis
@@ -102,7 +102,7 @@ export function CentraxisLogo({
             <span
               className={cn(
                 "rounded-md border border-indigo-500/20 bg-indigo-50 dark:bg-indigo-950/50 font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 font-mono",
-                sizeStyles.badge
+                sizeStyles.badge,
               )}
             >
               by Centvis

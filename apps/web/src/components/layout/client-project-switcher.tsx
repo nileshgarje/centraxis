@@ -75,7 +75,10 @@ export function ClientProjectSwitcher({
           </button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="start" className="w-72 max-h-[85vh] overflow-y-auto">
+        <DropdownMenuContent
+          align="start"
+          className="w-72 max-h-[85vh] overflow-y-auto"
+        >
           <DropdownMenuLabel className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
             <span>Client Workspaces</span>
             <button
@@ -132,7 +135,8 @@ export function ClientProjectSwitcher({
                       {client.projects.map((proj) => {
                         const isProjActive =
                           isClientActive &&
-                          proj.key.toLowerCase() === currentProjectKey?.toLowerCase();
+                          proj.key.toLowerCase() ===
+                            currentProjectKey?.toLowerCase();
 
                         return (
                           <button

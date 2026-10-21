@@ -46,7 +46,17 @@ interface BacklogViewProps {
   onCreateSprint?: () => void;
 }
 
-function getTypeBadgeVariant(type: string): "default" | "secondary" | "outline" | "status-backlog" | "status-todo" | "status-in-progress" | "status-in-review" | "status-done" {
+function getTypeBadgeVariant(
+  type: string,
+):
+  | "default"
+  | "secondary"
+  | "outline"
+  | "status-backlog"
+  | "status-todo"
+  | "status-in-progress"
+  | "status-in-review"
+  | "status-done" {
   switch (type) {
     case "EPIC":
       return "status-in-review";
@@ -61,7 +71,16 @@ function getTypeBadgeVariant(type: string): "default" | "secondary" | "outline" 
   }
 }
 
-function getPriorityBadgeVariant(priority: string): "default" | "secondary" | "outline" | "priority-low" | "priority-medium" | "priority-high" | "priority-urgent" {
+function getPriorityBadgeVariant(
+  priority: string,
+):
+  | "default"
+  | "secondary"
+  | "outline"
+  | "priority-low"
+  | "priority-medium"
+  | "priority-high"
+  | "priority-urgent" {
   switch (priority) {
     case "URGENT":
       return "priority-urgent";
@@ -83,8 +102,12 @@ export function BacklogView({
   const utils = api.useUtils();
 
   const [isMounted, setIsMounted] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [collapsedSections, setCollapsedSections] = useState<
+    Record<string, boolean>
+  >({});
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isSprintDialogOpen, setIsSprintDialogOpen] = useState(false);
@@ -102,9 +125,11 @@ export function BacklogView({
   });
 
   // Fetch sprints
-  const { data: sprints, isLoading: sprintsLoading } = api.sprint.list.useQuery({
-    projectId,
-  });
+  const { data: sprints, isLoading: sprintsLoading } = api.sprint.list.useQuery(
+    {
+      projectId,
+    },
+  );
 
   // Recommended velocity
   const recommendedVelocity = 28;
@@ -195,7 +220,8 @@ export function BacklogView({
         } else {
           unassigned.push(item);
           const childPoints =
-            item.children?.reduce((acc, c) => acc + (c.storyPoints ?? 0), 0) ?? 0;
+            item.children?.reduce((acc, c) => acc + (c.storyPoints ?? 0), 0) ??
+            0;
           unassignedPoints += (item.storyPoints ?? 0) + childPoints;
         }
       });
@@ -228,7 +254,9 @@ export function BacklogView({
       <div className="flex h-72 items-center justify-center">
         <div className="flex flex-col items-center gap-2">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-xs text-muted-foreground">Loading backlog & sprints...</p>
+          <p className="text-xs text-muted-foreground">
+            Loading backlog & sprints...
+          </p>
         </div>
       </div>
     );
@@ -292,7 +320,10 @@ export function BacklogView({
                 (sum, item) =>
                   sum +
                   (item.storyPoints ?? 0) +
-                  (item.children?.reduce((c, ch) => c + (ch.storyPoints ?? 0), 0) ?? 0),
+                  (item.children?.reduce(
+                    (c, ch) => c + (ch.storyPoints ?? 0),
+                    0,
+                  ) ?? 0),
                 0,
               );
               const isOverCapacity = committedPoints > recommendedVelocity;
@@ -399,7 +430,9 @@ export function BacklogView({
                           size="sm"
                           variant="outline"
                           className="h-7 text-xs gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
-                          onClick={() => startSprintMutation.mutate({ sprintId: sprint.id })}
+                          onClick={() =>
+                            startSprintMutation.mutate({ sprintId: sprint.id })
+                          }
                           disabled={startSprintMutation.isPending}
                         >
                           <Play className="h-3 w-3 fill-current" />
@@ -434,7 +467,8 @@ export function BacklogView({
                         >
                           {sprintItems.length === 0 ? (
                             <div className="p-6 text-center text-xs text-muted-foreground">
-                              No work items planned for this sprint yet. Drag items from the backlog or add one below.
+                              No work items planned for this sprint yet. Drag
+                              items from the backlog or add one below.
                             </div>
                           ) : (
                             sprintItems.map((item, index) => (
@@ -469,7 +503,9 @@ export function BacklogView({
                                       {/* Expand Chevron for subtasks */}
                                       {item.children.length > 0 ? (
                                         <button
-                                          onClick={() => toggleExpandItem(item.id)}
+                                          onClick={() =>
+                                            toggleExpandItem(item.id)
+                                          }
                                           className="rounded p-0.5 text-muted-foreground hover:bg-muted shrink-0"
                                         >
                                           {expandedItems[item.id] ? (
@@ -490,10 +526,14 @@ export function BacklogView({
                                       {/* Title (Takes Maximum Horizontal Room) */}
                                       <button
                                         type="button"
-                                        onClick={() => setSelectedItemId(item.id)}
+                                        onClick={() =>
+                                          setSelectedItemId(item.id)
+                                        }
                                         className="flex-1 text-left truncate font-medium text-foreground hover:text-primary transition-colors cursor-pointer"
                                       >
-                                        <span className="truncate">{item.title}</span>
+                                        <span className="truncate">
+                                          {item.title}
+                                        </span>
                                       </button>
 
                                       {/* Type Badge */}
@@ -506,7 +546,9 @@ export function BacklogView({
 
                                       {/* Priority Badge */}
                                       <Badge
-                                        variant={getPriorityBadgeVariant(item.priority)}
+                                        variant={getPriorityBadgeVariant(
+                                          item.priority,
+                                        )}
                                         className="text-[10px] shrink-0 font-medium py-0 px-1.5"
                                       >
                                         {item.priority}
@@ -526,9 +568,16 @@ export function BacklogView({
                                         {item.assignee ? (
                                           <>
                                             <Avatar className="h-5 w-5 ring-1 ring-border">
-                                              <AvatarImage src={item.assignee.image ?? undefined} />
+                                              <AvatarImage
+                                                src={
+                                                  item.assignee.image ??
+                                                  undefined
+                                                }
+                                              />
                                               <AvatarFallback className="text-[9px] font-bold">
-                                                {item.assignee.name?.slice(0, 2).toUpperCase() ?? "U"}
+                                                {item.assignee.name
+                                                  ?.slice(0, 2)
+                                                  .toUpperCase() ?? "U"}
                                               </AvatarFallback>
                                             </Avatar>
                                             <span className="text-xs text-muted-foreground whitespace-nowrap">
@@ -544,39 +593,43 @@ export function BacklogView({
                                     </div>
 
                                     {/* Subtasks (Children) */}
-                                    {expandedItems[item.id] && item.children.length > 0 && (
-                                      <div className="bg-muted/15 divide-y divide-border/40 border-t border-border/40 pl-8">
-                                        {item.children.map((child) => (
-                                          <div
-                                            key={child.id}
-                                            className="flex items-center gap-2.5 px-3 py-1.5 text-xs h-8"
-                                          >
-                                            <span className="font-mono text-[10px] text-muted-foreground">
-                                              {child.key}
-                                            </span>
-                                            <span className="flex-1 text-foreground truncate">
-                                              {child.title}
-                                            </span>
-                                            <Badge
-                                              variant={getTypeBadgeVariant(child.type)}
-                                              className="text-[9px] py-0 px-1"
+                                    {expandedItems[item.id] &&
+                                      item.children.length > 0 && (
+                                        <div className="bg-muted/15 divide-y divide-border/40 border-t border-border/40 pl-8">
+                                          {item.children.map((child) => (
+                                            <div
+                                              key={child.id}
+                                              className="flex items-center gap-2.5 px-3 py-1.5 text-xs h-8"
                                             >
-                                              {child.type}
-                                            </Badge>
-                                            <div className="w-12 text-center">
-                                              {child.storyPoints !== null && (
-                                                <span className="text-[10px] font-mono text-muted-foreground">
-                                                  {child.storyPoints} pts
-                                                </span>
-                                              )}
+                                              <span className="font-mono text-[10px] text-muted-foreground">
+                                                {child.key}
+                                              </span>
+                                              <span className="flex-1 text-foreground truncate">
+                                                {child.title}
+                                              </span>
+                                              <Badge
+                                                variant={getTypeBadgeVariant(
+                                                  child.type,
+                                                )}
+                                                className="text-[9px] py-0 px-1"
+                                              >
+                                                {child.type}
+                                              </Badge>
+                                              <div className="w-12 text-center">
+                                                {child.storyPoints !== null && (
+                                                  <span className="text-[10px] font-mono text-muted-foreground">
+                                                    {child.storyPoints} pts
+                                                  </span>
+                                                )}
+                                              </div>
+                                              <span className="text-xs text-muted-foreground min-w-[130px] text-right">
+                                                {child.assignee?.name ??
+                                                  "Unassigned"}
+                                              </span>
                                             </div>
-                                            <span className="text-xs text-muted-foreground min-w-[130px] text-right">
-                                              {child.assignee?.name ?? "Unassigned"}
-                                            </span>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
+                                          ))}
+                                        </div>
+                                      )}
                                   </div>
                                 )}
                               </Draggable>
@@ -651,7 +704,8 @@ export function BacklogView({
                   >
                     {backlogItems.length === 0 ? (
                       <div className="p-6 text-center text-xs text-muted-foreground">
-                        Backlog is currently empty. Use the quick-add bar below to create initial user stories.
+                        Backlog is currently empty. Use the quick-add bar below
+                        to create initial user stories.
                       </div>
                     ) : (
                       backlogItems.map((item, index) => (
@@ -717,7 +771,9 @@ export function BacklogView({
                                 </Badge>
 
                                 <Badge
-                                  variant={getPriorityBadgeVariant(item.priority)}
+                                  variant={getPriorityBadgeVariant(
+                                    item.priority,
+                                  )}
                                   className="text-[10px] shrink-0 font-medium py-0 px-1.5"
                                 >
                                   {item.priority}
@@ -735,9 +791,13 @@ export function BacklogView({
                                   {item.assignee ? (
                                     <>
                                       <Avatar className="h-5 w-5 ring-1 ring-border">
-                                        <AvatarImage src={item.assignee.image ?? undefined} />
+                                        <AvatarImage
+                                          src={item.assignee.image ?? undefined}
+                                        />
                                         <AvatarFallback className="text-[9px] font-bold">
-                                          {item.assignee.name?.slice(0, 2).toUpperCase() ?? "U"}
+                                          {item.assignee.name
+                                            ?.slice(0, 2)
+                                            .toUpperCase() ?? "U"}
                                         </AvatarFallback>
                                       </Avatar>
                                       <span className="text-xs text-muted-foreground whitespace-nowrap">
@@ -753,39 +813,42 @@ export function BacklogView({
                               </div>
 
                               {/* Subtasks (Children) */}
-                              {expandedItems[item.id] && item.children.length > 0 && (
-                                <div className="bg-muted/15 divide-y divide-border/40 border-t border-border/40 pl-8">
-                                  {item.children.map((child) => (
-                                    <div
-                                      key={child.id}
-                                      className="flex items-center gap-2.5 px-3 py-1.5 text-xs h-8"
-                                    >
-                                      <span className="font-mono text-[10px] text-muted-foreground">
-                                        {child.key}
-                                      </span>
-                                      <span className="flex-1 text-foreground truncate">
-                                        {child.title}
-                                      </span>
-                                      <Badge
-                                        variant={getTypeBadgeVariant(child.type)}
-                                        className="text-[9px] py-0 px-1"
+                              {expandedItems[item.id] &&
+                                item.children.length > 0 && (
+                                  <div className="bg-muted/15 divide-y divide-border/40 border-t border-border/40 pl-8">
+                                    {item.children.map((child) => (
+                                      <div
+                                        key={child.id}
+                                        className="flex items-center gap-2.5 px-3 py-1.5 text-xs h-8"
                                       >
-                                        {child.type}
-                                      </Badge>
-                                      <div className="w-12 text-center">
-                                        {child.storyPoints !== null && (
-                                          <span className="text-[10px] font-mono text-muted-foreground">
-                                            {child.storyPoints} pts
-                                          </span>
-                                        )}
+                                        <span className="font-mono text-[10px] text-muted-foreground">
+                                          {child.key}
+                                        </span>
+                                        <span className="flex-1 text-foreground truncate">
+                                          {child.title}
+                                        </span>
+                                        <Badge
+                                          variant={getTypeBadgeVariant(
+                                            child.type,
+                                          )}
+                                          className="text-[9px] py-0 px-1"
+                                        >
+                                          {child.type}
+                                        </Badge>
+                                        <div className="w-12 text-center">
+                                          {child.storyPoints !== null && (
+                                            <span className="text-[10px] font-mono text-muted-foreground">
+                                              {child.storyPoints} pts
+                                            </span>
+                                          )}
+                                        </div>
+                                        <span className="text-xs text-muted-foreground min-w-[130px] text-right">
+                                          {child.assignee?.name ?? "Unassigned"}
+                                        </span>
                                       </div>
-                                      <span className="text-xs text-muted-foreground min-w-[130px] text-right">
-                                        {child.assignee?.name ?? "Unassigned"}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                                    ))}
+                                  </div>
+                                )}
                             </div>
                           )}
                         </Draggable>
@@ -836,7 +899,7 @@ export function BacklogView({
         projectId={projectId}
         onSprintCompleted={(res) => {
           setToastMessage(
-            `Sprint "${res.sprintName}" completed. ${res.rolledOverCount} item(s) moved to ${res.targetDestination}.`
+            `Sprint "${res.sprintName}" completed. ${res.rolledOverCount} item(s) moved to ${res.targetDestination}.`,
           );
           setTimeout(() => setToastMessage(null), 6000);
         }}

@@ -46,10 +46,11 @@ export function SubTasksSection({ parentId, projectId }: SubTasksSectionProps) {
     { enabled: !!parentId },
   );
 
-  const { data: assignableUsers = [] } = api.project.getAssignableUsers.useQuery(
-    { projectId },
-    { enabled: !!projectId },
-  );
+  const { data: assignableUsers = [] } =
+    api.project.getAssignableUsers.useQuery(
+      { projectId },
+      { enabled: !!projectId },
+    );
 
   const invalidateAll = async () => {
     await Promise.all([
@@ -232,11 +233,17 @@ export function SubTasksSection({ parentId, projectId }: SubTasksSectionProps) {
                       <button
                         type="button"
                         className="flex items-center gap-1 rounded-full p-0.5 hover:ring-1 hover:ring-border focus:outline-none"
-                        title={task.assignee?.name ? `Assigned to ${task.assignee.name}` : "Unassigned"}
+                        title={
+                          task.assignee?.name
+                            ? `Assigned to ${task.assignee.name}`
+                            : "Unassigned"
+                        }
                       >
                         {task.assignee ? (
                           <Avatar className="h-5 w-5 ring-1 ring-border">
-                            <AvatarImage src={task.assignee.image ?? undefined} />
+                            <AvatarImage
+                              src={task.assignee.image ?? undefined}
+                            />
                             <AvatarFallback className="text-[9px] font-bold bg-primary/10 text-primary">
                               {assigneeInitials}
                             </AvatarFallback>
@@ -254,7 +261,10 @@ export function SubTasksSection({ parentId, projectId }: SubTasksSectionProps) {
                       </DropdownMenuLabel>
                       <DropdownMenuItem
                         onClick={() =>
-                          updateMutation.mutate({ id: task.id, assigneeId: null })
+                          updateMutation.mutate({
+                            id: task.id,
+                            assigneeId: null,
+                          })
                         }
                         className="text-xs text-muted-foreground cursor-pointer"
                       >
@@ -265,7 +275,10 @@ export function SubTasksSection({ parentId, projectId }: SubTasksSectionProps) {
                         <DropdownMenuItem
                           key={u.id}
                           onClick={() =>
-                            updateMutation.mutate({ id: task.id, assigneeId: u.id })
+                            updateMutation.mutate({
+                              id: task.id,
+                              assigneeId: u.id,
+                            })
                           }
                           className="flex items-center gap-2 text-xs cursor-pointer"
                         >
@@ -339,7 +352,9 @@ export function SubTasksSection({ parentId, projectId }: SubTasksSectionProps) {
         </div>
 
         {errorMessage && (
-          <p className="text-[11px] text-destructive font-medium">{errorMessage}</p>
+          <p className="text-[11px] text-destructive font-medium">
+            {errorMessage}
+          </p>
         )}
       </form>
     </div>

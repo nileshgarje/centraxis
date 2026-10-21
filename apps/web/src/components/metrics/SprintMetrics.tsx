@@ -39,7 +39,9 @@ export function SprintMetrics({ projectId }: { projectId: string }) {
       <div className="flex h-96 items-center justify-center">
         <div className="flex flex-col items-center space-y-3">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-          <p className="text-sm font-medium text-slate-500">Computing sprint metrics and burndown trajectory...</p>
+          <p className="text-sm font-medium text-slate-500">
+            Computing sprint metrics and burndown trajectory...
+          </p>
         </div>
       </div>
     );
@@ -97,7 +99,9 @@ export function SprintMetrics({ projectId }: { projectId: string }) {
           </div>
           <p className="mt-2 text-2xl font-bold text-slate-900">
             {velocityData?.averageVelocity ?? 24}{" "}
-            <span className="text-xs font-normal text-slate-500">pts/sprint</span>
+            <span className="text-xs font-normal text-slate-500">
+              pts/sprint
+            </span>
           </p>
           <p className="mt-1 text-[11px] text-emerald-600 font-semibold">
             Based on rolling 3-sprint average
@@ -170,7 +174,8 @@ export function SprintMetrics({ projectId }: { projectId: string }) {
               </h3>
             </div>
             <p className="mt-0.5 text-xs text-slate-500">
-              Ideal trajectory vs actual remaining story points across the 14-day sprint iteration
+              Ideal trajectory vs actual remaining story points across the
+              14-day sprint iteration
             </p>
           </div>
 

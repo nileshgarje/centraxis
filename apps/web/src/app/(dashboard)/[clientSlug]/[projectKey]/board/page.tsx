@@ -7,10 +7,5 @@ import { useProject } from "~/context/project-context";
 export default function ProjectBoardPage() {
   const { project, openCreateItem } = useProject();
 
-  return (
-    <KanbanBoard
-      projectId={project.id}
-      onCreateItem={openCreateItem}
-    />
-  );
+  return <KanbanBoard projectId={project.id} onCreateItem={openCreateItem} />;
 }

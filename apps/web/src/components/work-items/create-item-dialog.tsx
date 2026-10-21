@@ -98,15 +98,15 @@ export function CreateItemDialog({
 }: CreateItemDialogProps) {
   const utils = api.useUtils();
 
-  const [type, setType] = useState<"EPIC" | "FEATURE" | "STORY" | "TASK" | "BUG">(
-    defaultType,
-  );
+  const [type, setType] = useState<
+    "EPIC" | "FEATURE" | "STORY" | "TASK" | "BUG"
+  >(defaultType);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [acceptanceCriteria, setAcceptanceCriteria] = useState("");
-  const [priority, setPriority] = useState<"LOW" | "MEDIUM" | "HIGH" | "URGENT">(
-    "MEDIUM",
-  );
+  const [priority, setPriority] = useState<
+    "LOW" | "MEDIUM" | "HIGH" | "URGENT"
+  >("MEDIUM");
   const [storyPoints, setStoryPoints] = useState<number | null>(3);
   const [assigneeId, setAssigneeId] = useState<string>("");
   const [sprintId, setSprintId] = useState<string>(defaultSprintId ?? "");
@@ -203,7 +203,12 @@ export function CreateItemDialog({
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Sheet
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <SheetContent
         side="right"
         className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl h-full p-0 flex flex-col overflow-hidden bg-background border-border shadow-2xl"
@@ -264,7 +269,10 @@ export function CreateItemDialog({
 
             {/* 2. Title */}
             <div className="space-y-1.5">
-              <Label htmlFor="item-title" className="block text-xs font-semibold text-foreground">
+              <Label
+                htmlFor="item-title"
+                className="block text-xs font-semibold text-foreground"
+              >
                 Title <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -374,18 +382,28 @@ export function CreateItemDialog({
 
               {/* Target Sprint */}
               <div className="space-y-1.5">
-                <Label htmlFor="item-sprint" className="block text-xs font-semibold text-foreground">
+                <Label
+                  htmlFor="item-sprint"
+                  className="block text-xs font-semibold text-foreground"
+                >
                   Sprint Allocation
                 </Label>
                 <Select
                   value={sprintId || "backlog"}
-                  onValueChange={(val) => setSprintId(val === "backlog" ? "" : val)}
+                  onValueChange={(val) =>
+                    setSprintId(val === "backlog" ? "" : val)
+                  }
                 >
-                  <SelectTrigger id="item-sprint" className="w-full h-9 text-xs font-medium">
+                  <SelectTrigger
+                    id="item-sprint"
+                    className="w-full h-9 text-xs font-medium"
+                  >
                     <SelectValue placeholder="Backlog Pool (Unscheduled)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="backlog">Backlog Pool (Unscheduled)</SelectItem>
+                    <SelectItem value="backlog">
+                      Backlog Pool (Unscheduled)
+                    </SelectItem>
                     {sprints?.map((s) => (
                       <SelectItem key={s.id} value={s.id}>
                         {s.name} ({s.status})
@@ -397,14 +415,22 @@ export function CreateItemDialog({
 
               {/* Assignee */}
               <div className="space-y-1.5">
-                <Label htmlFor="item-assignee" className="block text-xs font-semibold text-foreground">
+                <Label
+                  htmlFor="item-assignee"
+                  className="block text-xs font-semibold text-foreground"
+                >
                   Assignee
                 </Label>
                 <Select
                   value={assigneeId || "unassigned"}
-                  onValueChange={(val) => setAssigneeId(val === "unassigned" ? "" : val)}
+                  onValueChange={(val) =>
+                    setAssigneeId(val === "unassigned" ? "" : val)
+                  }
                 >
-                  <SelectTrigger id="item-assignee" className="w-full h-9 text-xs font-medium">
+                  <SelectTrigger
+                    id="item-assignee"
+                    className="w-full h-9 text-xs font-medium"
+                  >
                     <SelectValue placeholder="Unassigned" />
                   </SelectTrigger>
                   <SelectContent>
@@ -420,7 +446,11 @@ export function CreateItemDialog({
                             />
                           ) : (
                             <div className="h-4 w-4 rounded-full bg-primary/10 text-primary text-[10px] flex items-center justify-center font-bold">
-                              {(u.name?.[0] || u.email?.[0] || "?").toUpperCase()}
+                              {(
+                                u.name?.[0] ||
+                                u.email?.[0] ||
+                                "?"
+                              ).toUpperCase()}
                             </div>
                           )}
                           <span>{u.name || u.email}</span>
@@ -438,14 +468,22 @@ export function CreateItemDialog({
 
               {/* Parent Work Item */}
               <div className="space-y-1.5">
-                <Label htmlFor="item-parent" className="block text-xs font-semibold text-foreground">
+                <Label
+                  htmlFor="item-parent"
+                  className="block text-xs font-semibold text-foreground"
+                >
                   Parent Hierarchy (Optional)
                 </Label>
                 <Select
                   value={parentId || "none"}
-                  onValueChange={(val) => setParentId(val === "none" ? "" : val)}
+                  onValueChange={(val) =>
+                    setParentId(val === "none" ? "" : val)
+                  }
                 >
-                  <SelectTrigger id="item-parent" className="w-full h-9 text-xs font-medium">
+                  <SelectTrigger
+                    id="item-parent"
+                    className="w-full h-9 text-xs font-medium"
+                  >
                     <SelectValue placeholder="No Parent (Root Item)" />
                   </SelectTrigger>
                   <SelectContent>
@@ -463,12 +501,7 @@ export function CreateItemDialog({
 
           {/* Sheet Footer */}
           <SheetFooter className="flex items-center justify-end space-x-2 border-t border-border bg-muted/20 px-6 py-3 shrink-0">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onClose}
-            >
+            <Button type="button" variant="outline" size="sm" onClick={onClose}>
               Cancel
             </Button>
             <Button

@@ -48,11 +48,16 @@ export async function bootstrapAdmin() {
     },
   });
 
-  console.log(`✅ [KC_BOOTSTRAP_ADMIN] Provisioned temporary administrator account: ${email}`);
+  console.log(
+    `✅ [KC_BOOTSTRAP_ADMIN] Provisioned temporary administrator account: ${email}`,
+  );
   return user;
 }
 
-if (process.argv[1]?.includes("bootstrap.ts") || process.argv[1]?.includes("bootstrap.js")) {
+if (
+  process.argv[1]?.includes("bootstrap.ts") ||
+  process.argv[1]?.includes("bootstrap.js")
+) {
   bootstrapAdmin()
     .then(() => process.exit(0))
     .catch((err) => {

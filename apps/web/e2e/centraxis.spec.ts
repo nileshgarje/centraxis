@@ -7,7 +7,12 @@ test.describe("Centraxis Agile Platform E2E Flow", () => {
       await page.locator('input[type="email"]').fill("admin@centvis.com");
       await page.locator('input[type="password"]').fill("AdminPassword123!");
       await page.locator('button[type="submit"]').click();
-      await page.waitForURL((url) => !url.pathname.includes("/login") && !url.pathname.includes("/auth/signin"), { timeout: 15000 });
+      await page.waitForURL(
+        (url) =>
+          !url.pathname.includes("/login") &&
+          !url.pathname.includes("/auth/signin"),
+        { timeout: 15000 },
+      );
     }
     await page.goto("/");
   });
@@ -52,9 +57,7 @@ test.describe("Centraxis Agile Platform E2E Flow", () => {
     // Trigger modal via unified + Create dropdown
     await page.click('button:has-text("Create")');
     await page.click("text=AI Story Agent");
-    await expect(
-      page.locator("text=Centraxis AI Story Agent"),
-    ).toBeVisible();
+    await expect(page.locator("text=Centraxis AI Story Agent")).toBeVisible();
 
     // Fill feature brief prompt
     const promptInput = page.locator(
@@ -81,6 +84,8 @@ test.describe("Centraxis Agile Platform E2E Flow", () => {
 
     // Close modal
     await page.keyboard.press("Escape");
-    await expect(page.locator("text=Centraxis AI Story Agent")).not.toBeVisible();
+    await expect(
+      page.locator("text=Centraxis AI Story Agent"),
+    ).not.toBeVisible();
   });
 });

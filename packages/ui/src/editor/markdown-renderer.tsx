@@ -31,12 +31,16 @@ function renderHast(node: any, key: string | number): React.ReactNode {
       : node.properties?.className || "";
     return (
       <Tag key={key} className={className}>
-        {node.children?.map((child: any, i: number) => renderHast(child, `${key}-${i}`))}
+        {node.children?.map((child: any, i: number) =>
+          renderHast(child, `${key}-${i}`),
+        )}
       </Tag>
     );
   }
   if (node.type === "root") {
-    return node.children?.map((child: any, i: number) => renderHast(child, `${key}-${i}`));
+    return node.children?.map((child: any, i: number) =>
+      renderHast(child, `${key}-${i}`),
+    );
   }
   return null;
 }
@@ -109,11 +113,7 @@ export function CodeBlockRenderer({
       {/* Code Area with Syntax Highlighting */}
       <pre className="overflow-x-auto p-3.5 font-mono text-xs leading-relaxed text-slate-100">
         <code>
-          {highlightedTree ? (
-            renderHast(highlightedTree, "root")
-          ) : (
-            code
-          )}
+          {highlightedTree ? renderHast(highlightedTree, "root") : code}
         </code>
       </pre>
     </div>
@@ -124,7 +124,8 @@ export function CodeBlockRenderer({
  * Highlight Gherkin acceptance criteria keywords
  */
 function renderGherkinLine(text: string, key: string | number) {
-  const gherkinRegex = /^(Scenario|Feature|Background|Given|When|Then|And|But)\b(.*)$/i;
+  const gherkinRegex =
+    /^(Scenario|Feature|Background|Given|When|Then|And|But)\b(.*)$/i;
   const match = text.match(gherkinRegex);
 
   if (match) {
@@ -132,14 +133,23 @@ function renderGherkinLine(text: string, key: string | number) {
     const rest = match[2]!;
 
     let badgeColor = "bg-blue-100 text-blue-800 border-blue-200";
-    if (keyword === "WHEN") badgeColor = "bg-purple-100 text-purple-800 border-purple-200";
-    if (keyword === "THEN") badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-200";
-    if (keyword === "AND" || keyword === "BUT") badgeColor = "bg-amber-100 text-amber-800 border-amber-200";
-    if (keyword === "SCENARIO" || keyword === "FEATURE") badgeColor = "bg-indigo-100 text-indigo-900 border-indigo-300 font-bold";
+    if (keyword === "WHEN")
+      badgeColor = "bg-purple-100 text-purple-800 border-purple-200";
+    if (keyword === "THEN")
+      badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-200";
+    if (keyword === "AND" || keyword === "BUT")
+      badgeColor = "bg-amber-100 text-amber-800 border-amber-200";
+    if (keyword === "SCENARIO" || keyword === "FEATURE")
+      badgeColor = "bg-indigo-100 text-indigo-900 border-indigo-300 font-bold";
 
     return (
-      <div key={key} className="my-1 flex items-baseline space-x-2 font-mono text-xs">
-        <span className={`rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${badgeColor}`}>
+      <div
+        key={key}
+        className="my-1 flex items-baseline space-x-2 font-mono text-xs"
+      >
+        <span
+          className={`rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${badgeColor}`}
+        >
           {match[1]}
         </span>
         <span className="text-slate-800">{rest}</span>
@@ -193,7 +203,13 @@ export function MarkdownRenderer({
     tokens = marked.lexer(content);
   } catch (err) {
     console.error("Markdown lexer error:", err);
-    return <div className={`whitespace-pre-wrap font-sans text-sm text-slate-800 ${className}`}>{content}</div>;
+    return (
+      <div
+        className={`whitespace-pre-wrap font-sans text-sm text-slate-800 ${className}`}
+      >
+        {content}
+      </div>
+    );
   }
 
   let taskGlobalIndex = 0;
@@ -212,27 +228,39 @@ export function MarkdownRenderer({
         const text = hToken.text;
         if (depth === 1) {
           return (
-            <h1 key={idx} className="mt-4 mb-2 text-xl font-bold tracking-tight text-slate-900 border-b border-slate-200 pb-1">
+            <h1
+              key={idx}
+              className="mt-4 mb-2 text-xl font-bold tracking-tight text-slate-900 border-b border-slate-200 pb-1"
+            >
               {text}
             </h1>
           );
         }
         if (depth === 2) {
           return (
-            <h2 key={idx} className="mt-3.5 mb-1.5 text-lg font-bold tracking-tight text-slate-900">
+            <h2
+              key={idx}
+              className="mt-3.5 mb-1.5 text-lg font-bold tracking-tight text-slate-900"
+            >
               {text}
             </h2>
           );
         }
         if (depth === 3) {
           return (
-            <h3 key={idx} className="mt-3 mb-1 text-base font-semibold text-slate-900">
+            <h3
+              key={idx}
+              className="mt-3 mb-1 text-base font-semibold text-slate-900"
+            >
               {text}
             </h3>
           );
         }
         return (
-          <h4 key={idx} className="mt-2.5 mb-1 text-sm font-semibold text-slate-800">
+          <h4
+            key={idx}
+            className="mt-2.5 mb-1 text-sm font-semibold text-slate-800"
+          >
             {text}
           </h4>
         );
@@ -255,13 +283,20 @@ export function MarkdownRenderer({
         const rawText = pToken.text;
         const lines = rawText.split("\n");
         const hasGherkin = lines.some((l) =>
-          /^(Scenario|Feature|Background|Given|When|Then|And|But)\b/i.test(l.trim())
+          /^(Scenario|Feature|Background|Given|When|Then|And|But)\b/i.test(
+            l.trim(),
+          ),
         );
 
         if (hasGherkin) {
           return (
-            <div key={idx} className="my-2 space-y-1 rounded-lg border border-slate-200 bg-slate-50/60 p-2.5">
-              {lines.map((l, lineIdx) => renderGherkinLine(l.trim(), `${idx}-${lineIdx}`))}
+            <div
+              key={idx}
+              className="my-2 space-y-1 rounded-lg border border-slate-200 bg-slate-50/60 p-2.5"
+            >
+              {lines.map((l, lineIdx) =>
+                renderGherkinLine(l.trim(), `${idx}-${lineIdx}`),
+              )}
             </div>
           );
         }
@@ -279,7 +314,11 @@ export function MarkdownRenderer({
           <ul
             key={idx}
             className={`my-2 space-y-1.5 ${
-              lToken.ordered ? "list-decimal pl-5" : lToken.items.some((i) => i.task) ? "list-none pl-0" : "list-disc pl-5"
+              lToken.ordered
+                ? "list-decimal pl-5"
+                : lToken.items.some((i) => i.task)
+                  ? "list-none pl-0"
+                  : "list-disc pl-5"
             } text-sm text-slate-800`}
           >
             {lToken.items.map((item, itemIdx) => {
@@ -298,7 +337,9 @@ export function MarkdownRenderer({
                     />
                     <span
                       className={`flex-1 text-sm ${
-                        item.checked ? "text-slate-400 line-through" : "text-slate-800"
+                        item.checked
+                          ? "text-slate-400 line-through"
+                          : "text-slate-800"
                       }`}
                     >
                       {item.text}
@@ -331,7 +372,10 @@ export function MarkdownRenderer({
       case "table": {
         const tToken = token as Tokens.Table;
         return (
-          <div key={idx} className="my-3 overflow-x-auto rounded-lg border border-slate-200">
+          <div
+            key={idx}
+            className="my-3 overflow-x-auto rounded-lg border border-slate-200"
+          >
             <table className="min-w-full divide-y divide-slate-200 text-left text-xs">
               <thead className="bg-slate-50 font-semibold text-slate-700">
                 <tr>
@@ -374,9 +418,17 @@ export function MarkdownRenderer({
     return inlineTokens.map((t, i) => {
       switch (t.type) {
         case "strong":
-          return <strong key={i} className="font-semibold text-slate-900">{t.text}</strong>;
+          return (
+            <strong key={i} className="font-semibold text-slate-900">
+              {t.text}
+            </strong>
+          );
         case "em":
-          return <em key={i} className="italic">{t.text}</em>;
+          return (
+            <em key={i} className="italic">
+              {t.text}
+            </em>
+          );
         case "codespan":
           return (
             <code
@@ -387,7 +439,11 @@ export function MarkdownRenderer({
             </code>
           );
         case "del":
-          return <del key={i} className="line-through text-slate-400">{t.text}</del>;
+          return (
+            <del key={i} className="line-through text-slate-400">
+              {t.text}
+            </del>
+          );
         case "link": {
           const l = t as Tokens.Link;
           return (

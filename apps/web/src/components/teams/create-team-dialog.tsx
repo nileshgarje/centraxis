@@ -196,10 +196,15 @@ export function CreateTeamDialog({
             {/* Target Velocity */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label htmlFor="target-velocity" className="text-xs font-semibold">
+                <Label
+                  htmlFor="target-velocity"
+                  className="text-xs font-semibold"
+                >
                   Target Velocity
                 </Label>
-                <span className="text-[10px] text-muted-foreground">pts / sprint</span>
+                <span className="text-[10px] text-muted-foreground">
+                  pts / sprint
+                </span>
               </div>
               <div className="relative">
                 <Input
@@ -271,7 +276,9 @@ export function CreateTeamDialog({
                         <div className="h-5 w-5 rounded-full bg-secondary text-[10px] font-bold flex items-center justify-center text-secondary-foreground">
                           {member.name?.slice(0, 1) ?? "U"}
                         </div>
-                        <span className="font-semibold text-foreground">{member.name}</span>
+                        <span className="font-semibold text-foreground">
+                          {member.name}
+                        </span>
                       </div>
                       <span className="text-[10px] text-muted-foreground uppercase font-medium">
                         {member.role}
@@ -289,7 +296,9 @@ export function CreateTeamDialog({
               <Label htmlFor="squad-desc" className="text-xs font-semibold">
                 Squad Mission & Description
               </Label>
-              <span className="text-[10px] text-muted-foreground">Optional</span>
+              <span className="text-[10px] text-muted-foreground">
+                Optional
+              </span>
             </div>
             <Textarea
               id="squad-desc"

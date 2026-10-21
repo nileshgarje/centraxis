@@ -10,10 +10,5 @@ interface ProjectPageProps {
 export default async function ProjectPage({ params }: ProjectPageProps) {
   const { projectKey } = await params;
 
-  return (
-    <CentraxisApp
-      initialProjectKey={projectKey}
-      initialTab="board"
-    />
-  );
+  return <CentraxisApp initialProjectKey={projectKey} initialTab="board" />;
 }

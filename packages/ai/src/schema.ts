@@ -33,7 +33,9 @@ export const UserStoryOutputSchema = z.object({
   subTasks: z
     .array(z.string())
     .min(1, "At least one technical subtask must be specified")
-    .describe("Actionable technical breakdown tasks required to deliver this story"),
+    .describe(
+      "Actionable technical breakdown tasks required to deliver this story",
+    ),
 });
 
 export type UserStoryOutput = z.infer<typeof UserStoryOutputSchema>;

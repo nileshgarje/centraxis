@@ -35,7 +35,10 @@ import { CreateClientDialog } from "~/components/clients/create-client-dialog";
 export default function ClientsSettingsPage() {
   const utils = api.useUtils();
   const [isAddClientOpen, setIsAddClientOpen] = useState(false);
-  const [clientToDelete, setClientToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [clientToDelete, setClientToDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -78,7 +81,8 @@ export default function ClientsSettingsPage() {
             Clients & Multi-Tenancy
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Segment your organization into dedicated client spaces (Clients &rarr; Projects &rarr; Teams &rarr; Sprints)
+            Segment your organization into dedicated client spaces (Clients
+            &rarr; Projects &rarr; Teams &rarr; Sprints)
           </p>
         </div>
 
@@ -125,7 +129,8 @@ export default function ClientsSettingsPage() {
         </div>
 
         <div className="text-xs text-muted-foreground font-medium">
-          {filteredClients.length} {filteredClients.length === 1 ? "Client" : "Clients"}
+          {filteredClients.length}{" "}
+          {filteredClients.length === 1 ? "Client" : "Clients"}
         </div>
       </div>
 
@@ -137,9 +142,12 @@ export default function ClientsSettingsPage() {
       ) : filteredClients.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border p-12 text-center space-y-3">
           <Building2 className="h-10 w-10 text-muted-foreground mx-auto opacity-50" />
-          <h3 className="text-sm font-semibold text-foreground">No clients found</h3>
+          <h3 className="text-sm font-semibold text-foreground">
+            No clients found
+          </h3>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            Create your first client tenant space to isolate projects and team allocations for client accounts.
+            Create your first client tenant space to isolate projects and team
+            allocations for client accounts.
           </p>
           <Button
             onClick={() => setIsAddClientOpen(true)}
@@ -186,7 +194,9 @@ export default function ClientsSettingsPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setClientToDelete({ id: client.id, name: client.name })}
+                    onClick={() =>
+                      setClientToDelete({ id: client.id, name: client.name })
+                    }
                     title="Delete Client"
                     className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition"
                   >
@@ -249,8 +259,11 @@ export default function ClientsSettingsPage() {
             <AlertDialogTitle>Delete Client Tenant?</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete client{" "}
-              <strong className="text-foreground">"{clientToDelete?.name}"</strong>?
-              Projects assigned to this client will become unassigned internal projects.
+              <strong className="text-foreground">
+                "{clientToDelete?.name}"
+              </strong>
+              ? Projects assigned to this client will become unassigned internal
+              projects.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

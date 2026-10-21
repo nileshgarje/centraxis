@@ -33,13 +33,12 @@ export default function ProfileSettingsPage() {
   const [rolloverDigestEmail, setRolloverDigestEmail] = useState(true);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
-  const userInitials =
-    (name || session?.user?.name || "AU")
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
+  const userInitials = (name || session?.user?.name || "AU")
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   const email = session?.user?.email || "admin@centvis.com";
   const isEntraIdUser = email.toLowerCase().endsWith("@centvis.com");
@@ -59,14 +58,17 @@ export default function ProfileSettingsPage() {
           Account & Profile
         </h1>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Manage your enterprise identity, authentication credentials, and transactional notifications
+          Manage your enterprise identity, authentication credentials, and
+          transactional notifications
         </p>
       </div>
 
       {savedSuccess && (
         <div className="flex items-center gap-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-4 py-3 text-xs text-emerald-800 dark:text-emerald-300 font-medium">
           <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-          <span>Profile and notification preferences updated successfully.</span>
+          <span>
+            Profile and notification preferences updated successfully.
+          </span>
         </div>
       )}
 
@@ -82,9 +84,7 @@ export default function ProfileSettingsPage() {
             </AvatarFallback>
           </Avatar>
           <div className="space-y-1">
-            <div className="text-sm font-semibold text-foreground">
-              {name}
-            </div>
+            <div className="text-sm font-semibold text-foreground">{name}</div>
             <div className="text-xs text-muted-foreground">{email}</div>
             <div className="flex items-center gap-2 pt-1">
               <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 font-mono text-[10px] font-bold text-muted-foreground uppercase">
@@ -96,7 +96,10 @@ export default function ProfileSettingsPage() {
 
         <form onSubmit={handleSave} className="space-y-4 max-w-md pt-2">
           <div className="space-y-1.5">
-            <Label htmlFor="display-name" className="text-xs font-semibold text-foreground">
+            <Label
+              htmlFor="display-name"
+              className="text-xs font-semibold text-foreground"
+            >
               Display Name
             </Label>
             <Input
@@ -109,7 +112,10 @@ export default function ProfileSettingsPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="email-address" className="text-xs font-semibold text-foreground">
+            <Label
+              htmlFor="email-address"
+              className="text-xs font-semibold text-foreground"
+            >
               Email Address
             </Label>
             <Input
@@ -203,11 +209,15 @@ export default function ProfileSettingsPage() {
         <div className="divide-y divide-border/60 pt-2">
           <div className="flex items-center justify-between py-3">
             <div className="space-y-0.5">
-              <Label htmlFor="sprint-kickoff-switch" className="text-xs font-semibold text-foreground cursor-pointer">
+              <Label
+                htmlFor="sprint-kickoff-switch"
+                className="text-xs font-semibold text-foreground cursor-pointer"
+              >
                 Sprint Kickoff Notifications
               </Label>
               <div className="text-[11px] text-muted-foreground">
-                Receive an email summary when a planned sprint is started by Scrum Master
+                Receive an email summary when a planned sprint is started by
+                Scrum Master
               </div>
             </div>
             <Switch
@@ -219,11 +229,15 @@ export default function ProfileSettingsPage() {
 
           <div className="flex items-center justify-between py-3">
             <div className="space-y-0.5">
-              <Label htmlFor="task-assignment-switch" className="text-xs font-semibold text-foreground cursor-pointer">
+              <Label
+                htmlFor="task-assignment-switch"
+                className="text-xs font-semibold text-foreground cursor-pointer"
+              >
                 Task Assignment Alerts
               </Label>
               <div className="text-[11px] text-muted-foreground">
-                Receive real-time alerts when a work item or bug is assigned to you
+                Receive real-time alerts when a work item or bug is assigned to
+                you
               </div>
             </div>
             <Switch
@@ -235,11 +249,15 @@ export default function ProfileSettingsPage() {
 
           <div className="flex items-center justify-between py-3">
             <div className="space-y-0.5">
-              <Label htmlFor="rollover-digest-switch" className="text-xs font-semibold text-foreground cursor-pointer">
+              <Label
+                htmlFor="rollover-digest-switch"
+                className="text-xs font-semibold text-foreground cursor-pointer"
+              >
                 Sprint Closeout & Rollover Digest
               </Label>
               <div className="text-[11px] text-muted-foreground">
-                Get velocity metrics and incomplete item rollover summaries on sprint completion
+                Get velocity metrics and incomplete item rollover summaries on
+                sprint completion
               </div>
             </div>
             <Switch

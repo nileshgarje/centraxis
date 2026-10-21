@@ -23,9 +23,14 @@ async function authenticateAsAdmin(page: Page) {
   await page.locator('button[type="submit"]').click();
 
   // Wait for session initialization and redirection to project workspace
-  await page.waitForURL((url) => !url.pathname.includes("/login") && !url.pathname.includes("/auth/signin"), {
-    timeout: 15000,
-  });
+  await page.waitForURL(
+    (url) =>
+      !url.pathname.includes("/login") &&
+      !url.pathname.includes("/auth/signin"),
+    {
+      timeout: 15000,
+    },
+  );
 }
 
 test.describe("Sprint & Backlog Item Count Parity E2E", () => {
@@ -48,13 +53,19 @@ test.describe("Sprint & Backlog Item Count Parity E2E", () => {
     });
 
     // 2. Locate the Active Sprint container
-    const activeSprintContainer = page.locator('[data-testid="active-sprint-container"]');
+    const activeSprintContainer = page.locator(
+      '[data-testid="active-sprint-container"]',
+    );
     await expect(activeSprintContainer).toBeVisible({ timeout: 10000 });
 
     // 3. Count all item cards rendered inside the active sprint container
-    const backlogActiveCards = activeSprintContainer.locator('[data-testid="work-item-card"]');
+    const backlogActiveCards = activeSprintContainer.locator(
+      '[data-testid="work-item-card"]',
+    );
     const backlogActiveItemCount = await backlogActiveCards.count();
-    console.log(`[E2E] Backlog active sprint item count: ${backlogActiveItemCount}`);
+    console.log(
+      `[E2E] Backlog active sprint item count: ${backlogActiveItemCount}`,
+    );
 
     // 4. Navigate to the Active Sprint Board (/projects/[projectKey]/board)
     await page.goto(`/projects/${projectKey}/board`);
@@ -67,7 +78,9 @@ test.describe("Sprint & Backlog Item Count Parity E2E", () => {
     await expect(kanbanColumns).toHaveCount(4);
 
     // 5. Query all columns and sum the total card elements
-    const boardCards = page.locator('[data-testid="kanban-column"] [data-testid="work-item-card"]');
+    const boardCards = page.locator(
+      '[data-testid="kanban-column"] [data-testid="work-item-card"]',
+    );
     const boardTotalItemCount = await boardCards.count();
     console.log(`[E2E] Kanban board total item count: ${boardTotalItemCount}`);
 
@@ -84,21 +97,29 @@ test.describe("Sprint & Backlog Item Count Parity E2E", () => {
       timeout: 15000,
     });
 
-    const activeSprintContainer = page.locator('[data-testid="active-sprint-container"]');
+    const activeSprintContainer = page.locator(
+      '[data-testid="active-sprint-container"]',
+    );
     await expect(activeSprintContainer).toBeVisible({ timeout: 10000 });
 
     // Record initial count on Backlog page
-    const backlogCards = activeSprintContainer.locator('[data-testid="work-item-card"]');
+    const backlogCards = activeSprintContainer.locator(
+      '[data-testid="work-item-card"]',
+    );
     const initialCount = await backlogCards.count();
     console.log(`[E2E] Initial backlog count: ${initialCount}`);
 
     // 2. Use the inline quick-add inside the active sprint container
-    const quickAddTrigger = activeSprintContainer.locator('[data-testid="inline-create-trigger"]');
+    const quickAddTrigger = activeSprintContainer.locator(
+      '[data-testid="inline-create-trigger"]',
+    );
     await expect(quickAddTrigger).toBeVisible();
     await quickAddTrigger.click();
 
     // Type a unique title and submit
-    const quickAddInput = activeSprintContainer.locator('[data-testid="inline-create-input"]');
+    const quickAddInput = activeSprintContainer.locator(
+      '[data-testid="inline-create-input"]',
+    );
     await expect(quickAddInput).toBeVisible();
 
     const newItemTitle = `Sync Parity Test Story ${Date.now()}`;
@@ -108,7 +129,9 @@ test.describe("Sprint & Backlog Item Count Parity E2E", () => {
     // 3. Verify the item card is immediately added to the active sprint container
     const expectedCount = initialCount + 1;
     await expect(backlogCards).toHaveCount(expectedCount, { timeout: 10000 });
-    await expect(activeSprintContainer.locator(`text=${newItemTitle}`)).toBeVisible();
+    await expect(
+      activeSprintContainer.locator(`text=${newItemTitle}`),
+    ).toBeVisible();
 
     // 4. Switch to Board view using in-app tab switch (WITHOUT hard page refresh)
     const activeBoardTab = page.locator('[data-testid="tab-active-board"]');
@@ -122,13 +145,17 @@ test.describe("Sprint & Backlog Item Count Parity E2E", () => {
     const boardColumns = page.locator('[data-testid="kanban-column"]');
     await expect(boardColumns.first()).toBeVisible({ timeout: 15000 });
 
-    const boardCards = page.locator('[data-testid="kanban-column"] [data-testid="work-item-card"]');
+    const boardCards = page.locator(
+      '[data-testid="kanban-column"] [data-testid="work-item-card"]',
+    );
     await expect(boardCards).toHaveCount(expectedCount, { timeout: 10000 });
 
     // Also assert that the newly created card is visible on the board
     await expect(
       page.locator('[data-testid="kanban-column"]').getByText(newItemTitle),
     ).toBeVisible();
-    console.log(`[E2E] Successfully verified dynamic sync: Board updated to ${expectedCount} cards immediately`);
+    console.log(
+      `[E2E] Successfully verified dynamic sync: Board updated to ${expectedCount} cards immediately`,
+    );
   });
 });

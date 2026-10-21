@@ -6,7 +6,11 @@ import {
   WorkItemPriority,
   TeamRole,
 } from "@centraxis/db";
-import { createTRPCRouter, protectedProcedure, developerProcedure } from "../trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  developerProcedure,
+} from "../trpc";
 
 async function isUserAssignableToProject(
   db: any,
@@ -33,9 +37,16 @@ async function isUserAssignableToProject(
   });
 
   if (!user) return false;
-  if (user.globalRole === "SYSTEM_ADMIN" || user.role === TeamRole.ORG_ADMIN) return true;
-  if (project.clientId && user.clientMemberships && user.clientMemberships.length > 0) return true;
-  if (user.projectMemberships && user.projectMemberships.length > 0) return true;
+  if (user.globalRole === "SYSTEM_ADMIN" || user.role === TeamRole.ORG_ADMIN)
+    return true;
+  if (
+    project.clientId &&
+    user.clientMemberships &&
+    user.clientMemberships.length > 0
+  )
+    return true;
+  if (user.projectMemberships && user.projectMemberships.length > 0)
+    return true;
 
   return false;
 }
@@ -95,7 +106,9 @@ export const workItemRouter = createTRPCRouter({
         parentId: z.string(),
         title: z.string().min(1, "Title is required").max(200),
         type: z.nativeEnum(WorkItemType).default(WorkItemType.TASK),
-        priority: z.nativeEnum(WorkItemPriority).default(WorkItemPriority.MEDIUM),
+        priority: z
+          .nativeEnum(WorkItemPriority)
+          .default(WorkItemPriority.MEDIUM),
         assigneeId: z.string().nullable().optional(),
         storyPoints: z.number().nullable().optional(),
       }),

@@ -178,9 +178,7 @@ export function CentraxisApp({
           />
         )}
 
-        {activeTab === "teams" && (
-          <TeamsView projectId={selectedProjectId} />
-        )}
+        {activeTab === "teams" && <TeamsView projectId={selectedProjectId} />}
 
         {activeTab === "metrics" && (
           <SprintMetrics projectId={selectedProjectId} />
