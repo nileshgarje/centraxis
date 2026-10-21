@@ -15,11 +15,13 @@ import {
   Sparkles,
   User,
   Zap,
+  ExternalLink,
 } from "lucide-react";
 import { api } from "~/trpc/react";
 import { WorkItemDrawer } from "../work-items/work-item-drawer";
 import { CompleteSprintDialog } from "../sprints/complete-sprint-dialog";
 import { Button, Badge, toast } from "@centraxis/ui";
+import { useProject } from "~/context/project-context";
 
 interface WorkItemCard {
   id: string;
@@ -97,6 +99,15 @@ export function KanbanBoard({
   onCreateItem?: (defaults?: { sprintId?: string | null }) => void;
 }) {
   const utils = api.useUtils();
+
+  let clientSlug: string | undefined;
+  try {
+    const proj = useProject();
+    clientSlug = proj.clientSlug;
+  } catch {
+    // If used outside ProjectProvider
+  }
+
   const {
     data: boardData,
     isLoading,
@@ -384,9 +395,23 @@ export function KanbanBoard({
                                 {/* Card Metadata Row */}
                                 <div className="flex items-center justify-between text-xs mb-2">
                                   <div className="flex items-center space-x-1.5">
-                                    <span className="font-mono font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded text-[11px]">
-                                      {card.key}
-                                    </span>
+                                    {clientSlug ? (
+                                      <a
+                                        href={`/${clientSlug}/${card.key}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        title={`Open ${card.key} in new tab`}
+                                        className="font-mono font-medium text-primary bg-primary/10 hover:bg-primary/20 px-1.5 py-0.5 rounded text-[11px] inline-flex items-center gap-1 group/link transition"
+                                      >
+                                        <span>{card.key}</span>
+                                        <ExternalLink className="h-2.5 w-2.5 opacity-60 group-hover/link:opacity-100" />
+                                      </a>
+                                    ) : (
+                                      <span className="font-mono font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded text-[11px]">
+                                        {card.key}
+                                      </span>
+                                    )}
                                     <span
                                       className={`rounded border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
                                         PRIORITY_STYLES[card.priority] ??

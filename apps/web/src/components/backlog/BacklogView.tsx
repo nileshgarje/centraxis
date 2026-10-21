@@ -12,6 +12,7 @@ import {
   GripVertical,
   Users,
   AlertTriangle,
+  ExternalLink,
 } from "lucide-react";
 import {
   DragDropContext,
@@ -34,6 +35,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@centraxis/ui";
+import { useProject } from "~/context/project-context";
 
 interface BacklogViewProps {
   projectId: string;
@@ -100,6 +102,14 @@ export function BacklogView({
   onCreateSprint,
 }: BacklogViewProps) {
   const utils = api.useUtils();
+
+  let clientSlug: string | undefined;
+  try {
+    const proj = useProject();
+    clientSlug = proj.clientSlug;
+  } catch {
+    // If rendered outside ProjectProvider
+  }
 
   const [isMounted, setIsMounted] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(
@@ -519,9 +529,23 @@ export function BacklogView({
                                       )}
 
                                       {/* Key Badge */}
-                                      <span className="font-mono text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded shrink-0">
-                                        {item.key}
-                                      </span>
+                                      {clientSlug ? (
+                                        <a
+                                          href={`/${clientSlug}/${item.key}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          onClick={(e) => e.stopPropagation()}
+                                          title={`Open ${item.key} in new tab`}
+                                          className="font-mono text-[11px] font-semibold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/20 px-1.5 py-0.5 rounded shrink-0 inline-flex items-center gap-1 group/link transition"
+                                        >
+                                          <span>{item.key}</span>
+                                          <ExternalLink className="h-2.5 w-2.5 opacity-60 group-hover/link:opacity-100" />
+                                        </a>
+                                      ) : (
+                                        <span className="font-mono text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded shrink-0">
+                                          {item.key}
+                                        </span>
+                                      )}
 
                                       {/* Title (Takes Maximum Horizontal Room) */}
                                       <button
@@ -751,9 +775,23 @@ export function BacklogView({
                                   <div className="w-4 shrink-0" />
                                 )}
 
-                                <span className="font-mono text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded shrink-0">
-                                  {item.key}
-                                </span>
+                                {clientSlug ? (
+                                  <a
+                                    href={`/${clientSlug}/${item.key}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    title={`Open ${item.key} in new tab`}
+                                    className="font-mono text-[11px] font-semibold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/20 px-1.5 py-0.5 rounded shrink-0 inline-flex items-center gap-1 group/link transition"
+                                  >
+                                    <span>{item.key}</span>
+                                    <ExternalLink className="h-2.5 w-2.5 opacity-60 group-hover/link:opacity-100" />
+                                  </a>
+                                ) : (
+                                  <span className="font-mono text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded shrink-0">
+                                    {item.key}
+                                  </span>
+                                )}
 
                                 <button
                                   type="button"

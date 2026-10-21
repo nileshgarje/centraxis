@@ -102,6 +102,7 @@ Centraxis provides an intuitive, bookmarkable URL routing hierarchy:
 | `http://localhost:3001/`                                                  | Root auto-resolver: redirects authenticated users to their first client workspace | Authenticated                            |
 | `http://localhost:3001/[clientSlug]`                                      | Client workspace home: client overview, active projects list, quick links         | Assigned Client Member or `SYSTEM_ADMIN` |
 | `http://localhost:3001/[clientSlug]/[projectKey]/board`                   | Interactive Kanban Sprint Board for the target project                            | Project/Client Member or `SYSTEM_ADMIN`  |
+| `http://localhost:3001/[clientSlug]/[itemKey]`                            | Dedicated Full Page Work Item View (e.g. `/client-apex/CTX-1`)                    | Project/Client Member or `SYSTEM_ADMIN`  |
 | `http://localhost:3001/[clientSlug]/[projectKey]/backlog`                 | Sprint backlog planning, epic tracking, and rank ordering                         | Project/Client Member or `SYSTEM_ADMIN`  |
 | `http://localhost:3001/[clientSlug]/[projectKey]/teams`                   | Squad allocations and cross-functional team breakdown                             | Project/Client Member or `SYSTEM_ADMIN`  |
 | `http://localhost:3001/[clientSlug]/[projectKey]/metrics`                 | Sprint burndown charts, velocity analytics, and delivery distribution             | Project/Client Member or `SYSTEM_ADMIN`  |

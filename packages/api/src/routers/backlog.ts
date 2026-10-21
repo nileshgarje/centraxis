@@ -66,6 +66,16 @@ export const backlogRouter = createTRPCRouter({
       const item = await ctx.db.workItem.findUnique({
         where: { id: input.id },
         include: {
+          project: {
+            select: {
+              id: true,
+              key: true,
+              name: true,
+              client: {
+                select: { id: true, slug: true, name: true },
+              },
+            },
+          },
           assignee: {
             select: { id: true, name: true, email: true, image: true },
           },
@@ -98,6 +108,88 @@ export const backlogRouter = createTRPCRouter({
           code: "NOT_FOUND",
           message: "Work item not found",
         });
+      }
+
+      return item;
+    }),
+
+  /**
+   * Fetch single work item by client slug and item key (e.g. key="CTX-1", clientSlug="client-apex")
+   */
+  getItemByKey: protectedProcedure
+    .input(
+      z.object({
+        clientSlug: z.string(),
+        key: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const item = await ctx.db.workItem.findFirst({
+        where: {
+          key: { equals: input.key, mode: "insensitive" },
+          project: {
+            client: {
+              slug: { equals: input.clientSlug, mode: "insensitive" },
+            },
+          },
+        },
+        include: {
+          project: {
+            include: {
+              client: true,
+            },
+          },
+          assignee: {
+            select: { id: true, name: true, email: true, image: true },
+          },
+          reporter: {
+            select: { id: true, name: true, email: true, image: true },
+          },
+          sprint: {
+            select: { id: true, name: true, status: true },
+          },
+          parent: {
+            select: { id: true, key: true, title: true, type: true },
+          },
+          children: {
+            select: {
+              id: true,
+              key: true,
+              title: true,
+              type: true,
+              status: true,
+              priority: true,
+              storyPoints: true,
+            },
+            orderBy: { rankOrder: "asc" },
+          },
+        },
+      });
+
+      if (!item) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Work item "${input.key}" under client "${input.clientSlug}" was not found.`,
+        });
+      }
+
+      // Check access: user must be SYSTEM_ADMIN or have membership in client or project
+      const user = ctx.session.user;
+      if (user.globalRole !== "SYSTEM_ADMIN") {
+        const hasAccess =
+          (await ctx.db.clientMember.findFirst({
+            where: { clientId: item.project.clientId!, userId: user.id },
+          })) ||
+          (await ctx.db.projectMember.findFirst({
+            where: { projectId: item.projectId, userId: user.id },
+          }));
+
+        if (!hasAccess) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have access to this work item.",
+          });
+        }
       }
 
       return item;

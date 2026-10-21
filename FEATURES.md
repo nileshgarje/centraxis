@@ -25,6 +25,7 @@ This document provides a comprehensive overview of all features and architectura
 - [17. Multi-Tenant Microsoft Entra ID (Azure AD) SSO & Workspace Domain Mapping](#17-multi-tenant-microsoft-entra-id-azure-ad-sso--workspace-domain-mapping)
 - [18. 8-Digit Email Verification Access Gate](#18-8-digit-email-verification-access-gate)
 - [19. Centvis Brand Identity & UI Standardization](#19-centvis-brand-identity--ui-standardization)
+- [20. Dedicated Full Work Item View & New Tab Option](#20-dedicated-full-work-item-view--new-tab-option)
 
 ---
 
@@ -429,3 +430,46 @@ Centraxis is crafted under the official **Centvis** design guidelines:
 - **Official Centvis Brand Logos**: Canonical SVG vector logos rendered across the application header, sign-in cards, email verification gate, and loading screens, maintaining crisp fidelity across high-DPI displays.
 - **Consistent Elevation & Sheet Heights**: Standardized responsive drawer and modal heights across all dialogs, work item sheets, and settings canvases.
 - **Solid High-Contrast Popovers**: Dark and light mode tokens eliminate transparent artifacting on popover dropdowns, command palettes, and tooltips.
+
+---
+
+## 20. Dedicated Full Work Item View & New Tab Option
+
+Centraxis provides dedicated, standalone full-page views for any work item across client workspaces:
+
+### Direct URL Routing (`/[clientSlug]/[itemKey]`)
+
+Users can navigate directly or share deep links to any work item using clean, intuitive paths:
+
+- **Example**: `http://localhost:3001/client-apex/CTX-1`
+- Automatically resolves the parent client workspace (`client-apex`) and extracts the target project key (`CTX`).
+- Employs strict permission verification ensuring only authorized client or project members (and `SYSTEM_ADMIN`) can access the issue.
+
+### 1-Click "Open in New Tab" Across All Interfaces
+
+Users can open any ticket in a full browser tab from anywhere in the application:
+
+1. **WorkItemDrawer Detail Sheet**: Header displays a dedicated **"Open in new tab"** button alongside an interactive external link badge on the issue key.
+2. **Kanban Board Cards**: Hovering over cards displays an external link shortcut on the ticket key (`data-item-key="CTX-1"`), allowing users to middle-click or 1-click open without disturbing board state.
+3. **Sprint Backlog & Pool**: Backlog row key badges link directly to the standalone work item page in a new tab (`target="_blank"`).
+
+### Enterprise 2-Column Full Screen Experience
+
+The dedicated full view delivers an expansive Jira/Linear-inspired workspace:
+
+- **Breadcrumb Navigation**: Seamless hierarchy traversal (`Client Workspace / Project Name (Key) / Issue Key`).
+- **Quick Action Bar**:
+  - 1-click navigation back to the interactive Kanban **Board** or Sprint **Backlog**.
+  - **"Workflow"** button launching the interactive state-machine diagram modal (`WorkflowViewerDialog`).
+  - **"Copy Link"** button for clipboard sharing with temporary confirmation states.
+  - Live auto-save feedback indicators (`Saving...`, `Saved`).
+- **Main Section (8 Columns)**:
+  - Large inline editable title with auto-save.
+  - Issue Type selector (`Story`, `Task`, `Bug`, `Feature`, `Epic`) and parent subtask link.
+  - Expansive Markdown editors with Live Preview tabs for both **Description** and **Acceptance Criteria (INVEST)**.
+  - Full-width **Sub-Tasks Checklist** (`SubTasksSection`) with progress roll-up bars and inline creation.
+  - Complete **Activity & Discussion Feed** (`CommentSection`) with @mentions and Markdown formatting.
+- **Attributes Sidebar (4 Columns)**:
+  - **Status Card**: Governed strictly by the active state-machine workflow engine.
+  - **Attributes Card**: Scoped Assignee selector, Priority selector, Fibonacci Story Points, and Sprint selector.
+  - **History & People Card**: Reporter profile, creation timestamp, and last updated timestamp.

@@ -29,12 +29,18 @@ export default function ProjectLayout({
 
   const { clientSlug, projectKey } = use(params);
 
+  // If projectKey is a work item key (e.g. CTX-1), extract the base project key (CTX)
+  const isItemKey = /-[0-9]+$/.test(projectKey);
+  const resolvedProjectKey = isItemKey
+    ? projectKey.slice(0, projectKey.lastIndexOf("-"))
+    : projectKey;
+
   const {
     data: project,
     isLoading,
     error,
   } = api.project.getByClientAndKey.useQuery(
-    { clientSlug, projectKey },
+    { clientSlug, projectKey: resolvedProjectKey },
     { retry: false },
   );
 
@@ -73,7 +79,7 @@ export default function ProjectLayout({
 
   const handleTabChange = (tab: "board" | "backlog" | "teams" | "metrics") => {
     const routeSuffix = tab === "board" ? "board" : tab;
-    router.push(`/${clientSlug}/${projectKey}/${routeSuffix}`);
+    router.push(`/${clientSlug}/${resolvedProjectKey}/${routeSuffix}`);
   };
 
   // Global Keyboard Shortcuts (Cmd+K / Ctrl+K, Cmd+J / Ctrl+J, and C)
@@ -119,7 +125,7 @@ export default function ProjectLayout({
         <div className="flex flex-col items-center space-y-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-xs font-semibold text-muted-foreground">
-            Loading project workspace [{projectKey.toUpperCase()}]...
+            Loading project workspace [{resolvedProjectKey.toUpperCase()}]...
           </p>
         </div>
       </div>
@@ -139,7 +145,7 @@ export default function ProjectLayout({
           <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
             Project{" "}
             <span className="font-mono font-bold text-primary">
-              [{projectKey.toUpperCase()}]
+              [{resolvedProjectKey.toUpperCase()}]
             </span>{" "}
             under client{" "}
             <span className="font-semibold text-foreground font-mono">
@@ -174,7 +180,7 @@ export default function ProjectLayout({
     <ProjectProvider
       project={project}
       clientSlug={clientSlug}
-      projectKey={projectKey}
+      projectKey={resolvedProjectKey}
       openCreateItem={handleOpenCreateItem}
       openCreateSprint={() => setIsCreateSprintOpen(true)}
       openAiModal={() => setIsAiModalOpen(true)}

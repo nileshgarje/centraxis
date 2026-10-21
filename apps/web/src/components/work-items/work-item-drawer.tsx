@@ -42,6 +42,7 @@ import {
 } from "@centraxis/ui";
 import { SubTasksSection } from "./sub-tasks-section";
 import { CommentSection } from "../comments/comment-section";
+import { useProject } from "~/context/project-context";
 
 interface WorkItemDrawerProps {
   itemId: string | null;
@@ -175,6 +176,18 @@ export function WorkItemDrawer({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isWorkflowModalOpen, setIsWorkflowModalOpen] = useState(false);
 
+  let contextClientSlug: string | undefined;
+  try {
+    const proj = useProject();
+    contextClientSlug = proj.clientSlug;
+  } catch {
+    // If rendered outside of ProjectProvider
+  }
+
+  const clientSlug = item?.project?.client?.slug || contextClientSlug;
+  const fullViewUrl =
+    clientSlug && item?.key ? `/${clientSlug}/${item.key}` : null;
+
   // Workflow transitions query
   const { data: workflowData } = api.workflow.getAvailableTransitions.useQuery(
     { workItemId: itemId! },
@@ -287,11 +300,23 @@ export function WorkItemDrawer({
         {/* Header Bar */}
         <div className="flex items-center justify-between border-b border-border pl-6 pr-14 py-3.5 bg-background bg-white dark:bg-slate-950 shrink-0 min-h-[57px]">
           <div className="flex items-center space-x-3">
-            {item && (
-              <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
-                {item.key}
-              </span>
-            )}
+            {item &&
+              (fullViewUrl ? (
+                <a
+                  href={fullViewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 px-2 py-0.5 rounded border border-primary/20 transition flex items-center gap-1 group"
+                  title="Open full view in new tab"
+                >
+                  <span>{item.key}</span>
+                  <ExternalLink className="h-2.5 w-2.5 opacity-60 group-hover:opacity-100" />
+                </a>
+              ) : (
+                <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
+                  {item.key}
+                </span>
+              ))}
 
             {/* Status Selector Dropdown (Enforced by Workflow Engine) */}
             <Select
@@ -325,6 +350,22 @@ export function WorkItemDrawer({
               <GitFork className="h-3.5 w-3.5 text-primary" />
               <span>View Workflow</span>
             </Button>
+
+            {/* Open in new tab button */}
+            {fullViewUrl && (
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="h-7 text-xs font-medium gap-1.5 hover:border-primary hover:text-primary transition shrink-0"
+                title="Open full view of work item in new tab"
+              >
+                <a href={fullViewUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-3.5 w-3.5 text-primary" />
+                  <span>Open in new tab</span>
+                </a>
+              </Button>
+            )}
 
             {/* Auto-save status indicator */}
             <div className="flex items-center space-x-1 text-xs text-muted-foreground">
