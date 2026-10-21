@@ -592,9 +592,231 @@ export const workflowRouter = createTRPCRouter({
     }),
 
   /**
+   * Get workflow for the canvas editor
+   */
+  getWorkflowForEdit: protectedProcedure
+    .input(z.object({ workflowId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const workflow = await ctx.db.workflow.findUnique({
+        where: { id: input.workflowId },
+        include: {
+          states: { orderBy: { orderIndex: "asc" } },
+          transitions: {
+            include: {
+              fromState: true,
+              toState: true,
+            },
+          },
+          client: { select: { id: true, name: true, slug: true } },
+          project: { select: { id: true, name: true, key: true } },
+        },
+      });
+
+      if (!workflow) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Workflow not found.",
+        });
+      }
+
+      return workflow;
+    }),
+
+  /**
+   * Clone a published workflow into a working draft copy
+   */
+  createDraftCopy: protectedProcedure
+    .input(z.object({ workflowId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const source = await ctx.db.workflow.findUnique({
+        where: { id: input.workflowId },
+        include: {
+          states: true,
+          transitions: true,
+        },
+      });
+
+      if (!source) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Workflow not found.",
+        });
+      }
+
+      // If already a draft, return it directly
+      if (!source.isPublished) {
+        return { draftWorkflowId: source.id, isNewDraft: false };
+      }
+
+      // Create new draft clone
+      return ctx.db.$transaction(async (tx) => {
+        const draft = await tx.workflow.create({
+          data: {
+            name: `${source.name} (Draft v${source.version + 1})`,
+            description: source.description,
+            scope: source.scope,
+            clientId: source.clientId,
+            projectId: source.projectId,
+            isPublished: false,
+            version: source.version,
+          },
+        });
+
+        // Clone states and map IDs
+        const stateIdMap = new Map<string, string>();
+        for (const st of source.states) {
+          const newState = await tx.workflowState.create({
+            data: {
+              workflowId: draft.id,
+              name: st.name,
+              slug: st.slug,
+              category: st.category,
+              color: st.color,
+              orderIndex: st.orderIndex,
+            },
+          });
+          stateIdMap.set(st.id, newState.id);
+        }
+
+        // Clone transitions
+        for (const tr of source.transitions) {
+          const newFromId = tr.fromStateId
+            ? stateIdMap.get(tr.fromStateId) ?? null
+            : null;
+          const newToId = stateIdMap.get(tr.toStateId);
+          if (newToId) {
+            await tx.workflowTransition.create({
+              data: {
+                workflowId: draft.id,
+                name: tr.name,
+                fromStateId: newFromId,
+                toStateId: newToId,
+                requiredRole: tr.requiredRole,
+              },
+            });
+          }
+        }
+
+        return { draftWorkflowId: draft.id, isNewDraft: true };
+      });
+    }),
+
+  /**
+   * Add or update a state node
+   */
+  upsertState: protectedProcedure
+    .input(
+      z.object({
+        workflowId: z.string(),
+        stateId: z.string().optional(),
+        name: z.string().min(2, "State name must be at least 2 characters"),
+        slug: z.string(),
+        category: z.nativeEnum(StateCategory),
+        color: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { workflowId, stateId, name, slug, category, color } = input;
+
+      if (stateId) {
+        return ctx.db.workflowState.update({
+          where: { id: stateId },
+          data: { name, slug, category, color },
+        });
+      }
+
+      // Find highest orderIndex
+      const lastState = await ctx.db.workflowState.findFirst({
+        where: { workflowId },
+        orderBy: { orderIndex: "desc" },
+      });
+
+      return ctx.db.workflowState.create({
+        data: {
+          workflowId,
+          name,
+          slug,
+          category,
+          color,
+          orderIndex: (lastState?.orderIndex ?? 0) + 1,
+        },
+      });
+    }),
+
+  /**
+   * Delete state node and its transitions
+   */
+  deleteState: protectedProcedure
+    .input(z.object({ stateId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.workflowState.delete({
+        where: { id: input.stateId },
+      });
+    }),
+
+  /**
+   * Connect transition edge between states
+   */
+  createTransition: protectedProcedure
+    .input(
+      z.object({
+        workflowId: z.string(),
+        name: z.string().min(2, "Transition name must be at least 2 characters"),
+        fromStateId: z.string().nullable(),
+        toStateId: z.string(),
+        requiredRole: z.nativeEnum(ProjectRole).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.workflowTransition.create({
+        data: {
+          workflowId: input.workflowId,
+          name: input.name,
+          fromStateId: input.fromStateId,
+          toStateId: input.toStateId,
+          requiredRole: input.requiredRole,
+        },
+        include: {
+          fromState: true,
+          toState: true,
+        },
+      });
+    }),
+
+  /**
+   * Delete transition edge
+   */
+  deleteTransition: protectedProcedure
+    .input(z.object({ transitionId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.workflowTransition.delete({
+        where: { id: input.transitionId },
+      });
+    }),
+
+  /**
+   * Update workflow title and description
+   */
+  updateWorkflowMeta: protectedProcedure
+    .input(
+      z.object({
+        workflowId: z.string(),
+        name: z.string().min(2).optional(),
+        description: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { workflowId, ...data } = input;
+      return ctx.db.workflow.update({
+        where: { id: workflowId },
+        data,
+      });
+    }),
+
+  /**
    * Publish workflow scheme and increment version
    */
-  publishWorkflow: adminProcedure
+  publishWorkflow: protectedProcedure
     .input(z.object({ workflowId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const workflow = await ctx.db.workflow.findUnique({
@@ -619,9 +841,12 @@ export const workflowRouter = createTRPCRouter({
         });
       }
 
+      const cleanName = workflow.name.replace(/ \(Draft v\d+\)$/, "");
+
       return ctx.db.workflow.update({
         where: { id: input.workflowId },
         data: {
+          name: cleanName,
           isPublished: true,
           version: { increment: 1 },
         },

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +28,7 @@ import {
   Loader2,
   Check,
   AlertTriangle,
+  Edit2,
 } from "lucide-react";
 import { api } from "~/trpc/react";
 
@@ -71,12 +74,37 @@ export function WorkflowViewerDialog({
   const [executingSlug, setExecutingSlug] = useState<string | null>(null);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
+  const router = useRouter();
+  const { data: session } = useSession();
+
+  const user = session?.user;
+  const isGlobalAdmin =
+    user?.globalRole === "SYSTEM_ADMIN" || user?.role === "ORG_ADMIN";
+  const isLeadOrAdmin =
+    isGlobalAdmin ||
+    user?.role === "SCRUM_MASTER" ||
+    (user as any)?.memberships?.some(
+      (m: any) => m.role === "PROJECT_LEAD" || m.role === "CLIENT_ADMIN",
+    );
+
   // Load available transitions and active workflow for this work item
   const { data, isLoading, error } =
     api.workflow.getAvailableTransitions.useQuery(
       { workItemId },
       { enabled: open && !!workItemId },
     );
+
+  const draftCopyMutation = api.workflow.createDraftCopy.useMutation({
+    onSuccess: (res) => {
+      onOpenChange(false);
+      router.push(`/settings/workflows/${res.draftWorkflowId}/edit`);
+    },
+  });
+
+  const handleEditWorkflow = () => {
+    if (!data?.workflow?.id) return;
+    draftCopyMutation.mutate({ workflowId: data.workflow.id });
+  };
 
   // Transition execution mutation
   const transitionMutation = api.workflow.executeTransition.useMutation({
@@ -607,6 +635,26 @@ export function WorkflowViewerDialog({
           </div>
 
           <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!isLeadOrAdmin || draftCopyMutation.isPending}
+              onClick={handleEditWorkflow}
+              className="gap-1.5 text-xs font-semibold"
+              title={
+                isLeadOrAdmin
+                  ? "Open visual canvas editor for this workflow scheme"
+                  : "Only Admins or Project Leads can modify workflows."
+              }
+            >
+              {draftCopyMutation.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+              ) : (
+                <Edit2 className="h-3.5 w-3.5 text-primary" />
+              )}
+              <span>Edit Workflow</span>
+            </Button>
+
             <Button
               variant="outline"
               size="sm"

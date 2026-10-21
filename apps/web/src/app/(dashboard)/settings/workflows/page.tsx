@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   GitFork,
   CheckCircle2,
@@ -42,6 +44,7 @@ import {
 } from "@centraxis/ui";
 
 export default function WorkflowsSettingsPage() {
+  const router = useRouter();
   const utils = api.useUtils();
   const [scopeFilter, setScopeFilter] = useState<string>("ALL");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -345,6 +348,19 @@ export default function WorkflowsSettingsPage() {
                         Publish
                       </Button>
                     )}
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      asChild
+                      className="h-7 text-xs font-semibold gap-1 hover:border-primary hover:text-primary transition"
+                      title="Open visual node canvas editor"
+                    >
+                      <Link href={`/settings/workflows/${wf.id}/edit`}>
+                        <GitFork className="h-3 w-3 text-primary" />
+                        <span>Visual Editor</span>
+                      </Link>
+                    </Button>
 
                     <Button
                       size="sm"

@@ -111,5 +111,47 @@ test.describe("Customizable & Publishable Workflow Engine", () => {
     await expect(page.locator("button[title='Zoom in']")).toBeVisible();
     await expect(page.locator("button[title='Zoom out']")).toBeVisible();
     await expect(page.locator("button[title='Reset view']")).toBeVisible();
+
+    // Verify "Edit Workflow" button in footer
+    const editBtn = page.locator("button:has-text('Edit Workflow')");
+    await expect(editBtn).toBeVisible();
+  });
+
+  test("4. Verify Visual Workflow Editor Canvas with React Flow & Custom State Creation", async ({
+    page,
+  }) => {
+    await page.goto("/settings/workflows");
+
+    // Click "Visual Editor" on the first workflow scheme
+    const editorBtn = page.locator("a:has-text('Visual Editor')").first();
+    await expect(editorBtn).toBeVisible();
+    await editorBtn.click();
+
+    await page.waitForURL((url) => url.pathname.includes("/edit"), {
+      timeout: 10000,
+    });
+
+    // Verify canvas editor toolbar elements
+    await expect(page.locator("text=Publish Workflow")).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(page.locator("button:has-text('Add Status')")).toBeVisible();
+    await expect(page.locator("text=Canvas Hint:")).toBeVisible();
+
+    // Open Add Status dialog
+    await page.locator("button:has-text('Add Status')").click();
+    await expect(page.locator("text=Add Workflow State")).toBeVisible();
+
+    // Fill form for new state: SECURITY REVIEW under IN_REVIEW
+    const nameInput = page.locator('input[placeholder="e.g. SECURITY REVIEW"]');
+    await nameInput.fill("SECURITY REVIEW");
+
+    // Click Add State button
+    await page.locator("button:has-text('Add State')").click();
+
+    // Verify SECURITY REVIEW state node appears on the React Flow canvas
+    await expect(page.locator("text=SECURITY REVIEW").first()).toBeVisible({
+      timeout: 10000,
+    });
   });
 });
