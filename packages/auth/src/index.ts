@@ -255,10 +255,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       if (token.id) {
-        const dbUser = await db.user.findUnique({
+        let dbUser = await db.user.findUnique({
           where: { id: token.id as string },
           select: {
             id: true,
+            email: true,
             role: true,
             globalRole: true,
             organizationId: true,
@@ -273,6 +274,44 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
 
         if (dbUser) {
+          // If the user does not have an organization assigned (e.g. freshly provisioned via Entra ID SSO)
+          if (!dbUser.organizationId) {
+            const defaultOrg = await db.organization.findFirst({
+              orderBy: { createdAt: "asc" },
+            });
+            if (defaultOrg) {
+              const isNilesh =
+                dbUser.email?.toLowerCase() === "nilesh.garje@centvis.com";
+              const updated = await db.user.update({
+                where: { id: dbUser.id },
+                data: {
+                  organizationId: defaultOrg.id,
+                  ...(isNilesh
+                    ? {
+                        globalRole: GlobalRole.SYSTEM_ADMIN,
+                        role: TeamRole.ORG_ADMIN,
+                      }
+                    : {}),
+                },
+                select: {
+                  id: true,
+                  email: true,
+                  role: true,
+                  globalRole: true,
+                  organizationId: true,
+                  isTemporary: true,
+                  memberships: {
+                    select: {
+                      teamId: true,
+                      role: true,
+                    },
+                  },
+                },
+              });
+              dbUser = updated;
+            }
+          }
+
           token.organizationId = dbUser.organizationId;
           token.role = dbUser.role;
           token.globalRole = dbUser.globalRole;

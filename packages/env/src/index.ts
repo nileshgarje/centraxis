@@ -1,5 +1,23 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
+import path from "node:path";
+import fs from "node:fs";
+
+// Ensure environment variables are loaded across workspace packages
+if (typeof process.loadEnvFile === "function") {
+  const candidatePaths = [
+    path.resolve(process.cwd(), ".env"),
+    path.resolve(process.cwd(), "../../.env"),
+    path.resolve(process.cwd(), "../.env"),
+  ];
+  for (const envPath of candidatePaths) {
+    if (fs.existsSync(envPath)) {
+      try {
+        process.loadEnvFile(envPath);
+      } catch {}
+    }
+  }
+}
 
 export const env = createEnv({
   server: {
