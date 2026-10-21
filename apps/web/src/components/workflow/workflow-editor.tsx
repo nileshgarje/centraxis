@@ -17,12 +17,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
-import {
-  Button,
-  Badge,
-  Input,
-  toast,
-} from "@centraxis/ui";
+import { Button, Badge, Input, toast } from "@centraxis/ui";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -67,7 +62,10 @@ const nodeTypes = {
   stateNode: StateNode as any,
 };
 
-export function WorkflowEditor({ workflowId, backHref = "/settings/workflows" }: WorkflowEditorProps) {
+export function WorkflowEditor({
+  workflowId,
+  backHref = "/settings/workflows",
+}: WorkflowEditorProps) {
   const router = useRouter();
   const utils = api.useUtils();
 
@@ -87,11 +85,14 @@ export function WorkflowEditor({ workflowId, backHref = "/settings/workflows" }:
   } | null>(null);
 
   // Queries
-  const { data: workflow, isLoading, error } =
-    api.workflow.getWorkflowForEdit.useQuery(
-      { workflowId },
-      { enabled: !!workflowId },
-    );
+  const {
+    data: workflow,
+    isLoading,
+    error,
+  } = api.workflow.getWorkflowForEdit.useQuery(
+    { workflowId },
+    { enabled: !!workflowId },
+  );
 
   // Mutations
   const upsertStateMutation = api.workflow.upsertState.useMutation({
@@ -190,7 +191,11 @@ export function WorkflowEditor({ workflowId, backHref = "/settings/workflows" }:
             setIsStateDialogOpen(true);
           },
           onDelete: (id: string) => {
-            if (confirm(`Delete state "${st.name}"? Connected transitions will also be removed.`)) {
+            if (
+              confirm(
+                `Delete state "${st.name}"? Connected transitions will also be removed.`,
+              )
+            ) {
               deleteStateMutation.mutate({ stateId: id });
             }
           },
@@ -243,8 +248,12 @@ export function WorkflowEditor({ workflowId, backHref = "/settings/workflows" }:
         return;
       }
 
-      const sourceNode = workflow?.states.find((s) => s.id === connection.source);
-      const targetNode = workflow?.states.find((s) => s.id === connection.target);
+      const sourceNode = workflow?.states.find(
+        (s) => s.id === connection.source,
+      );
+      const targetNode = workflow?.states.find(
+        (s) => s.id === connection.target,
+      );
 
       setPendingConnection({
         sourceId: connection.source,
@@ -291,7 +300,9 @@ export function WorkflowEditor({ workflowId, backHref = "/settings/workflows" }:
     return (
       <div className="flex h-[80vh] items-center justify-center space-x-2 text-muted-foreground">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        <span className="text-sm font-medium">Loading visual workflow canvas...</span>
+        <span className="text-sm font-medium">
+          Loading visual workflow canvas...
+        </span>
       </div>
     );
   }
@@ -420,7 +431,9 @@ export function WorkflowEditor({ workflowId, backHref = "/settings/workflows" }:
           <Button
             size="sm"
             onClick={() => publishMutation.mutate({ workflowId })}
-            disabled={publishMutation.isPending || (workflow.states?.length ?? 0) < 2}
+            disabled={
+              publishMutation.isPending || (workflow.states?.length ?? 0) < 2
+            }
             className="h-8 text-xs font-semibold gap-1.5"
           >
             {publishMutation.isPending ? (
@@ -451,7 +464,10 @@ export function WorkflowEditor({ workflowId, backHref = "/settings/workflows" }:
           proOptions={{ hideAttribution: true }}
         >
           <Background color="#94a3b8" gap={20} size={1} />
-          <Controls position="bottom-right" className="!bg-card !border-border !shadow-md" />
+          <Controls
+            position="bottom-right"
+            className="!bg-card !border-border !shadow-md"
+          />
           <MiniMap
             position="bottom-left"
             className="!bg-card !border-border !shadow-sm !rounded-lg overflow-hidden"
@@ -463,7 +479,8 @@ export function WorkflowEditor({ workflowId, backHref = "/settings/workflows" }:
         <div className="absolute top-4 left-6 pointer-events-none bg-card/90 backdrop-blur border border-border px-3.5 py-2 rounded-lg shadow-sm text-xs text-muted-foreground flex items-center space-x-2 z-10">
           <span className="font-semibold text-foreground">Canvas Hint:</span>
           <span>
-            Drag between node handles to create transitions. Click any transition line to select and delete.
+            Drag between node handles to create transitions. Click any
+            transition line to select and delete.
           </span>
         </div>
       </div>

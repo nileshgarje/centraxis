@@ -47,10 +47,7 @@ export const env = createEnv({
       .string()
       .min(1)
       .default("placeholder_azure_ad_client_secret"),
-    AZURE_AD_TENANT_ID: z
-      .string()
-      .min(1)
-      .default("organizations"),
+    AZURE_AD_TENANT_ID: z.string().min(1).default("organizations"),
 
     // Bootstrap Admin (BOOTSTRAP_ADMIN_*)
     BOOTSTRAP_ADMIN_USERNAME: z.string().optional(),

@@ -36,18 +36,22 @@
 
 ## Key Highlights
 
+- **Visual Publishable Workflow Engine (`@xyflow/react`)**: Interactive drag-and-drop state-machine editor. Admins define customized states (`START`, `TODO`, `IN_PROGRESS`, `IN_REVIEW`, `DONE`), action-labeled transitions (e.g. `Start Development`, `Submit to QA`, `QA Failed`), role guards, and a draft/publish versioning lifecycle across Global, Client, and Project scopes with hierarchical fallback.
+- **Visual "Task Workflow" Viewer Modal**: Real-time state-machine diagram viewer accessible directly from work items and sprint boards, illustrating the current status node and permitted destination transitions.
+- **Multi-Tenant Microsoft Entra ID (Azure AD) SSO**: Enterprise authentication configured with the global `organizations` authority endpoint. Enables seamless login for users across independent Microsoft 365 tenants with automatic account linking and domain-to-workspace mapping.
+- **Automatic Client Workspace Domain Mapping**: Automatically associates authenticating users to their respective Client Workspaces based on verified email domains (`Client.allowedDomains`) or Azure Tenant IDs (`Client.tenantId`).
+- **8-Digit Email Verification Access Gate**: Mandatory identity verification gate for new or unverified users via a segmented 8-box OTP interface (`/auth/verify-email`), complete with rate limiting, resend cooldowns, and developer testing previews.
 - **Path-Based Multi-Client Tenancy (`/[clientSlug]/[projectKey]/...`)**: Complete URL-driven workspace isolation supporting multiple enterprise clients, each housing dedicated projects and sprint boards.
 - **Strict Assignee & Role Scoping**: Multi-tier RBAC (`SYSTEM_ADMIN`, `CLIENT_ADMIN`, `PROJECT_LEAD`, `MEMBER`, `VIEWER`). Issue assignees are strictly scoped to users associated with the target client or project.
 - **Deep Sub-Tasks Management & Progress Roll-Up**: Link child sub-tasks to parent stories with live visual progress bars (`X/Y Done (Z%)`), inline title editing, toggleable completion checkboxes, and quick keyboard entry.
 - **Quality Gate Completion Enforcement**: Enforces that parent stories cannot transition to `DONE` / `RESOLVED` while child sub-tasks remain incomplete, raising HTTP 412 Precondition Failed with clear user alerts.
 - **Discussion Feed, @Mentions & Notifications**: Rich comment feeds supporting Markdown and `@` autocomplete mentions for project members. In-app notification hub with live unread badge counters and 1-click item links.
 - **Cold-Start Bootstrap Admin**: Zero-touch initial administration via `BOOTSTRAP_ADMIN_USERNAME` and `BOOTSTRAP_ADMIN_PASSWORD` from `.env`, with clear `Temporary User` UI badges.
-- **Interactive Drag-and-Drop Kanban Board**: Real-time card reordering, swimlanes, column WIP counters, and active sprint management powered by `@hello-pangea/dnd`.
+- **Interactive Drag-and-Drop Kanban Board**: Real-time card reordering, swimlanes, column WIP counters, and active sprint management powered by `@hello-pangea/dnd`. State transitions are strictly validated against the active project workflow.
 - **Sprint Backlog & Hierarchy**: Full-fidelity backlog planning with Epics, Features, Stories, Tasks, and Bugs. Rank reordering and drag-into-sprint capabilities.
 - **AI Story Generation Agent (`Cmd+J` / `Ctrl+J`)**: Vercel AI SDK integration drafting structured user stories following the INVEST framework, complete with acceptance criteria and Fibonacci story points.
 - **Global Command Menu (`Cmd+K` / `Ctrl+K`)**: Rapid spotlight search across work items, projects, client workspaces, and quick navigation actions.
-- **Official shadcn/ui Primitives**: Built exclusively with canonical, accessible Radix UI primitives styled with Centvis enterprise HSL tokens (solid opaque dropdowns, cards, sheets, dialogs, and dark/light mode toggle).
-- **Dual Authentication Engine**: Microsoft Entra ID (Azure AD) SSO for enterprise identity alongside a local development credential bypass.
+- **Official shadcn/ui Primitives & Centvis Branding**: Built exclusively with canonical, accessible Radix UI primitives styled with Centvis enterprise HSL tokens (solid opaque dropdowns, cards, sheets, dialogs, dark/light mode toggle, and official Centvis vector logos).
 
 ---
 
@@ -93,17 +97,21 @@ jira/
 
 Centraxis provides an intuitive, bookmarkable URL routing hierarchy:
 
-| Route Path                                                | Description                                                                       | Access Level                             |
-| :-------------------------------------------------------- | :-------------------------------------------------------------------------------- | :--------------------------------------- |
-| `http://localhost:3001/`                                  | Root auto-resolver: redirects authenticated users to their first client workspace | Authenticated                            |
-| `http://localhost:3001/[clientSlug]`                      | Client workspace home: client overview, active projects list, quick links         | Assigned Client Member or `SYSTEM_ADMIN` |
-| `http://localhost:3001/[clientSlug]/[projectKey]/board`   | Interactive Kanban Sprint Board for the target project                            | Project/Client Member or `SYSTEM_ADMIN`  |
-| `http://localhost:3001/[clientSlug]/[projectKey]/backlog` | Sprint backlog planning, epic tracking, and rank ordering                         | Project/Client Member or `SYSTEM_ADMIN`  |
-| `http://localhost:3001/[clientSlug]/[projectKey]/teams`   | Squad allocations and cross-functional team breakdown                             | Project/Client Member or `SYSTEM_ADMIN`  |
-| `http://localhost:3001/[clientSlug]/[projectKey]/metrics` | Sprint burndown charts, velocity analytics, and delivery distribution             | Project/Client Member or `SYSTEM_ADMIN`  |
-| `http://localhost:3001/[clientSlug]/settings`             | Client profile, branding, contact email, and allocated client members             | `CLIENT_ADMIN` or `SYSTEM_ADMIN`         |
-| `http://localhost:3001/admin`                             | Global System Administration: tenant allocations, organizations, and global RBAC  | `SYSTEM_ADMIN` only                      |
-| `http://localhost:3001/login`                             | Authentication gateway (Microsoft Entra ID SSO & local development login)         | Public                                   |
+| Route Path                                                                | Description                                                                       | Access Level                             |
+| :------------------------------------------------------------------------ | :-------------------------------------------------------------------------------- | :--------------------------------------- |
+| `http://localhost:3001/`                                                  | Root auto-resolver: redirects authenticated users to their first client workspace | Authenticated                            |
+| `http://localhost:3001/[clientSlug]`                                      | Client workspace home: client overview, active projects list, quick links         | Assigned Client Member or `SYSTEM_ADMIN` |
+| `http://localhost:3001/[clientSlug]/[projectKey]/board`                   | Interactive Kanban Sprint Board for the target project                            | Project/Client Member or `SYSTEM_ADMIN`  |
+| `http://localhost:3001/[clientSlug]/[projectKey]/backlog`                 | Sprint backlog planning, epic tracking, and rank ordering                         | Project/Client Member or `SYSTEM_ADMIN`  |
+| `http://localhost:3001/[clientSlug]/[projectKey]/teams`                   | Squad allocations and cross-functional team breakdown                             | Project/Client Member or `SYSTEM_ADMIN`  |
+| `http://localhost:3001/[clientSlug]/[projectKey]/metrics`                 | Sprint burndown charts, velocity analytics, and delivery distribution             | Project/Client Member or `SYSTEM_ADMIN`  |
+| `http://localhost:3001/[clientSlug]/[projectKey]/settings/workflow`       | Visual Project Workflow Editor & state transition customization                   | `PROJECT_LEAD` or `SYSTEM_ADMIN`         |
+| `http://localhost:3001/[clientSlug]/settings`                             | Client profile, domain mappings, branding, and allocated client members           | `CLIENT_ADMIN` or `SYSTEM_ADMIN`         |
+| `http://localhost:3001/[clientSlug]/settings/workflows/[workflowId]/edit` | Visual Client-Scoped Workflow Editor & Draft/Publish lifecycle                    | `CLIENT_ADMIN` or `SYSTEM_ADMIN`         |
+| `http://localhost:3001/admin`                                             | Global System Administration: tenant allocations, organizations, and global RBAC  | `SYSTEM_ADMIN` only                      |
+| `http://localhost:3001/admin/workflows/[workflowId]/edit`                 | Visual Global Workflow Editor (React Flow node canvas)                            | `SYSTEM_ADMIN` only                      |
+| `http://localhost:3001/auth/verify-email`                                 | 8-digit OTP verification gate for new and unverified users                        | Authenticated (Unverified)               |
+| `http://localhost:3001/login`                                             | Authentication gateway (Microsoft Entra ID SSO & local development login)         | Public                                   |
 
 ---
 
@@ -159,9 +167,11 @@ BOOTSTRAP_ADMIN_USERNAME="admin@centvis.com"
 BOOTSTRAP_ADMIN_PASSWORD="AdminPassword123!"
 
 # Microsoft Entra ID (Azure AD) SSO (Optional in local dev mode)
+# Use "organizations" for multi-tenant enterprise login across client tenants,
+# or your specific Azure AD Tenant ID for single-tenant mode.
 AZURE_AD_CLIENT_ID="placeholder-entra-client-id"
 AZURE_AD_CLIENT_SECRET="placeholder-entra-client-secret"
-AZURE_AD_TENANT_ID="placeholder-entra-tenant-id"
+AZURE_AD_TENANT_ID="organizations"
 
 # AI Story Agent (Optional for local mock / OpenAI API)
 OPENAI_API_KEY="sk-placeholder-api-key"

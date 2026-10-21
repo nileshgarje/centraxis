@@ -233,6 +233,58 @@ Incorporate sprint metrics, perform integration testing, and prepare Docker prod
 
 ---
 
+## Phase 7: Customizable & Publishable Workflow Engine (`feat(workflow)`)
+
+### Objectives
+
+Implement a visual state-machine workflow engine supporting custom states, action-labeled transitions, draft/publish lifecycle, and hierarchical scoping across Global, Client, and Project levels.
+
+### Step-by-Step Implementation
+
+1. **Database Schema Enhancements (`packages/db/prisma/schema.prisma`):**
+   - Add `Workflow`, `WorkflowState`, and `WorkflowTransition` models.
+   - Add `WorkflowScope` (`GLOBAL`, `CLIENT`, `PROJECT`) and `StateCategory` (`START`, `TODO`, `IN_PROGRESS`, `IN_REVIEW`, `DONE`).
+   - Add `isPublished` boolean and `version` integer to support draft vs. published versions.
+   - Link `Client` and `Project` to active `Workflow`.
+
+2. **tRPC Workflow Router (`packages/api/src/routers/workflow.ts`):**
+   - Procedures: `list`, `getWorkflowForEdit`, `upsertState`, `deleteState`, `createTransition`, `deleteTransition`, `publishWorkflow`, `getActiveWorkflow`.
+   - Hierarchical resolution fallback: Project $\rightarrow$ Client $\rightarrow$ Global Default.
+
+3. **React Flow Visual Canvas Editor (`apps/web`):**
+   - Implement `@xyflow/react` interactive canvas with custom state nodes and transition edges.
+   - Visual routes: `/admin/workflows/[workflowId]/edit`, `/[clientSlug]/settings/workflows/[workflowId]/edit`, and `/[clientSlug]/[projectKey]/settings/workflow`.
+   - Provide "Task workflow" visual diagram viewer modal in work item details.
+
+4. **Kanban & Detail Sheet Transition Enforcement:**
+   - Guard `board.moveCard` and `backlog.updateItem` to reject invalid transitions and enforce role restrictions.
+
+---
+
+## Phase 8: Enterprise Multi-Tenant Entra ID & 8-Digit Verification Gate (`feat(auth)`)
+
+### Objectives
+
+Provide enterprise-grade authentication supporting users from independent Microsoft 365 / Entra ID corporate tenants, automated client workspace mapping, and an 8-digit OTP email verification access gate.
+
+### Step-by-Step Implementation
+
+1. **Multi-Tenant Authority Endpoint:**
+   - Update `packages/auth` to support the global `organizations` endpoint via `AZURE_AD_TENANT_ID="organizations"`.
+   - Enable `allowDangerousEmailAccountLinking: true` to prevent OAuth account collisions.
+
+2. **Client Workspace Domain Mapping:**
+   - Add `allowedDomains String[]` and `tenantId String?` to the `Client` Prisma model.
+   - Automatically allocate authenticating users to client workspaces based on their verified email domains.
+
+3. **8-Digit Email Verification Access Gate (`/auth/verify-email`):**
+   - Add `VerificationToken` storage with 15-minute expiration and resend cooldowns.
+   - Build accessible 8-box segmented OTP input component with paste and auto-advance support.
+   - Enforce route guards in `middleware.ts` and `apps/web/src/app/page.tsx` redirecting unverified accounts.
+   - Local dev code preview banner for rapid testing without external SMTP.
+
+---
+
 ## Execution & Deliverables Matrix
 
 | Phase       | Milestone             | Deliverable / Verification Check                                                 |
@@ -244,3 +296,5 @@ Incorporate sprint metrics, perform integration testing, and prepare Docker prod
 | **Phase 4** | AI Story Agent        | Calling `ai.generateStoryFromPrompt` returns structured INVEST-compliant story.  |
 | **Phase 5** | Frontend & Boards     | Interactive backlog grooming and drag-and-drop sprint boards operating smoothly. |
 | **Phase 6** | Deployment & QA       | Full Playwright E2E suite passes green; Docker production container boots.       |
+| **Phase 7** | Workflow Engine       | Visual canvas editor (`@xyflow/react`) and transition guards pass verification.  |
+| **Phase 8** | Multi-Tenant & Gate   | Multi-tenant SSO, domain mapping, and 8-digit OTP verification gate functioning. |

@@ -61,9 +61,9 @@ export default function WorkflowsSettingsPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
 
   // Assign dialog state
-  const [assignTargetType, setAssignTargetType] = useState<"CLIENT" | "PROJECT">(
-    "CLIENT",
-  );
+  const [assignTargetType, setAssignTargetType] = useState<
+    "CLIENT" | "PROJECT"
+  >("CLIENT");
   const [assignTargetId, setAssignTargetId] = useState<string>("");
 
   // Queries
@@ -115,17 +115,49 @@ export default function WorkflowsSettingsPage() {
       description: newWorkflowDescription.trim() || undefined,
       scope: newWorkflowScope,
       clientId:
-        newWorkflowScope === "CLIENT" ? selectedClientId || undefined : undefined,
+        newWorkflowScope === "CLIENT"
+          ? selectedClientId || undefined
+          : undefined,
       projectId:
         newWorkflowScope === "PROJECT"
           ? selectedProjectId || undefined
           : undefined,
       states: [
-        { name: "TO DO", slug: "todo", category: "TODO", color: "#64748b", orderIndex: 0 },
-        { name: "IN DEVELOPMENT", slug: "in_development", category: "IN_PROGRESS", color: "#3b82f6", orderIndex: 1 },
-        { name: "READY FOR QA", slug: "ready_for_qa", category: "IN_REVIEW", color: "#8b5cf6", orderIndex: 2 },
-        { name: "IN QA", slug: "in_qa", category: "IN_REVIEW", color: "#f59e0b", orderIndex: 3 },
-        { name: "DONE", slug: "done", category: "DONE", color: "#22c55e", orderIndex: 4 },
+        {
+          name: "TO DO",
+          slug: "todo",
+          category: "TODO",
+          color: "#64748b",
+          orderIndex: 0,
+        },
+        {
+          name: "IN DEVELOPMENT",
+          slug: "in_development",
+          category: "IN_PROGRESS",
+          color: "#3b82f6",
+          orderIndex: 1,
+        },
+        {
+          name: "READY FOR QA",
+          slug: "ready_for_qa",
+          category: "IN_REVIEW",
+          color: "#8b5cf6",
+          orderIndex: 2,
+        },
+        {
+          name: "IN QA",
+          slug: "in_qa",
+          category: "IN_REVIEW",
+          color: "#f59e0b",
+          orderIndex: 3,
+        },
+        {
+          name: "DONE",
+          slug: "done",
+          category: "DONE",
+          color: "#22c55e",
+          orderIndex: 4,
+        },
       ],
     });
   };
@@ -155,7 +187,8 @@ export default function WorkflowsSettingsPage() {
             Customizable Workflow Schemes
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Define, publish, and link state-machine workflows across Global, Client, and Project scopes with automatic hierarchical fallback.
+            Define, publish, and link state-machine workflows across Global,
+            Client, and Project scopes with automatic hierarchical fallback.
           </p>
         </div>
 
@@ -391,7 +424,8 @@ export default function WorkflowsSettingsPage() {
           <DialogHeader>
             <DialogTitle>Create Workflow Scheme</DialogTitle>
             <DialogDescription className="text-xs">
-              Define a new state-machine scheme in draft mode. You can customize states and transitions before publishing.
+              Define a new state-machine scheme in draft mode. You can customize
+              states and transitions before publishing.
             </DialogDescription>
           </DialogHeader>
 
@@ -503,7 +537,8 @@ export default function WorkflowsSettingsPage() {
           <DialogHeader>
             <DialogTitle>Assign Workflow Scheme</DialogTitle>
             <DialogDescription className="text-xs">
-              Link &ldquo;{selectedWorkflow?.name}&rdquo; to an active Client or Project to override the global default.
+              Link &ldquo;{selectedWorkflow?.name}&rdquo; to an active Client or
+              Project to override the global default.
             </DialogDescription>
           </DialogHeader>
 
@@ -581,7 +616,9 @@ export default function WorkflowsSettingsPage() {
                 size="sm"
                 disabled={associateMutation.isPending || !assignTargetId}
               >
-                {associateMutation.isPending ? "Assigning..." : "Confirm Assignment"}
+                {associateMutation.isPending
+                  ? "Assigning..."
+                  : "Confirm Assignment"}
               </Button>
             </DialogFooter>
           </form>

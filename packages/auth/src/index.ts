@@ -338,7 +338,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         // If user does not exist or has not verified email yet, issue 8-digit verification code
         if (!existingUser || !existingUser.emailVerified) {
-          const code = Math.floor(10000000 + Math.random() * 90000000).toString();
+          const code = Math.floor(
+            10000000 + Math.random() * 90000000,
+          ).toString();
           await db.verificationToken.deleteMany({
             where: { identifier: user.email.toLowerCase() },
           });
@@ -492,7 +494,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             ? GlobalRole.SYSTEM_ADMIN
             : GlobalRole.USER);
         session.user.isTemporary = Boolean(token.isTemporary);
-        session.user.emailVerified = (token.emailVerified as Date | null) ?? null;
+        session.user.emailVerified =
+          (token.emailVerified as Date | null) ?? null;
         session.user.memberships =
           (token.memberships as UserTeamMembership[]) ?? [];
       }

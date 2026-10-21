@@ -78,7 +78,8 @@ export function EditTransitionDialog({
         <DialogHeader>
           <DialogTitle>Configure State Transition</DialogTitle>
           <DialogDescription className="text-xs">
-            Define the action trigger label and execution rules when moving work items between these states.
+            Define the action trigger label and execution rules when moving work
+            items between these states.
           </DialogDescription>
         </DialogHeader>
 
@@ -103,7 +104,9 @@ export function EditTransitionDialog({
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           {/* Action Trigger Name */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">Action Trigger Label</Label>
+            <Label className="text-xs font-semibold">
+              Action Trigger Label
+            </Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -143,16 +146,15 @@ export function EditTransitionDialog({
                 <SelectItem value="NONE">
                   No restriction (All Contributors)
                 </SelectItem>
-                <SelectItem value="MEMBER">
-                  Members & Project Leads
-                </SelectItem>
+                <SelectItem value="MEMBER">Members & Project Leads</SelectItem>
                 <SelectItem value="PROJECT_LEAD">
                   Project Leads & Admins Only
                 </SelectItem>
               </SelectContent>
             </Select>
             <p className="text-[11px] text-muted-foreground">
-              Restrict who can trigger this state change (e.g. only QA or Leads).
+              Restrict who can trigger this state change (e.g. only QA or
+              Leads).
             </p>
           </div>
 

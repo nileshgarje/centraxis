@@ -276,7 +276,8 @@ async function main() {
   const apexClientWorkflow = await prisma.workflow.create({
     data: {
       name: "Apex Fast-Track Delivery Workflow",
-      description: "Dedicated client workflow with direct dev-to-resolution routing",
+      description:
+        "Dedicated client workflow with direct dev-to-resolution routing",
       scope: WorkflowScope.CLIENT,
       clientId: clientApex.id,
       isPublished: true,
@@ -364,17 +365,72 @@ async function main() {
   // Apex Transitions:
   await prisma.workflowTransition.createMany({
     data: [
-      { workflowId: apexClientWorkflow.id, name: "Create", fromStateId: null, toStateId: apexTodo.id },
-      { workflowId: apexClientWorkflow.id, name: "Start Development", fromStateId: apexTodo.id, toStateId: apexInDev.id },
-      { workflowId: apexClientWorkflow.id, name: "Submit to QA", fromStateId: apexInDev.id, toStateId: apexReadyQa.id },
-      { workflowId: apexClientWorkflow.id, name: "Start Testing", fromStateId: apexReadyQa.id, toStateId: apexInQa.id },
-      { workflowId: apexClientWorkflow.id, name: "QA Failed", fromStateId: apexInQa.id, toStateId: apexReopened.id },
-      { workflowId: apexClientWorkflow.id, name: "Passed", fromStateId: apexInQa.id, toStateId: apexResolved.id },
-      { workflowId: apexClientWorkflow.id, name: "Move to Development", fromStateId: apexReopened.id, toStateId: apexInDev.id },
-      { workflowId: apexClientWorkflow.id, name: "Close Issue", fromStateId: apexReopened.id, toStateId: apexDone.id },
-      { workflowId: apexClientWorkflow.id, name: "Reopen Issue", fromStateId: apexResolved.id, toStateId: apexReopened.id },
-      { workflowId: apexClientWorkflow.id, name: "Close Issue", fromStateId: apexResolved.id, toStateId: apexDone.id },
-      { workflowId: apexClientWorkflow.id, name: "Close Issue", fromStateId: null, toStateId: apexDone.id },
+      {
+        workflowId: apexClientWorkflow.id,
+        name: "Create",
+        fromStateId: null,
+        toStateId: apexTodo.id,
+      },
+      {
+        workflowId: apexClientWorkflow.id,
+        name: "Start Development",
+        fromStateId: apexTodo.id,
+        toStateId: apexInDev.id,
+      },
+      {
+        workflowId: apexClientWorkflow.id,
+        name: "Submit to QA",
+        fromStateId: apexInDev.id,
+        toStateId: apexReadyQa.id,
+      },
+      {
+        workflowId: apexClientWorkflow.id,
+        name: "Start Testing",
+        fromStateId: apexReadyQa.id,
+        toStateId: apexInQa.id,
+      },
+      {
+        workflowId: apexClientWorkflow.id,
+        name: "QA Failed",
+        fromStateId: apexInQa.id,
+        toStateId: apexReopened.id,
+      },
+      {
+        workflowId: apexClientWorkflow.id,
+        name: "Passed",
+        fromStateId: apexInQa.id,
+        toStateId: apexResolved.id,
+      },
+      {
+        workflowId: apexClientWorkflow.id,
+        name: "Move to Development",
+        fromStateId: apexReopened.id,
+        toStateId: apexInDev.id,
+      },
+      {
+        workflowId: apexClientWorkflow.id,
+        name: "Close Issue",
+        fromStateId: apexReopened.id,
+        toStateId: apexDone.id,
+      },
+      {
+        workflowId: apexClientWorkflow.id,
+        name: "Reopen Issue",
+        fromStateId: apexResolved.id,
+        toStateId: apexReopened.id,
+      },
+      {
+        workflowId: apexClientWorkflow.id,
+        name: "Close Issue",
+        fromStateId: apexResolved.id,
+        toStateId: apexDone.id,
+      },
+      {
+        workflowId: apexClientWorkflow.id,
+        name: "Close Issue",
+        fromStateId: null,
+        toStateId: apexDone.id,
+      },
     ],
   });
 

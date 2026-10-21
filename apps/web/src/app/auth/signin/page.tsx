@@ -128,7 +128,9 @@ function SignInForm() {
 
   const handleVerifyNewUser = async () => {
     if (!email) {
-      setErrorMessage("Please enter your email address to receive an 8-digit code.");
+      setErrorMessage(
+        "Please enter your email address to receive an 8-digit code.",
+      );
       return;
     }
     setIsLoading(true);

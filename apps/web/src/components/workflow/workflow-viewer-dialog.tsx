@@ -631,7 +631,10 @@ export function WorkflowViewerDialog({
         {/* Footer Actions */}
         <div className="px-6 py-3 border-t border-border bg-card flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-            <span>Click any reachable state node or ribbon button to trigger an instant transition.</span>
+            <span>
+              Click any reachable state node or ribbon button to trigger an
+              instant transition.
+            </span>
           </div>
 
           <div className="flex items-center space-x-2">

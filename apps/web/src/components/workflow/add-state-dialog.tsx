@@ -108,7 +108,8 @@ export function AddStateDialog({
             {initialData ? "Edit State Node" : "Add Workflow State"}
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Configure the state name, standard status category, and theme color token.
+            Configure the state name, standard status category, and theme color
+            token.
           </DialogDescription>
         </DialogHeader>
 

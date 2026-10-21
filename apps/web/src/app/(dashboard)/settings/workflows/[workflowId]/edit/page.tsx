@@ -11,9 +11,6 @@ export default async function SettingsWorkflowEditPage({ params }: PageProps) {
   const { workflowId } = await params;
 
   return (
-    <WorkflowEditor
-      workflowId={workflowId}
-      backHref="/settings/workflows"
-    />
+    <WorkflowEditor workflowId={workflowId} backHref="/settings/workflows" />
   );
 }

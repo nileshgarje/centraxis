@@ -28,7 +28,9 @@ test.describe("Full Centraxis Platform Screen Verification", () => {
 
   test("1. Verify Active Kanban Board & Item Drawer", async ({ page }) => {
     await page.goto("/client-apex/CTX/board");
-    await expect(page.locator('svg[aria-label="Centvis"]').first()).toBeVisible();
+    await expect(
+      page.locator('svg[aria-label="Centvis"]').first(),
+    ).toBeVisible();
 
     // Verify Active Board
     await expect(page.locator("text=ACTIVE").first()).toBeVisible();
@@ -65,9 +67,7 @@ test.describe("Full Centraxis Platform Screen Verification", () => {
     await expect(
       page.locator("button:has-text('Create Sprint')"),
     ).toBeVisible();
-    await expect(
-      page.locator("text=Backlog").first(),
-    ).toBeVisible();
+    await expect(page.locator("text=Backlog").first()).toBeVisible();
   });
 
   test("3. Verify Squads / Teams Screen", async ({ page }) => {

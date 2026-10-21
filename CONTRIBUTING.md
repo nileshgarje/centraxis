@@ -85,6 +85,8 @@ Thank you for your interest in contributing to **Centraxis** by Centvis! This gu
 All commits should follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 - `feat(web): add path-based multi-client routing`
+- `feat(workflow): add visual state-machine editor and publishable lifecycle`
+- `feat(auth): add multi-tenant Entra ID sso and 8-digit verification gate`
 - `feat(subtasks): add checklist progress roll-up and quality gate enforcement`
 - `feat(mentions): add scoped user mention autocomplete and notification hub`
 - `fix(api): strictly scope assignee query to client and project members`

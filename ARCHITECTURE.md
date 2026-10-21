@@ -50,14 +50,18 @@ apps/web/src/app/
 │   ├── login/
 │   │   └── page.tsx                  # Public login gateway
 │   └── auth/
-│       └── signin/page.tsx           # Credentials & Entra ID signin form
+│       ├── signin/page.tsx           # Credentials & Entra ID signin form
+│       └── verify-email/page.tsx     # 8-digit OTP verification gate for new users
 │
 ├── (dashboard)/
 │   ├── [clientSlug]/
 │   │   ├── layout.tsx                # ClientLayout: validates slug, loads client, wraps ClientProvider
 │   │   ├── page.tsx                  # ClientHomePage: client projects overview
 │   │   ├── settings/
-│   │   │   └── page.tsx              # Client Settings: profile, branding, client members
+│   │   │   ├── page.tsx              # Client Settings: profile, domains, branding, members
+│   │   │   └── workflows/
+│   │   │       └── [workflowId]/
+│   │   │           └── edit/page.tsx # Visual Client-Scoped Workflow Editor (React Flow)
 │   │   └── [projectKey]/
 │   │       ├── layout.tsx            # ProjectLayout: validates project, loads active sprint, wraps ProjectProvider
 │   │       ├── board/
@@ -66,11 +70,16 @@ apps/web/src/app/
 │   │       │   └── page.tsx          # Sprint backlog planning & rank ordering
 │   │       ├── teams/
 │   │       │   └── page.tsx          # Squad allocations & cross-functional teams
-│   │       └── metrics/
-│   │           └── page.tsx          # Sprint metrics & burndown analytics
+│   │       ├── metrics/
+│   │       │   └── page.tsx          # Sprint metrics & burndown analytics
+│   │       └── settings/
+│   │           └── workflow/page.tsx # Visual Project-Scoped Workflow Editor
 │   │
 │   ├── admin/
-│   │   └── page.tsx                  # Global SYSTEM_ADMIN tenant overview
+│   │   ├── page.tsx                  # Global SYSTEM_ADMIN tenant overview
+│   │   └── workflows/
+│   │       └── [workflowId]/
+│   │           └── edit/page.tsx     # Visual Global Workflow Editor (React Flow)
 │   │
 │   └── settings/
 │       ├── profile/page.tsx          # User profile settings
@@ -83,7 +92,7 @@ apps/web/src/app/
 │
 ├── layout.tsx                        # Root layout: ThemeProvider, TRPCReactProvider, Toaster
 ├── page.tsx                          # Root redirect: auto-resolves user's default client workspace
-└── middleware.ts                     # Next.js Route Guard Middleware (session cookie verification)
+└── middleware.ts                     # Next.js Route Guard Middleware (session & email verification checks)
 ```
 
 ---
@@ -100,11 +109,17 @@ erDiagram
 
     Client ||--o{ Project : "owns"
     Client ||--o{ ClientMember : "allocates"
+    Client |o--o| Workflow : "active workflow"
 
     Project ||--o{ ProjectMember : "allocates"
     Project ||--o{ ProjectTeam : "links"
     Project ||--o{ Sprint : "schedules"
     Project ||--o{ WorkItem : "tracks"
+    Project |o--o| Workflow : "active workflow"
+
+    Workflow ||--o{ WorkflowState : "defines"
+    Workflow ||--o{ WorkflowTransition : "defines"
+    WorkflowState ||--o{ WorkflowTransition : "from / to"
 
     User ||--o{ ClientMember : "belongs to"
     User ||--o{ ProjectMember : "belongs to"
@@ -124,22 +139,28 @@ erDiagram
 
     Comment ||--o{ Mention : "contains"
     Mention ||--o| Notification : "triggers"
+
+    User ||--o{ VerificationToken : "verifies via"
 ```
 
 ### Core Relational Models
 
 - **`Organization`**: Multi-tenant top-level boundary (e.g. `Centvis`).
-- **`Client`**: Client tenant space (e.g. `Client Apex`, slug `client-apex`). Unique by `[orgId, slug]`.
+- **`Client`**: Client tenant space (e.g. `Client Apex`, slug `client-apex`). Unique by `[orgId, slug]`. Stores `allowedDomains` (`String[]`), optional Entra `tenantId`, and active `workflowId`.
 - **`ClientMember`**: Explicit join table associating users with clients, assigning `ClientRole` (`CLIENT_ADMIN`, `CLIENT_MEMBER`).
-- **`Project`**: Agile project space (e.g. `Centraxis Core`, key `CTX`) linked to a parent `Client`.
+- **`Project`**: Agile project space (e.g. `Centraxis Core`, key `CTX`) linked to a parent `Client` and optional project-level `workflowId`.
 - **`ProjectMember`**: Explicit join table associating users with projects, assigning `ProjectRole` (`PROJECT_LEAD`, `MEMBER`, `VIEWER`).
+- **`Workflow`**: State-machine definition with `scope` (`GLOBAL`, `CLIENT`, `PROJECT`), `isPublished` boolean, `version` integer, and associations to `Client` or `Project`.
+- **`WorkflowState`**: Status node within a workflow with `name`, `slug`, `category` (`START`, `TODO`, `IN_PROGRESS`, `IN_REVIEW`, `DONE`), `color`, and `orderIndex`. Unique by `[workflowId, slug]`.
+- **`WorkflowTransition`**: Directed edge between states with trigger `name`, optional `fromStateId` (`null` for "Any"), `toStateId`, and optional `requiredRole` (`PROJECT_LEAD`, `MEMBER`, `VIEWER`).
+- **`VerificationToken`**: 8-digit OTP access token storing `identifier` (email), `token` (8-digit code), and `expires` timestamp (15-minute window).
 - **`Team` / `Squad`**: Cross-functional team (Frontend, Backend, Platform) linked to projects via `ProjectTeam`.
 - **`Sprint`**: Time-boxed sprint cycle with `SprintStatus` (`PLANNED`, `ACTIVE`, `COMPLETED`).
-- **`WorkItem`**: Agile issue with `WorkItemType` (`EPIC`, `FEATURE`, `STORY`, `TASK`, `BUG`), `WorkItemStatus` (`BACKLOG`, `TODO`, `IN_PROGRESS`, `IN_REVIEW`, `DONE`), `WorkItemPriority`, hierarchical self-relation (`parentId`), and fractional `rankOrder`.
+- **`WorkItem`**: Agile issue with `WorkItemType` (`EPIC`, `FEATURE`, `STORY`, `TASK`, `BUG`), `WorkItemStatus` (`BACKLOG`, `TODO`, `IN_PROGRESS`, `IN_REVIEW`, `DONE`), `stateSlug` matching active workflow state, `WorkItemPriority`, hierarchical self-relation (`parentId`), and fractional `rankOrder`.
 - **`Comment`**: Discussion entry on a work item with rich Markdown body and relational authorship.
 - **`Mention`**: Extracted `@mention` entity linking comments to specific mentioned users.
 - **`Notification`**: In-app alert record with `NotificationType` (`MENTION`, `ASSIGNED`, `STATUS_CHANGED`), unread state (`isRead`), direct links, and optional relation to `Mention`.
-- **`User`**: Identity model containing `globalRole` (`SYSTEM_ADMIN`, `USER`), `isTemporary` boolean for bootstrap administration, and membership associations across clients, projects, and squads.
+- **`User`**: Identity model containing `globalRole` (`SYSTEM_ADMIN`, `USER`), `emailVerified` timestamp, `isTemporary` boolean for bootstrap administration, and membership associations across clients, projects, and squads.
 
 ---
 
@@ -149,19 +170,21 @@ All client-server communications use type-safe [tRPC](https://trpc.io/) procedur
 
 ### Router Inventory
 
-| Router         | File                                       | Procedures                                                                              | Purpose                                                                            |
-| :------------- | :----------------------------------------- | :-------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------- |
-| `clients`      | `packages/api/src/routers/client.ts`       | `list`, `getBySlug`, `getById`, `create`, `update`                                      | Client workspace resolution, tenancy, and slug enforcement                         |
-| `project`      | `packages/api/src/routers/project.ts`      | `list`, `getByClientAndKey`, `getAssignableUsers`, `create`                             | Project metadata, cross-client resolution, and scoped assignee querying            |
-| `workItem`     | `packages/api/src/routers/work-item.ts`    | `getSubTasks`, `createSubTask`, `updateSubTaskStatus`, `updateSubTask`, `deleteSubTask` | Sub-task lifecycle management, sequential keys, and roll-up metrics                |
-| `comment`      | `packages/api/src/routers/comment.ts`      | `listByWorkItem`, `create`, `delete`                                                    | Markdown comment feeds, scoped `@mention` parsing, and transactional notifications |
-| `notification` | `packages/api/src/routers/notification.ts` | `getUnreadCount`, `listRecent`, `markAsRead`, `markAllAsRead`                           | Header notification bell, unread counters, and notification feed                   |
-| `board`        | `packages/api/src/routers/board.ts`        | `getBoardData`, `moveCard`                                                              | Active sprint Kanban board card fetching and column transitions                    |
-| `backlog`      | `packages/api/src/routers/backlog.ts`      | `getTree`, `getItems`, `createItem`, `updateItem`, `reorder`                            | Hierarchical backlog tree, sprint pools, quality gate enforcement, and item CRUD   |
-| `sprint`       | `packages/api/src/routers/sprint.ts`       | `list`, `getActive`, `create`, `start`, `complete`                                      | Sprint lifecycle planning, active sprint resolution, and completion                |
-| `org`          | `packages/api/src/routers/org.ts`          | `getDetails`, `listMembers`, `updateUserAccess`                                         | Global organization management, user role matrices, and invitations                |
-| `ai`           | `packages/api/src/routers/ai.ts`           | `generateStory`, `listLogs`                                                             | AI INVEST story drafting powered by Vercel AI SDK                                  |
-| `metrics`      | `packages/api/src/routers/metrics.ts`      | `getSprintMetrics`, `getVelocity`                                                       | Burndown chart data points and velocity analytics                                  |
+| Router         | File                                       | Procedures                                                                                                                                 | Purpose                                                                            |
+| :------------- | :----------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------- |
+| `clients`      | `packages/api/src/routers/client.ts`       | `list`, `getBySlug`, `getById`, `create`, `update`                                                                                         | Client workspace resolution, allowed domains, and tenant mappings                  |
+| `project`      | `packages/api/src/routers/project.ts`      | `list`, `getByClientAndKey`, `getAssignableUsers`, `create`                                                                                | Project metadata, cross-client resolution, and scoped assignee querying            |
+| `workflow`     | `packages/api/src/routers/workflow.ts`     | `list`, `getWorkflowForEdit`, `upsertState`, `deleteState`, `createTransition`, `deleteTransition`, `publishWorkflow`, `getActiveWorkflow` | State-machine definition, Draft/Publish lifecycle, canvas nodes & edges            |
+| `auth`         | `packages/api/src/routers/auth.ts`         | `sendVerificationCode`, `verifyEmailCode`, `getVerificationStatus`                                                                         | 8-digit OTP code dispatch, token verification, and email verification gating       |
+| `workItem`     | `packages/api/src/routers/work-item.ts`    | `getSubTasks`, `createSubTask`, `updateSubTaskStatus`, `updateSubTask`, `deleteSubTask`                                                    | Sub-task lifecycle management, sequential keys, and roll-up metrics                |
+| `comment`      | `packages/api/src/routers/comment.ts`      | `listByWorkItem`, `create`, `delete`                                                                                                       | Markdown comment feeds, scoped `@mention` parsing, and transactional notifications |
+| `notification` | `packages/api/src/routers/notification.ts` | `getUnreadCount`, `listRecent`, `markAsRead`, `markAllAsRead`                                                                              | Header notification bell, unread counters, and notification feed                   |
+| `board`        | `packages/api/src/routers/board.ts`        | `getBoardData`, `moveCard`                                                                                                                 | Active sprint Kanban board card fetching and workflow-validated transitions        |
+| `backlog`      | `packages/api/src/routers/backlog.ts`      | `getTree`, `getItems`, `createItem`, `updateItem`, `reorder`                                                                               | Hierarchical backlog tree, sprint pools, quality gates, and status transitions     |
+| `sprint`       | `packages/api/src/routers/sprint.ts`       | `list`, `getActive`, `create`, `start`, `complete`                                                                                         | Sprint lifecycle planning, active sprint resolution, and completion                |
+| `org`          | `packages/api/src/routers/org.ts`          | `getDetails`, `listMembers`, `updateUserAccess`                                                                                            | Global organization management, user role matrices, and invitations                |
+| `ai`           | `packages/api/src/routers/ai.ts`           | `generateStory`, `listLogs`                                                                                                                | AI INVEST story drafting powered by Vercel AI SDK                                  |
+| `metrics`      | `packages/api/src/routers/metrics.ts`      | `getSprintMetrics`, `getVelocity`                                                                                                          | Burndown chart data points and velocity analytics                                  |
 
 ---
 
@@ -172,6 +195,7 @@ All client-server communications use type-safe [tRPC](https://trpc.io/) procedur
 - Runs on Edge runtime before page render.
 - Validates the presence of session tokens in cookies (`authjs.session-token` / `next-auth.session-token`).
 - Automatically intercepts unauthenticated requests and redirects to `/login?callbackUrl=...`.
+- Intercepts authenticated users whose `emailVerified` is null/empty and routes them to `/auth/verify-email`.
 - Bypasses static assets, `_next/*`, `favicon.ico`, and `/api/*` endpoints.
 
 ### B. Client & Project Layout Guards
@@ -229,6 +253,22 @@ When parsing comments for `@mention` tags (`comment.create`):
 - Cold-start initial environments read `BOOTSTRAP_ADMIN_USERNAME` and `BOOTSTRAP_ADMIN_PASSWORD` from `.env`.
 - An initial `SYSTEM_ADMIN` user is provisioned with `isTemporary: true`.
 - Sessions for temporary users reflect `isTemporary: true`, alerting UI consumers to display visible temporary warnings.
+
+### H. Workflow State Transition Validation
+
+When moving cards across the Kanban board (`board.moveCard`) or updating status via the drawer (`backlog.updateItem`):
+
+- The server resolves the active workflow scheme using hierarchical fallback: `Project.workflowId` $\rightarrow$ `Client.workflowId` $\rightarrow$ `Global Default Workflow`.
+- Resolves the source state and destination state by `stateSlug` / ID.
+- Verifies that an explicit directed transition exists between source and destination (or an "Any" state transition where `fromStateId === null`).
+- If a `requiredRole` is configured on the transition, the server verifies the user's role in the active project (`PROJECT_LEAD`, `MEMBER`, etc.).
+- If the transition is prohibited or the user lacks the required role, the mutation aborts with `BAD_REQUEST`:
+  ```ts
+  throw new TRPCError({
+    code: "BAD_REQUEST",
+    message: "Invalid status transition for the active workflow.",
+  });
+  ```
 
 ---
 

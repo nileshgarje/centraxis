@@ -34,18 +34,20 @@ test.describe("Client Creation & Organization Resolution", () => {
     await addClientBtn.click();
 
     // 4. Fill Create Client Form
-    const nameInput = page.locator('input#client-name');
+    const nameInput = page.locator("input#client-name");
     await expect(nameInput).toBeVisible({ timeout: 5000 });
     await nameInput.fill(clientName);
 
-    const slugInput = page.locator('input#client-slug');
+    const slugInput = page.locator("input#client-slug");
     await slugInput.fill(clientSlug);
 
-    const emailField = page.locator('input#client-email');
+    const emailField = page.locator("input#client-email");
     await emailField.fill(`contact@${clientSlug}.com`);
 
     // 5. Submit Form
-    const submitBtn = page.locator('button[type="submit"]:has-text("Create Client")');
+    const submitBtn = page.locator(
+      'button[type="submit"]:has-text("Create Client")',
+    );
     await expect(submitBtn).toBeEnabled({ timeout: 5000 });
     await submitBtn.click();
 

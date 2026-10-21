@@ -215,7 +215,10 @@ export const workflowRouter = createTRPCRouter({
       );
 
       // Distinct permitted target states
-      const targetStateMap = new Map<string, (typeof workflow.states)[number]>();
+      const targetStateMap = new Map<
+        string,
+        (typeof workflow.states)[number]
+      >();
       for (const t of availableTransitions) {
         if (t.toState.id !== currentState?.id) {
           targetStateMap.set(t.toState.id, t.toState);
@@ -681,7 +684,7 @@ export const workflowRouter = createTRPCRouter({
         // Clone transitions
         for (const tr of source.transitions) {
           const newFromId = tr.fromStateId
-            ? stateIdMap.get(tr.fromStateId) ?? null
+            ? (stateIdMap.get(tr.fromStateId) ?? null)
             : null;
           const newToId = stateIdMap.get(tr.toStateId);
           if (newToId) {
@@ -761,7 +764,9 @@ export const workflowRouter = createTRPCRouter({
     .input(
       z.object({
         workflowId: z.string(),
-        name: z.string().min(2, "Transition name must be at least 2 characters"),
+        name: z
+          .string()
+          .min(2, "Transition name must be at least 2 characters"),
         fromStateId: z.string().nullable(),
         toStateId: z.string(),
         requiredRole: z.nativeEnum(ProjectRole).optional(),

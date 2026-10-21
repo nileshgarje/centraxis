@@ -21,6 +21,10 @@ This document provides a comprehensive overview of all features and architectura
 - [13. Deep Sub-Tasks Management & Quality Gates](#13-deep-sub-tasks-management--quality-gates)
 - [14. Discussion Feeds, @Mentions & Notifications](#14-discussion-feeds-mentions--notifications)
 - [15. Zero-Touch Bootstrap Administration](#15-zero-touch-bootstrap-administration)
+- [16. Visual Publishable Workflow Engine & Canvas Editor](#16-visual-publishable-workflow-engine--canvas-editor)
+- [17. Multi-Tenant Microsoft Entra ID (Azure AD) SSO & Workspace Domain Mapping](#17-multi-tenant-microsoft-entra-id-azure-ad-sso--workspace-domain-mapping)
+- [18. 8-Digit Email Verification Access Gate](#18-8-digit-email-verification-access-gate)
+- [19. Centvis Brand Identity & UI Standardization](#19-centvis-brand-identity--ui-standardization)
 
 ---
 
@@ -318,3 +322,110 @@ To support automated container deployments, CI pipelines, and cold-start install
   ```
 - **Cold-Start Auto-Creation**: During server initialization or database seeding, if no administrative account exists matching the configured username, Centraxis automatically creates a `SYSTEM_ADMIN` user with `isTemporary = true`.
 - **Temporary User Banner**: When logged in via the bootstrap administrator, the UI prominently displays a **Temporary User** warning badge in the user profile menu and top header, reminding administrators to configure permanent identity providers (such as Microsoft Entra ID) and secure their deployment.
+
+---
+
+## 16. Visual Publishable Workflow Engine & Canvas Editor
+
+Centraxis features an enterprise-grade state-machine workflow engine that allows teams to customize how work items transition through development lifecycles.
+
+### Hierarchical Scoping & Fallback
+
+Workflows operate at three distinct hierarchy levels:
+
+1. **Global Workflows (`GLOBAL`)**: Universal default workflows managed by `SYSTEM_ADMIN` (e.g. the standard "Centvis Standard Agile Workflow").
+2. **Client Workflows (`CLIENT`)**: Customized workflows assigned to specific enterprise clients, managed by `CLIENT_ADMIN` or `SYSTEM_ADMIN`.
+3. **Project Workflows (`PROJECT`)**: Granular workflows customized for individual projects, managed by `PROJECT_LEAD` or `SYSTEM_ADMIN`.
+
+> **Hierarchical Resolution Fallback**: When evaluating permitted transitions for a work item, Centraxis checks:  
+> `Active Project Workflow` $\rightarrow$ `Client Workflow` $\rightarrow$ `Global Default Workflow`.
+
+### Draft vs. Published Versioning Lifecycle
+
+To protect live sprints and active work items from breaking mid-flight:
+
+- **Immutable Active Versions**: Published workflows cannot be edited directly in production.
+- **Draft Working Copy**: Selecting **"Edit Workflow"** creates or opens a working `isPublished: false` draft copy.
+- **Atomic Publishing**: Once changes and transitions are finalized, clicking **"Publish Workflow"** atomically increments the version number (`version: { increment: 1 }`), marks `isPublished: true`, and switches active projects to the updated state machine.
+
+### React Flow Visual Canvas (`@xyflow/react`)
+
+Admins can visually design workflows via a node-based visual editor (`WorkflowEditor`):
+
+- **Custom State Nodes (`WorkflowStateNode`)**:
+  - Displays state title (e.g., `TO DO`, `IN DEVELOPMENT`, `READY FOR QA`, `IN QA`, `REOPENED`, `RESOLVED`, `DONE`).
+  - Category pill badge: `START`, `TODO`, `IN_PROGRESS`, `IN_REVIEW`, `DONE`.
+  - Color-coded borders and accents.
+  - Interactive source (right/bottom) and target (left/top) handles for transition connections.
+  - Context menu to edit title, category, or delete state.
+- **Custom Transition Edges (`WorkflowTransitionEdge`)**:
+  - Edge lines connecting source states to destination states.
+  - Action trigger labels (e.g., `Start Development`, `Submit to QA`, `QA Failed`, `Close Issue`).
+  - Delete transition button directly on edge hover.
+  - Support for "Any" state transitions (`fromStateId: null`).
+- **Canvas Controls**: Zoom in/out, fit view, interactive MiniMap, customizable background grid, and automated Dagre layout re-arrangement.
+
+### Quality & Role Transition Guards
+
+- **Role-Based Guards**: Transitions can enforce minimum role permissions (`PROJECT_LEAD`, `MEMBER`, `VIEWER`), ensuring only authorized roles (such as QA or Leads) can trigger sensitive transitions (e.g., `QA Passed` or `Close Issue`).
+- **Board Enforcement**: Dragging cards on the Kanban board (`board.moveCard`) or changing status via the `WorkItemDrawer` verifies that the requested transition exists in the project's active workflow schema before mutating state.
+- **Visual "Task Workflow" Diagram Viewer**: Users can click **"Task workflow"** in the issue drawer or board toolbar to open a read-only diagram modal illustrating where the current task sits in the lifecycle and which transition paths are allowed.
+
+---
+
+## 17. Multi-Tenant Microsoft Entra ID (Azure AD) SSO & Workspace Domain Mapping
+
+Centraxis provides out-of-the-box support for enterprise Single Sign-On (SSO) across disparate Microsoft 365 / Azure AD corporate tenants.
+
+### Universal Authority Endpoint
+
+- Uses the Microsoft identity platform multi-tenant endpoint:
+  ```env
+  AZURE_AD_TENANT_ID="organizations"
+  ```
+  This routes OAuth requests to `https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize`, allowing employees and contractors from any corporate Azure AD tenant to sign in without requiring separate hardcoded tenant registrations.
+
+### Client Workspace Domain Mapping
+
+When an enterprise client is onboarded to Centraxis, administrators configure allowed domains:
+
+- **Model Fields**: `Client.allowedDomains` (e.g. `["apextech.com", "apex-cloud.io"]`) and `Client.tenantId`.
+- **Automatic Tenancy Resolution**: When a user signs in via Microsoft SSO, Centraxis parses their verified email address:
+  1. Checks if the user already has explicit client memberships.
+  2. If none exist, matches the email domain (e.g., `@apextech.com`) against all registered `Client.allowedDomains`.
+  3. Automatically allocates the user to the matching client workspace with the default `CLIENT_MEMBER` role.
+
+### Account Linking & Error Handling
+
+- **Account Linking**: Built-in support for `allowDangerousEmailAccountLinking: true` in NextAuth enables users who previously registered with credentials or email to sign in via Microsoft Entra ID with the same email without conflicting constraint errors.
+- **Graceful Error Banner**: If an OAuth issue arises (such as `OAuthAccountNotLinked`), the signin page (`/auth/signin`) intercepts the error query parameter and presents a clear, actionable UI notification banner explaining how to link or authenticate the account.
+
+---
+
+## 18. 8-Digit Email Verification Access Gate
+
+To protect enterprise workspaces from unauthorized or spoofed access, Centraxis enforces a mandatory 8-digit OTP (One-Time Password) identity verification gate for new or unverified users.
+
+### Verification Flow & Route Guard
+
+1. **Unverified User Interception**: When a new user signs in via credentials or SSO whose `emailVerified` timestamp is null, server-side route guards in `middleware.ts` and `apps/web/src/app/page.tsx` intercept navigation and redirect them directly to `/auth/verify-email`.
+2. **8-Digit Segmented OTP Input**:
+   - Clean, accessible 8-box segmented PIN input component with individual digit cells.
+   - Automatic focus advancement on numeric entry.
+   - Full keyboard navigation: `Backspace` deletes and steps back, left/right arrow keys navigate cells.
+   - Clipboard Paste Support: Pasting an 8-digit code (e.g. `12345678`) instantly distributes digits across all 8 slots and auto-submits.
+3. **Token Management & Security**:
+   - Codes are stored in the Prisma `VerificationToken` table with `identifier: email`, hashed/raw `token`, and a strict 15-minute expiration (`expires: 15m`).
+   - Rate limiting and a 60-second cooldown timer prevent brute force or repeated spamming of verification emails.
+4. **Developer Environment Preview**:
+   - In local development (`NODE_ENV === "development"`), the generated 8-digit verification code is highlighted in a dedicated UI banner directly on the verification screen, enabling rapid local and automated E2E testing without an active SMTP server.
+
+---
+
+## 19. Centvis Brand Identity & UI Standardization
+
+Centraxis is crafted under the official **Centvis** design guidelines:
+
+- **Official Centvis Brand Logos**: Canonical SVG vector logos rendered across the application header, sign-in cards, email verification gate, and loading screens, maintaining crisp fidelity across high-DPI displays.
+- **Consistent Elevation & Sheet Heights**: Standardized responsive drawer and modal heights across all dialogs, work item sheets, and settings canvases.
+- **Solid High-Contrast Popovers**: Dark and light mode tokens eliminate transparent artifacting on popover dropdowns, command palettes, and tooltips.

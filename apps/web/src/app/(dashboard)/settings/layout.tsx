@@ -3,7 +3,14 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, User, Building2, Users, ShieldCheck, GitFork } from "lucide-react";
+import {
+  ArrowLeft,
+  User,
+  Building2,
+  Users,
+  ShieldCheck,
+  GitFork,
+} from "lucide-react";
 import { CentvisLogo, ThemeToggle } from "@centraxis/ui";
 
 const SETTINGS_NAV = [

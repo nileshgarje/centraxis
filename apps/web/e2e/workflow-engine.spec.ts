@@ -36,8 +36,12 @@ test.describe("Customizable & Publishable Workflow Engine", () => {
 
     // Verify Scope filter tabs
     await expect(page.locator("button:has-text('All Schemes')")).toBeVisible();
-    await expect(page.locator("button:has-text('Global Default')")).toBeVisible();
-    await expect(page.locator("button:has-text('Client Scoped')")).toBeVisible();
+    await expect(
+      page.locator("button:has-text('Global Default')"),
+    ).toBeVisible();
+    await expect(
+      page.locator("button:has-text('Client Scoped')"),
+    ).toBeVisible();
 
     // Verify Centvis Standard Agile Workflow is listed
     await expect(

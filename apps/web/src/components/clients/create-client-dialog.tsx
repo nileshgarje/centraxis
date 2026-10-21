@@ -245,7 +245,8 @@ export function CreateClientDialog({
               className="h-9 text-xs"
             />
             <p className="text-[11px] text-muted-foreground">
-              Comma-separated. Users signing in with Microsoft Entra ID from these domains are automatically enrolled into this workspace.
+              Comma-separated. Users signing in with Microsoft Entra ID from
+              these domains are automatically enrolled into this workspace.
             </p>
           </div>
 

@@ -10,10 +10,5 @@ interface PageProps {
 export default async function AdminWorkflowEditPage({ params }: PageProps) {
   const { workflowId } = await params;
 
-  return (
-    <WorkflowEditor
-      workflowId={workflowId}
-      backHref="/admin"
-    />
-  );
+  return <WorkflowEditor workflowId={workflowId} backHref="/admin" />;
 }

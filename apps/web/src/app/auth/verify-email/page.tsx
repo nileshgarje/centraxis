@@ -22,8 +22,7 @@ function VerifyEmailForm() {
   const searchParams = useSearchParams();
   const { data: session, status, update } = useSession();
 
-  const initialEmail =
-    searchParams.get("email") || session?.user?.email || "";
+  const initialEmail = searchParams.get("email") || session?.user?.email || "";
   const [email, setEmail] = useState(initialEmail);
   const [digits, setDigits] = useState<string[]>(Array(8).fill(""));
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -375,7 +374,8 @@ function VerifyEmailForm() {
         </div>
 
         <p className="text-center text-[11px] text-slate-400">
-          Protected by Centvis Identity Services & Enterprise Multi-Factor Verification
+          Protected by Centvis Identity Services & Enterprise Multi-Factor
+          Verification
         </p>
       </div>
     </div>
