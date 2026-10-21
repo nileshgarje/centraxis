@@ -15,6 +15,7 @@ export interface CentraxisUser {
   role: TeamRole;
   organizationId: string | null;
   memberships: UserTeamMembership[];
+  isTemporary?: boolean;
 }
 
 export interface CentraxisSession {
@@ -32,6 +33,7 @@ declare module "next-auth" {
     role?: TeamRole;
     organizationId?: string | null;
     memberships?: UserTeamMembership[];
+    isTemporary?: boolean;
   }
 }
 
@@ -42,5 +44,6 @@ declare module "@auth/core/jwt" {
     globalRole?: GlobalRole;
     role?: TeamRole;
     memberships?: UserTeamMembership[];
+    isTemporary?: boolean;
   }
 }

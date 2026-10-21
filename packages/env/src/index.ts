@@ -20,6 +20,10 @@ export const env = createEnv({
     AZURE_AD_CLIENT_SECRET: z.string().min(1).default("placeholder_azure_ad_client_secret"),
     AZURE_AD_TENANT_ID: z.string().min(1).default("placeholder_azure_ad_tenant_id"),
     
+    // Keycloak-compatible Bootstrap Admin (KC_BOOTSTRAP_ADMIN_*)
+    KC_BOOTSTRAP_ADMIN_USERNAME: z.string().optional(),
+    KC_BOOTSTRAP_ADMIN_PASSWORD: z.string().optional(),
+
     // AI Story Agent
     OPENAI_API_KEY: z.string().min(1).optional(),
   },

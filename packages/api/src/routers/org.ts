@@ -57,6 +57,7 @@ export const orgRouter = createTRPCRouter({
       image: m.image,
       role: m.role,
       globalRole: m.globalRole,
+      isTemporary: m.isTemporary,
       createdAt: m.createdAt,
       updatedAt: m.updatedAt,
       teams: m.memberships.map((tm) => tm.team),

@@ -30,6 +30,11 @@ test.describe.serial("Empty Database E2E Lifecycle", () => {
     await expect(page.locator("text=Global Enterprise Administration").first()).toBeVisible();
     await expect(page.locator("text=No client workspaces configured yet").first()).toBeVisible();
     await expect(page.locator("text=Add First Client").first()).toBeVisible();
+
+    // Verify KC_BOOTSTRAP_ADMIN Temporary User Security Banner & Header indicator
+    await expect(page.locator("text=Temporary User").first()).toBeVisible();
+    await expect(page.locator("text=Signed in with Temporary Bootstrap Administrator").first()).toBeVisible();
+    await expect(page.locator("text=KC_BOOTSTRAP_ADMIN").first()).toBeVisible();
   });
 
   test("2. Create first Client Workspace via UI", async () => {
@@ -64,6 +69,9 @@ test.describe.serial("Empty Database E2E Lifecycle", () => {
     await expect(page.locator("text=Apex Innovations").first()).toBeVisible({ timeout: 10000 });
     await expect(page.locator("text=apex-innovations").first()).toBeVisible();
     await expect(page.locator("text=Assigned Projects").first()).toBeVisible();
+
+    // Verify Header shows Temporary Admin badge for this bootstrapped user
+    await expect(page.locator("text=Temporary Admin").first()).toBeVisible();
 
     // Verify Empty Project State
     await expect(page.locator("text=No projects assigned to this client yet").first()).toBeVisible();

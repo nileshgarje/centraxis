@@ -24,11 +24,13 @@ import {
   LogOut,
   User,
   FolderGit2,
+  AlertTriangle,
 } from "lucide-react";
 import {
   CentraxisLogo,
   ThemeToggle,
   Button,
+  Badge,
   Avatar,
   AvatarFallback,
   AvatarImage,
@@ -456,6 +458,17 @@ export function Header({
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {session?.user?.isTemporary && (
+              <Badge
+                variant="outline"
+                className="hidden sm:inline-flex items-center gap-1.5 border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2.5 py-1 text-xs font-semibold shadow-xs"
+                title="Logged in as Temporary Bootstrap Administrator (KC_BOOTSTRAP_ADMIN)"
+              >
+                <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                <span>Temporary Admin</span>
+              </Badge>
+            )}
+
             <ThemeToggle />
 
             {/* User Profile Avatar Dropdown Menu with Entra ID SSO info and Settings Navigation */}
@@ -463,7 +476,7 @@ export function Header({
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex items-center gap-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex items-center gap-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring relative"
                 >
                   <Avatar className="h-8 w-8 ring-1 ring-border cursor-pointer transition hover:opacity-90">
                     <AvatarImage src={session?.user?.image ?? undefined} />
@@ -471,6 +484,12 @@ export function Header({
                       {userInitials}
                     </AvatarFallback>
                   </Avatar>
+                  {session?.user?.isTemporary && (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                    </span>
+                  )}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
@@ -482,9 +501,19 @@ export function Header({
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-bold text-foreground truncate">
-                      {session?.user?.name ?? "Admin User"}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-foreground truncate">
+                        {session?.user?.name ?? "Admin User"}
+                      </span>
+                      {session?.user?.isTemporary && (
+                        <Badge
+                          variant="outline"
+                          className="border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 text-[9px] px-1 py-0 font-bold uppercase tracking-wider shrink-0"
+                        >
+                          Temporary
+                        </Badge>
+                      )}
+                    </div>
                     <span className="text-[11px] text-muted-foreground truncate">
                       {session?.user?.email ?? "admin@centvis.com"}
                     </span>
@@ -494,6 +523,17 @@ export function Header({
                         {isEntraIdUser ? "Entra ID SSO" : "Local Workspace"}
                       </span>
                     </div>
+                    {session?.user?.isTemporary && (
+                      <div className="mt-2 rounded-lg bg-amber-500/10 border border-amber-500/30 p-2 text-[11px] text-amber-900 dark:text-amber-200 space-y-0.5">
+                        <div className="flex items-center gap-1 font-bold text-amber-700 dark:text-amber-400">
+                          <AlertTriangle className="h-3 w-3 shrink-0" />
+                          <span>Temporary Account</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground leading-tight">
+                          Provisioned via KC_BOOTSTRAP_ADMIN. Create a permanent admin in Workspace Members and remove this user.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
 

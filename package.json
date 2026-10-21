@@ -16,6 +16,7 @@
     "db:push": "turbo db:push",
     "db:migrate": "turbo db:migrate",
     "db:seed": "turbo db:seed",
+    "db:bootstrap": "turbo db:bootstrap",
     "db:empty": "turbo db:empty",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down"

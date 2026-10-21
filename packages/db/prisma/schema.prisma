@@ -121,6 +121,7 @@ model User {
   password      String?
   globalRole    GlobalRole      @default(USER)
   role          TeamRole        @default(DEVELOPER)
+  isTemporary   Boolean         @default(false)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 

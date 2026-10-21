@@ -287,6 +287,11 @@ export default function MembersSettingsPage() {
                               SysAdmin
                             </span>
                           )}
+                          {member.isTemporary && (
+                            <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950/50 dark:text-amber-300">
+                              Temporary
+                            </span>
+                          )}
                         </div>
                         <p className="text-[11px] text-slate-500 truncate">
                           {member.email}

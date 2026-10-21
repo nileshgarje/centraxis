@@ -42,6 +42,9 @@
     "db:seed": {
       "cache": false
     },
+    "db:bootstrap": {
+      "cache": false
+    },
     "db:empty": {
       "cache": false
     },

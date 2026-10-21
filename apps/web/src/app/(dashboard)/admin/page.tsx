@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import {
   Building2,
   Users,
@@ -12,6 +13,7 @@ import {
   ExternalLink,
   Kanban,
   CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 import {
   Button,
@@ -29,6 +31,7 @@ import { ThemeToggle } from "@centraxis/ui";
 import { CreateClientDialog } from "~/components/clients/create-client-dialog";
 
 export default function AdminOverviewPage() {
+  const { data: session } = useSession();
   const [isCreateClientOpen, setIsCreateClientOpen] = useState(false);
 
   const { data: clients, isLoading: clientsLoading } = api.clients.list.useQuery();
@@ -43,9 +46,20 @@ export default function AdminOverviewPage() {
           <div className="flex items-center gap-4 shrink-0">
             <CentraxisLogo size="md" />
             <div className="h-4 w-px bg-border" />
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-              <Shield className="h-4 w-4 text-primary" />
-              <span>Global System Administration</span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                <Shield className="h-4 w-4 text-primary" />
+                <span>Global System Administration</span>
+              </div>
+              {session?.user?.isTemporary && (
+                <Badge
+                  variant="outline"
+                  className="border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 gap-1 text-[11px] font-semibold"
+                >
+                  <AlertTriangle className="h-3 w-3 text-amber-500" />
+                  <span>Temporary User</span>
+                </Badge>
+              )}
             </div>
           </div>
 
@@ -95,6 +109,42 @@ export default function AdminOverviewPage() {
             </Button>
           </div>
         </div>
+
+        {/* Temporary Bootstrap Administrator Security Callout */}
+        {session?.user?.isTemporary && (
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-amber-950 dark:text-amber-200 shadow-sm">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold">
+                    Signed in with Temporary Bootstrap Administrator
+                  </h3>
+                  <Badge
+                    variant="outline"
+                    className="border-amber-500/40 bg-amber-500/20 text-amber-800 dark:text-amber-300 text-[10px] font-mono font-semibold"
+                  >
+                    KC_BOOTSTRAP_ADMIN
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5 max-w-2xl">
+                  This account was provisioned via environment credentials for initial configuration. Set up a permanent administrator account in Workspace Members and remove this temporary account.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="border-amber-500/40 hover:bg-amber-500/20 text-xs shrink-0 self-start sm:self-auto font-semibold"
+            >
+              <Link href="/settings/members">Create Permanent Admin</Link>
+            </Button>
+          </div>
+        )}
 
         {/* Global Metrics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

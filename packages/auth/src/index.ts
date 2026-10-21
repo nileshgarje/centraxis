@@ -48,7 +48,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             id: "credentials",
             name: "Development Credentials",
             credentials: {
-              email: { label: "Email", type: "email" },
+              email: { label: "Email or Username", type: "text" },
               password: { label: "Password", type: "password" },
             },
             async authorize(credentials) {
@@ -56,9 +56,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 return null;
               }
 
-              const email = (credentials.email as string).trim().toLowerCase();
-              let user = await db.user.findUnique({
-                where: { email },
+              const rawUsername = (
+                process.env.KC_BOOTSTRAP_ADMIN_USERNAME ||
+                process.env.BOOTSTRAP_ADMIN_USERNAME ||
+                "admin@centvis.com"
+              ).trim();
+              const bootstrapPassword =
+                process.env.KC_BOOTSTRAP_ADMIN_PASSWORD ||
+                process.env.BOOTSTRAP_ADMIN_PASSWORD ||
+                "AdminPassword123!";
+
+              const bootstrapEmail = rawUsername.includes("@")
+                ? rawUsername.toLowerCase()
+                : `${rawUsername.toLowerCase()}@centvis.com`;
+              const bootstrapUsername = rawUsername.includes("@")
+                ? rawUsername.split("@")[0]!.toLowerCase()
+                : rawUsername.toLowerCase();
+
+              const input = (credentials.email as string).trim().toLowerCase();
+              const isInputBootstrapMatch =
+                input === bootstrapEmail || input === bootstrapUsername;
+
+              let user = await db.user.findFirst({
+                where: {
+                  OR: [
+                    { email: input },
+                    ...(isInputBootstrapMatch ? [{ email: bootstrapEmail }] : []),
+                  ],
+                },
                 select: {
                   id: true,
                   name: true,
@@ -68,11 +93,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   role: true,
                   globalRole: true,
                   organizationId: true,
+                  isTemporary: true,
                 },
               });
 
               if (!user) {
-                // If database has 0 users (fresh/empty database), auto-bootstrap the initial organization & SYSTEM_ADMIN
+                // If database has 0 users (fresh/empty database), auto-bootstrap the initial organization & SYSTEM_ADMIN from KC_BOOTSTRAP_ADMIN_*
                 const userCount = await db.user.count();
                 if (userCount === 0) {
                   let org = await db.organization.findFirst();
@@ -85,19 +111,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     });
                   }
                   const passStr = credentials.password as string;
-                  const hashedPassword = await bcrypt.hash(passStr || "password123", 10);
-                  const nameParts = email.split("@")[0]?.split(".") || ["admin"];
-                  const displayName = nameParts
+                  const initialPass = isInputBootstrapMatch ? bootstrapPassword : passStr;
+                  const hashedPassword = await bcrypt.hash(initialPass || "password123", 10);
+                  const nameParts = input.split("@")[0]?.split(".") || ["admin"];
+                  const baseName = nameParts
                     .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
                     .join(" ");
 
                   user = await db.user.create({
                     data: {
-                      email,
-                      name: displayName || "System Administrator",
+                      email: isInputBootstrapMatch ? bootstrapEmail : input,
+                      name: `${baseName || "Bootstrap Administrator"} (Temporary)`,
                       password: hashedPassword,
                       role: TeamRole.ORG_ADMIN,
                       globalRole: GlobalRole.SYSTEM_ADMIN,
+                      isTemporary: true,
                       organizationId: org.id,
                     },
                     select: {
@@ -109,18 +137,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                       role: true,
                       globalRole: true,
                       organizationId: true,
+                      isTemporary: true,
                     },
                   });
+
+                  console.warn(
+                    `[KC_BOOTSTRAP_ADMIN] Initial temporary administrator provisioned from environment: ${user.email}`,
+                  );
                 } else {
                   return null;
                 }
               }
 
               const passStr = credentials.password as string;
+              const isBootstrapMatch =
+                (user.email?.toLowerCase() === bootstrapEmail || user.isTemporary) &&
+                passStr === bootstrapPassword;
               const isFallbackMatch =
                 passStr === "AdminPassword123!" || passStr === "password123";
               const isValid =
-                isFallbackMatch || (user.password ? await bcrypt.compare(passStr, user.password) : false);
+                isBootstrapMatch ||
+                isFallbackMatch ||
+                (user.password ? await bcrypt.compare(passStr, user.password) : false);
 
               if (!isValid) {
                 return null;
@@ -134,6 +172,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 role: user.role,
                 globalRole: user.globalRole,
                 organizationId: user.organizationId,
+                isTemporary: user.isTemporary,
               };
             },
           }),
@@ -189,6 +228,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.role = (user as any).role;
         token.globalRole = (user as any).globalRole;
         token.organizationId = (user as any).organizationId;
+        token.isTemporary = (user as any).isTemporary;
       }
 
       if (token.id) {
@@ -199,6 +239,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             role: true,
             globalRole: true,
             organizationId: true,
+            isTemporary: true,
             memberships: {
               select: {
                 teamId: true,
@@ -212,6 +253,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.organizationId = dbUser.organizationId;
           token.role = dbUser.role;
           token.globalRole = dbUser.globalRole;
+          token.isTemporary = dbUser.isTemporary;
           token.memberships = dbUser.memberships as UserTeamMembership[];
         }
       }
@@ -230,6 +272,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           (session.user.role === TeamRole.ORG_ADMIN
             ? GlobalRole.SYSTEM_ADMIN
             : GlobalRole.USER);
+        session.user.isTemporary = Boolean(token.isTemporary);
         session.user.memberships =
           (token.memberships as UserTeamMembership[]) ?? [];
       }
