@@ -39,14 +39,14 @@ test.describe.serial("Empty Database E2E Lifecycle", () => {
     ).toBeVisible();
     await expect(page.locator("text=Add First Client").first()).toBeVisible();
 
-    // Verify KC_BOOTSTRAP_ADMIN Temporary User Security Banner & Header indicator
+    // Verify BOOTSTRAP_ADMIN Temporary User Security Banner & Header indicator
     await expect(page.locator("text=Temporary User").first()).toBeVisible();
     await expect(
       page
         .locator("text=Signed in with Temporary Bootstrap Administrator")
         .first(),
     ).toBeVisible();
-    await expect(page.locator("text=KC_BOOTSTRAP_ADMIN").first()).toBeVisible();
+    await expect(page.locator("text=BOOTSTRAP_ADMIN").first()).toBeVisible();
   });
 
   test("2. Create first Client Workspace via UI", async () => {

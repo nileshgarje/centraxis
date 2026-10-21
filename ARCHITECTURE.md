@@ -226,7 +226,7 @@ When parsing comments for `@mention` tags (`comment.create`):
 
 ### G. Cold-Start Bootstrap Administration Security
 
-- Cold-start initial environments read `KC_BOOTSTRAP_ADMIN_USERNAME` and `KC_BOOTSTRAP_ADMIN_PASSWORD` from `.env`.
+- Cold-start initial environments read `BOOTSTRAP_ADMIN_USERNAME` and `BOOTSTRAP_ADMIN_PASSWORD` from `.env`.
 - An initial `SYSTEM_ADMIN` user is provisioned with `isTemporary: true`.
 - Sessions for temporary users reflect `isTemporary: true`, alerting UI consumers to display visible temporary warnings.
 

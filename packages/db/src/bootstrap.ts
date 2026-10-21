@@ -3,13 +3,13 @@ import bcrypt from "bcryptjs";
 
 export async function bootstrapAdmin() {
   const rawUsername = (
-    process.env.KC_BOOTSTRAP_ADMIN_USERNAME ||
     process.env.BOOTSTRAP_ADMIN_USERNAME ||
+    process.env.KC_BOOTSTRAP_ADMIN_USERNAME ||
     "admin@centvis.com"
   ).trim();
   const password =
-    process.env.KC_BOOTSTRAP_ADMIN_PASSWORD ||
     process.env.BOOTSTRAP_ADMIN_PASSWORD ||
+    process.env.KC_BOOTSTRAP_ADMIN_PASSWORD ||
     "AdminPassword123!";
 
   const email = rawUsername.includes("@")
@@ -49,7 +49,7 @@ export async function bootstrapAdmin() {
   });
 
   console.log(
-    `✅ [KC_BOOTSTRAP_ADMIN] Provisioned temporary administrator account: ${email}`,
+    `✅ [BOOTSTRAP_ADMIN] Provisioned temporary administrator account: ${email}`,
   );
   return user;
 }

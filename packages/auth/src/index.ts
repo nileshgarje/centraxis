@@ -60,13 +60,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               }
 
               const rawUsername = (
-                process.env.KC_BOOTSTRAP_ADMIN_USERNAME ||
                 process.env.BOOTSTRAP_ADMIN_USERNAME ||
+                process.env.KC_BOOTSTRAP_ADMIN_USERNAME ||
                 "admin@centvis.com"
               ).trim();
               const bootstrapPassword =
-                process.env.KC_BOOTSTRAP_ADMIN_PASSWORD ||
                 process.env.BOOTSTRAP_ADMIN_PASSWORD ||
+                process.env.KC_BOOTSTRAP_ADMIN_PASSWORD ||
                 "AdminPassword123!";
 
               const bootstrapEmail = rawUsername.includes("@")
@@ -103,7 +103,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               });
 
               if (!user) {
-                // If database has 0 users (fresh/empty database), auto-bootstrap the initial organization & SYSTEM_ADMIN from KC_BOOTSTRAP_ADMIN_*
+                // If database has 0 users (fresh/empty database), auto-bootstrap the initial organization & SYSTEM_ADMIN from BOOTSTRAP_ADMIN_*
                 const userCount = await db.user.count();
                 if (userCount === 0) {
                   let org = await db.organization.findFirst();
@@ -154,7 +154,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   });
 
                   console.warn(
-                    `[KC_BOOTSTRAP_ADMIN] Initial temporary administrator provisioned from environment: ${user.email}`,
+                    `[BOOTSTRAP_ADMIN] Initial temporary administrator provisioned from environment: ${user.email}`,
                   );
                 } else {
                   return null;

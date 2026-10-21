@@ -132,7 +132,7 @@ export default function AdminOverviewPage() {
                     variant="outline"
                     className="border-amber-500/40 bg-amber-500/20 text-amber-800 dark:text-amber-300 text-[10px] font-mono font-semibold"
                   >
-                    KC_BOOTSTRAP_ADMIN
+                    BOOTSTRAP_ADMIN
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5 max-w-2xl">

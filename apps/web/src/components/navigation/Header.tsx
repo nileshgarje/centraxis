@@ -487,7 +487,7 @@ export function Header({
               <Badge
                 variant="outline"
                 className="hidden sm:inline-flex items-center gap-1.5 border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2.5 py-1 text-xs font-semibold shadow-xs"
-                title="Logged in as Temporary Bootstrap Administrator (KC_BOOTSTRAP_ADMIN)"
+                title="Logged in as Temporary Bootstrap Administrator (BOOTSTRAP_ADMIN)"
               >
                 <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                 <span>Temporary Admin</span>
@@ -557,7 +557,7 @@ export function Header({
                           <span>Temporary Account</span>
                         </div>
                         <p className="text-[10px] text-muted-foreground leading-tight">
-                          Provisioned via KC_BOOTSTRAP_ADMIN. Create a permanent
+                          Provisioned via BOOTSTRAP_ADMIN. Create a permanent
                           admin in Workspace Members and remove this user.
                         </p>
                       </div>

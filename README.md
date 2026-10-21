@@ -41,7 +41,7 @@
 - **Deep Sub-Tasks Management & Progress Roll-Up**: Link child sub-tasks to parent stories with live visual progress bars (`X/Y Done (Z%)`), inline title editing, toggleable completion checkboxes, and quick keyboard entry.
 - **Quality Gate Completion Enforcement**: Enforces that parent stories cannot transition to `DONE` / `RESOLVED` while child sub-tasks remain incomplete, raising HTTP 412 Precondition Failed with clear user alerts.
 - **Discussion Feed, @Mentions & Notifications**: Rich comment feeds supporting Markdown and `@` autocomplete mentions for project members. In-app notification hub with live unread badge counters and 1-click item links.
-- **Keycloak-Style Cold-Start Bootstrap Admin**: Zero-touch initial administration via `KC_BOOTSTRAP_ADMIN_USERNAME` and `KC_BOOTSTRAP_ADMIN_PASSWORD` from `.env`, with clear `Temporary User` UI badges.
+- **Cold-Start Bootstrap Admin**: Zero-touch initial administration via `BOOTSTRAP_ADMIN_USERNAME` and `BOOTSTRAP_ADMIN_PASSWORD` from `.env`, with clear `Temporary User` UI badges.
 - **Interactive Drag-and-Drop Kanban Board**: Real-time card reordering, swimlanes, column WIP counters, and active sprint management powered by `@hello-pangea/dnd`.
 - **Sprint Backlog & Hierarchy**: Full-fidelity backlog planning with Epics, Features, Stories, Tasks, and Bugs. Rank reordering and drag-into-sprint capabilities.
 - **AI Story Generation Agent (`Cmd+J` / `Ctrl+J`)**: Vercel AI SDK integration drafting structured user stories following the INVEST framework, complete with acceptance criteria and Fibonacci story points.
@@ -154,9 +154,9 @@ REDIS_URL="redis://localhost:6380"
 AUTH_SECRET="centraxis-super-secret-auth-key-32-chars-minimum"
 NEXTAUTH_URL="http://localhost:3001"
 
-# Keycloak-Style Bootstrap Admin (Optional cold-start initial user)
-KC_BOOTSTRAP_ADMIN_USERNAME="admin@centvis.com"
-KC_BOOTSTRAP_ADMIN_PASSWORD="AdminPassword123!"
+# Bootstrap Admin (Optional cold-start initial user)
+BOOTSTRAP_ADMIN_USERNAME="admin@centvis.com"
+BOOTSTRAP_ADMIN_PASSWORD="AdminPassword123!"
 
 # Microsoft Entra ID (Azure AD) SSO (Optional in local dev mode)
 AZURE_AD_CLIENT_ID="placeholder-entra-client-id"

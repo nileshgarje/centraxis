@@ -313,8 +313,8 @@ To support automated container deployments, CI pipelines, and cold-start install
 
 - **Environment-Driven Setup**: Reads credentials from `.env`:
   ```env
-  KC_BOOTSTRAP_ADMIN_USERNAME="admin@centvis.com"
-  KC_BOOTSTRAP_ADMIN_PASSWORD="AdminPassword123!"
+  BOOTSTRAP_ADMIN_USERNAME="admin@centvis.com"
+  BOOTSTRAP_ADMIN_PASSWORD="AdminPassword123!"
   ```
 - **Cold-Start Auto-Creation**: During server initialization or database seeding, if no administrative account exists matching the configured username, Centraxis automatically creates a `SYSTEM_ADMIN` user with `isTemporary = true`.
 - **Temporary User Banner**: When logged in via the bootstrap administrator, the UI prominently displays a **Temporary User** warning badge in the user profile menu and top header, reminding administrators to configure permanent identity providers (such as Microsoft Entra ID) and secure their deployment.

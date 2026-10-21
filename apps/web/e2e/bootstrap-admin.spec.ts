@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Keycloak KC_BOOTSTRAP_ADMIN Temporary Admin Feature", () => {
+test.describe("BOOTSTRAP_ADMIN Temporary Admin Feature", () => {
   test("Bootstrapped admin is flagged with temporary user badge and security banner", async ({
     page,
   }) => {
@@ -24,7 +24,7 @@ test.describe("Keycloak KC_BOOTSTRAP_ADMIN Temporary Admin Feature", () => {
       timeout: 10000,
     });
 
-    // 2. Go to /admin and verify KC_BOOTSTRAP_ADMIN Security Callout and Temporary User badge
+    // 2. Go to /admin and verify BOOTSTRAP_ADMIN Security Callout and Temporary User badge
     await page.goto("/admin");
     await expect(page.locator("text=Temporary User").first()).toBeVisible({
       timeout: 10000,
@@ -34,7 +34,7 @@ test.describe("Keycloak KC_BOOTSTRAP_ADMIN Temporary Admin Feature", () => {
         .locator("text=Signed in with Temporary Bootstrap Administrator")
         .first(),
     ).toBeVisible({ timeout: 10000 });
-    await expect(page.locator("text=KC_BOOTSTRAP_ADMIN").first()).toBeVisible();
+    await expect(page.locator("text=BOOTSTRAP_ADMIN").first()).toBeVisible();
     await expect(
       page.locator('a:has-text("Create Permanent Admin")').first(),
     ).toBeVisible();
