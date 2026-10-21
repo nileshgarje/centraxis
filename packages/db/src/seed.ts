@@ -18,6 +18,9 @@ async function main() {
   const defaultHashedPassword = await bcrypt.hash("password123", 10);
 
   // Clean existing records in reverse dependency order
+  await prisma.notification.deleteMany();
+  await prisma.mention.deleteMany();
+  await prisma.comment.deleteMany();
   await prisma.aiStoryLog.deleteMany();
   await prisma.workItem.deleteMany();
   await prisma.sprint.deleteMany();
@@ -329,13 +332,18 @@ async function main() {
 
   const createdUsers = [];
   const userByEmail = new Map<string, any>();
+  const adminHashedPassword = await bcrypt.hash("AdminPassword123!", 10);
   for (const spec of userSpecs) {
     const isSystemAdmin = spec.orgRole === TeamRole.ORG_ADMIN;
+    const userPassword =
+      spec.email === "admin@centvis.com"
+        ? adminHashedPassword
+        : defaultHashedPassword;
     const user = await prisma.user.create({
       data: {
         name: spec.name,
         email: spec.email,
-        password: defaultHashedPassword,
+        password: userPassword,
         emailVerified: new Date(),
         image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(spec.name)}`,
         role: spec.orgRole,
@@ -640,6 +648,86 @@ async function main() {
       reporterId: createdUsers[1]?.id,
     },
   });
+
+  // Additional sub-task under Story 1 to showcase progress roll-up (e.g. 1/2 Done)
+  await prisma.workItem.create({
+    data: {
+      key: "CTX-8",
+      title: "Add unit tests for Entra ID token callback",
+      description: "Verify claims and refresh token rotation handlers",
+      type: WorkItemType.TASK,
+      status: WorkItemStatus.TODO,
+      priority: WorkItemPriority.MEDIUM,
+      storyPoints: 2,
+      rankOrder: 8000,
+      parentId: story1.id,
+      projectId: coreProject.id,
+      sprintId: activeSprint.id,
+      assigneeId: createdUsers[4]?.id, // Liam Chen
+      reporterId: createdUsers[2]?.id,
+    },
+  });
+
+  // 7b. Seed Comments, Mentions & In-App Notifications
+  console.log("Creating Comments, Mentions, and Notifications...");
+  if (rachel && liam) {
+    const comment1 = await prisma.comment.create({
+      data: {
+        body: `Hey @[${liam.name}](${liam.id}) please review the Entra ID claims mapping and JWT session callback!`,
+        workItemId: story1.id,
+        authorId: rachel.id,
+      },
+    });
+
+    const mention1 = await prisma.mention.create({
+      data: {
+        commentId: comment1.id,
+        mentionedUserId: liam.id,
+      },
+    });
+
+    await prisma.notification.create({
+      data: {
+        userId: liam.id,
+        type: "MENTION",
+        title: `Mentioned by ${rachel.name}`,
+        message: `${rachel.name} mentioned you in CTX-3: 'Hey @${liam.name} please review the Entra ID claims mapping...'`,
+        link: `/client-apex/CTX/board?item=CTX-3`,
+        isRead: false,
+        mentionId: mention1.id,
+      },
+    });
+  }
+
+  const adminUser = userByEmail.get("admin@centvis.com");
+  if (adminUser && rachel) {
+    const adminComment = await prisma.comment.create({
+      data: {
+        body: `@[${adminUser.name}](${adminUser.id}) workspace initialized and ready for executive demo review.`,
+        workItemId: story1.id,
+        authorId: rachel.id,
+      },
+    });
+
+    const adminMention = await prisma.mention.create({
+      data: {
+        commentId: adminComment.id,
+        mentionedUserId: adminUser.id,
+      },
+    });
+
+    await prisma.notification.create({
+      data: {
+        userId: adminUser.id,
+        type: "MENTION",
+        title: "Workspace Ready",
+        message: `${rachel.name} mentioned you in CTX-3: 'workspace initialized and ready for executive demo review.'`,
+        link: `/client-apex/CTX/board?item=CTX-3`,
+        isRead: false,
+        mentionId: adminMention.id,
+      },
+    });
+  }
 
   // 8. AI Story Audit Log
   console.log("Creating AI Story Audit Log...");
