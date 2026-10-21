@@ -43,6 +43,7 @@ import {
 } from "@centraxis/ui";
 import { api } from "~/trpc/react";
 import { CreateClientDialog } from "../clients/create-client-dialog";
+import { NotificationPopover } from "../layout/notification-popover";
 
 interface HeaderProjectItem {
   id: string;
@@ -468,6 +469,8 @@ export function Header({
                 <span>Temporary Admin</span>
               </Badge>
             )}
+
+            <NotificationPopover />
 
             <ThemeToggle />
 

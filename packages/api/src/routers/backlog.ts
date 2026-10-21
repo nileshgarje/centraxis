@@ -330,6 +330,30 @@ export const backlogRouter = createTRPCRouter({
         }
       }
 
+      // Quality Gate: Prevent marking parent story as DONE if incomplete subtasks remain
+      if (data.status === WorkItemStatus.DONE) {
+        const itemWithChildren = await ctx.db.workItem.findUnique({
+          where: { id },
+          include: {
+            children: {
+              select: { id: true, key: true, status: true },
+            },
+          },
+        });
+        if (itemWithChildren && itemWithChildren.children.length > 0) {
+          const incompleteSubtasks = itemWithChildren.children.filter(
+            (c) => c.status !== WorkItemStatus.DONE,
+          );
+          if (incompleteSubtasks.length > 0) {
+            const keys = incompleteSubtasks.map((c) => c.key).join(", ");
+            throw new TRPCError({
+              code: "PRECONDITION_FAILED",
+              message: `Cannot resolve work item while child sub-tasks are incomplete (${keys}).`,
+            });
+          }
+        }
+      }
+
       return ctx.db.workItem.update({
         where: { id },
         data,

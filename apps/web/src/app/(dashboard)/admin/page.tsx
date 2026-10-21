@@ -29,6 +29,7 @@ import { api } from "~/trpc/react";
 import { CentraxisLogo } from "@centraxis/ui";
 import { ThemeToggle } from "@centraxis/ui";
 import { CreateClientDialog } from "~/components/clients/create-client-dialog";
+import { NotificationPopover } from "~/components/layout/notification-popover";
 
 export default function AdminOverviewPage() {
   const { data: session } = useSession();
@@ -75,6 +76,7 @@ export default function AdminOverviewPage() {
                 <span>Manage Users & Roles</span>
               </Link>
             </Button>
+            <NotificationPopover />
             <ThemeToggle />
           </div>
         </div>

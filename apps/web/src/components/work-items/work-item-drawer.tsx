@@ -38,6 +38,8 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@centraxis/ui";
+import { SubTasksSection } from "./sub-tasks-section";
+import { CommentSection } from "../comments/comment-section";
 
 interface WorkItemDrawerProps {
   itemId: string | null;
@@ -70,14 +72,6 @@ const PRIORITIES = [
 ];
 
 const FIBONACCI_POINTS = [1, 2, 3, 5, 8, 13];
-
-interface LocalComment {
-  id: string;
-  authorName: string;
-  authorInitials: string;
-  createdAt: string;
-  content: string;
-}
 
 export function WorkItemDrawer({
   itemId,
@@ -115,19 +109,7 @@ export function WorkItemDrawer({
   const [sprintId, setSprintId] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-
-  // Developer comments
-  const [newComment, setNewComment] = useState("");
-  const [comments, setComments] = useState<LocalComment[]>([
-    {
-      id: "c-1",
-      authorName: "Alex Morgan",
-      authorInitials: "AM",
-      createdAt: "1 hour ago",
-      content:
-        "Investigated the implementation. Let's make sure code blocks use lowlight syntax highlighting and include an instant copy button:\n\n```typescript\nimport { common, createLowlight } from 'lowlight';\nconst lowlight = createLowlight(common);\n```",
-    },
-  ]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Sync state when item data loads
   useEffect(() => {
@@ -140,6 +122,7 @@ export function WorkItemDrawer({
       setStoryPoints(item.storyPoints ?? null);
       setAssigneeId(item.assigneeId || "");
       setSprintId(item.sprintId || "");
+      setErrorMessage(null);
     }
   }, [item]);
 
@@ -157,10 +140,12 @@ export function WorkItemDrawer({
   const updateMutation = api.backlog.updateItem.useMutation({
     onMutate: () => {
       setIsSaving(true);
+      setErrorMessage(null);
     },
     onSuccess: () => {
       setIsSaving(false);
       setSaveSuccess(true);
+      setErrorMessage(null);
       setTimeout(() => setSaveSuccess(false), 2000);
       void utils.backlog.getItem.invalidate({ id: itemId! });
       void utils.backlog.getItems.invalidate();
@@ -169,7 +154,8 @@ export function WorkItemDrawer({
     },
     onError: (err) => {
       setIsSaving(false);
-      console.error("Failed to update work item:", err);
+      setErrorMessage(err.message || "Failed to update work item.");
+      if (item) setStatus(item.status);
     },
   });
 
@@ -188,19 +174,6 @@ export function WorkItemDrawer({
       id: itemId,
       ...fields,
     });
-  };
-
-  const handleAddComment = () => {
-    if (!newComment.trim()) return;
-    const newEntry: LocalComment = {
-      id: "c-" + Date.now(),
-      authorName: "Alex Morgan",
-      authorInitials: "AM",
-      createdAt: "Just now",
-      content: newComment.trim(),
-    };
-    setComments([newEntry, ...comments]);
-    setNewComment("");
   };
 
   return (
@@ -260,6 +233,23 @@ export function WorkItemDrawer({
               </div>
             </div>
           </div>
+
+          {/* Quality Gate / Validation Error Banner */}
+          {errorMessage && (
+            <div className="mx-6 mt-3 flex items-center justify-between rounded-lg bg-destructive/10 border border-destructive/20 px-3.5 py-2.5 text-xs text-destructive font-medium shrink-0 animate-in fade-in-0">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
+                <span>{errorMessage}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setErrorMessage(null)}
+                className="text-xs hover:underline font-semibold ml-2 cursor-pointer shrink-0"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
 
           {/* Drawer Body */}
           {isLoading || !item ? (
@@ -454,106 +444,17 @@ export function WorkItemDrawer({
                 />
               </div>
 
-              {/* Subtasks (if any) */}
-              {item.children && item.children.length > 0 && (
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                    Subtasks ({item.children.filter((c) => c.status === "DONE").length}/
-                    {item.children.length})
-                  </Label>
-                  <div className="divide-y divide-border rounded-lg border border-border bg-card">
-                    {item.children.map((child) => (
-                      <div
-                        key={child.id}
-                        className="flex items-center justify-between px-3 py-2 text-xs"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <CheckCircle2
-                            className={`h-4 w-4 ${
-                              child.status === "DONE"
-                                ? "text-emerald-500"
-                                : "text-muted-foreground/40"
-                            }`}
-                          />
-                          <span className="font-mono text-primary font-semibold">
-                            {child.key}
-                          </span>
-                          <span
-                            className={
-                              child.status === "DONE"
-                                ? "line-through text-muted-foreground"
-                                : "text-foreground"
-                            }
-                          >
-                            {child.title}
-                          </span>
-                        </div>
-                        <span className="text-[10px] uppercase font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border">
-                          {child.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* Sub-Tasks Management with Progress Bar, Checkboxes & Inline Quick-Add */}
+              <SubTasksSection
+                parentId={item.id}
+                projectId={targetProjectId!}
+              />
 
-              {/* Developer Comments & Activity Section */}
-              <div className="space-y-4 pt-3 border-t border-border">
-                <div className="flex items-center space-x-2 text-xs font-semibold text-foreground uppercase tracking-wider">
-                  <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                  <span>Developer Comments & Activity ({comments.length})</span>
-                </div>
-
-                {/* New Comment Box using MarkdownEditor */}
-                <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-3">
-                  <span className="text-xs font-medium text-foreground">Leave a comment</span>
-                  <MarkdownEditor
-                    value={newComment}
-                    onChange={setNewComment}
-                    minHeight="90px"
-                    placeholder="Write a comment with code snippets (```ts ...) or checklist items..."
-                  />
-                  <div className="flex justify-end pt-1">
-                    <Button
-                      type="button"
-                      size="sm"
-                      disabled={!newComment.trim()}
-                      onClick={handleAddComment}
-                      className="gap-1.5 text-xs"
-                    >
-                      <Send className="h-3 w-3" />
-                      <span>Post Comment</span>
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Rendered Comments List */}
-                <div className="space-y-3">
-                  {comments.map((comm) => (
-                    <div
-                      key={comm.id}
-                      className="rounded-lg border border-border bg-card p-4 shadow-2xs space-y-2"
-                    >
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <div className="flex items-center space-x-2">
-                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 font-bold text-[10px] text-primary">
-                            {comm.authorInitials}
-                          </div>
-                          <span className="font-semibold text-foreground">
-                            {comm.authorName}
-                          </span>
-                        </div>
-                        <span>{comm.createdAt}</span>
-                      </div>
-
-                      <MarkdownRenderer
-                        content={comm.content}
-                        className="text-xs"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
+              {/* Real Comments Stream with @Mentions & In-App Notifications */}
+              <CommentSection
+                workItemId={item.id}
+                projectId={targetProjectId!}
+              />
             </div>
           )}
       </SheetContent>

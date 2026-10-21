@@ -9,6 +9,9 @@ import { aiRouter } from "./routers/ai";
 import { metricsRouter } from "./routers/metrics";
 
 import { clientRouter } from "./routers/client";
+import { workItemRouter } from "./routers/work-item";
+import { commentRouter } from "./routers/comment";
+import { notificationRouter } from "./routers/notification";
 
 export const appRouter = createTRPCRouter({
   org: orgRouter,
@@ -16,6 +19,9 @@ export const appRouter = createTRPCRouter({
   project: projectRouter,
   team: teamRouter,
   backlog: backlogRouter,
+  workItem: workItemRouter,
+  comment: commentRouter,
+  notification: notificationRouter,
   sprint: sprintRouter,
   board: boardRouter,
   ai: aiRouter,
