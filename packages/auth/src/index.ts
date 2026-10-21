@@ -298,10 +298,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           : ["centvis.com"]; // Default allowed domain
 
         const userDomain = user.email.split("@")[1]?.toLowerCase();
+        let isClientDomainMatch = false;
+        if (userDomain) {
+          const clientWithDomain = await db.client.findFirst({
+            where: {
+              allowedDomains: { has: userDomain },
+            },
+          });
+          if (clientWithDomain) {
+            isClientDomainMatch = true;
+          }
+        }
+
         if (
           allowedDomains.length > 0 &&
           userDomain &&
-          !allowedDomains.includes(userDomain)
+          !allowedDomains.includes(userDomain) &&
+          !isClientDomainMatch
         ) {
           const pendingInvite = await db.invitation.findFirst({
             where: {
@@ -425,6 +438,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 },
               });
               dbUser = updated;
+            }
+          }
+
+          // Auto-enroll client member if user domain matches a registered Client's allowedDomains
+          const userEmail = dbUser.email?.toLowerCase();
+          const userDomain = userEmail?.split("@")[1]?.toLowerCase();
+          if (userDomain && userDomain !== "centvis.com") {
+            const matchingClient = await db.client.findFirst({
+              where: {
+                allowedDomains: { has: userDomain },
+              },
+            });
+            if (matchingClient) {
+              await db.clientMember.upsert({
+                where: {
+                  userId_clientId: {
+                    userId: dbUser.id,
+                    clientId: matchingClient.id,
+                  },
+                },
+                create: {
+                  userId: dbUser.id,
+                  clientId: matchingClient.id,
+                  role: "CLIENT_MEMBER",
+                },
+                update: {},
+              });
             }
           }
 

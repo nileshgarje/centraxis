@@ -50,6 +50,8 @@ export function CreateClientDialog({
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
   const [contactEmail, setContactEmail] = useState("");
   const [logo, setLogo] = useState("");
+  const [allowedDomainsStr, setAllowedDomainsStr] = useState("");
+  const [tenantId, setTenantId] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -59,6 +61,8 @@ export function CreateClientDialog({
       setIsSlugManuallyEdited(false);
       setContactEmail("");
       setLogo("");
+      setAllowedDomainsStr("");
+      setTenantId("");
       setErrorMessage(null);
     }
   }, [isOpen]);
@@ -105,11 +109,18 @@ export function CreateClientDialog({
     }
 
     setErrorMessage(null);
+    const parsedDomains = allowedDomainsStr
+      .split(",")
+      .map((d) => d.trim().toLowerCase().replace(/^@/, ""))
+      .filter(Boolean);
+
     createMutation.mutate({
       name: name.trim(),
       slug: cleanSlug || undefined,
       contactEmail: contactEmail.trim() || undefined,
       logo: logo.trim() || undefined,
+      tenantId: tenantId.trim() || undefined,
+      allowedDomains: parsedDomains,
     });
   };
 
@@ -215,6 +226,48 @@ export function CreateClientDialog({
               />
               <Mail className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             </div>
+          </div>
+
+          {/* Allowed Domains (Multi-Tenant SSO) */}
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="client-domains"
+              className="text-xs font-semibold text-foreground"
+            >
+              Client Email Domains (Multi-Tenant Microsoft SSO)
+            </Label>
+            <Input
+              id="client-domains"
+              type="text"
+              value={allowedDomainsStr}
+              onChange={(e) => setAllowedDomainsStr(e.target.value)}
+              placeholder="e.g. acmecorp.com, acme.co"
+              className="h-9 text-xs"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Comma-separated. Users signing in with Microsoft Entra ID from these domains are automatically enrolled into this workspace.
+            </p>
+          </div>
+
+          {/* Azure Tenant ID */}
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="client-tenant-id"
+              className="text-xs font-semibold text-foreground"
+            >
+              Microsoft Tenant ID (Optional)
+            </Label>
+            <Input
+              id="client-tenant-id"
+              type="text"
+              value={tenantId}
+              onChange={(e) => setTenantId(e.target.value)}
+              placeholder="e.g. 11111111-2222-3333-4444-555555555555"
+              className="h-9 font-mono text-xs"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Azure AD Tenant GUID of the client's Microsoft 365 organization.
+            </p>
           </div>
 
           {/* Logo URL */}

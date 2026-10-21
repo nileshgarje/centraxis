@@ -38,7 +38,7 @@ export const env = createEnv({
       .default("default_dev_auth_secret_change_in_production"),
     NEXTAUTH_URL: z.string().url().optional(),
 
-    // Microsoft Entra ID (Azure AD) SSO
+    // Microsoft Entra ID (Azure AD) SSO (Supports multi-tenant across client Azure AD tenants)
     AZURE_AD_CLIENT_ID: z
       .string()
       .min(1)
@@ -50,7 +50,7 @@ export const env = createEnv({
     AZURE_AD_TENANT_ID: z
       .string()
       .min(1)
-      .default("placeholder_azure_ad_tenant_id"),
+      .default("organizations"),
 
     // Bootstrap Admin (BOOTSTRAP_ADMIN_*)
     BOOTSTRAP_ADMIN_USERNAME: z.string().optional(),

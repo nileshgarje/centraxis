@@ -205,6 +205,8 @@ export const clientRouter = createTRPCRouter({
           .nullable()
           .or(z.literal("")),
         logo: z.string().optional().nullable().or(z.literal("")),
+        tenantId: z.string().optional().nullable().or(z.literal("")),
+        allowedDomains: z.array(z.string()).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -266,6 +268,8 @@ export const clientRouter = createTRPCRouter({
           slug: generatedSlug,
           contactEmail: input.contactEmail?.trim() || null,
           logo: input.logo?.trim() || null,
+          tenantId: input.tenantId?.trim() || null,
+          allowedDomains: input.allowedDomains ?? [],
           orgId,
           members: {
             create: {
@@ -287,6 +291,8 @@ export const clientRouter = createTRPCRouter({
         name: z.string().min(1).optional(),
         contactEmail: z.string().optional().nullable().or(z.literal("")),
         logo: z.string().optional().nullable().or(z.literal("")),
+        tenantId: z.string().optional().nullable().or(z.literal("")),
+        allowedDomains: z.array(z.string()).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -297,6 +303,12 @@ export const clientRouter = createTRPCRouter({
           name: data.name?.trim(),
           contactEmail: data.contactEmail?.trim() || null,
           logo: data.logo?.trim() || null,
+          ...(data.tenantId !== undefined
+            ? { tenantId: data.tenantId?.trim() || null }
+            : {}),
+          ...(data.allowedDomains !== undefined
+            ? { allowedDomains: data.allowedDomains }
+            : {}),
         },
       });
     }),

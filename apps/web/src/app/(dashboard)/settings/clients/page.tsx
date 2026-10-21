@@ -211,6 +211,23 @@ export default function ClientsSettingsPage() {
                   </div>
                 )}
 
+                {/* Multitenant SSO Domains */}
+                {client.allowedDomains && client.allowedDomains.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">
+                      SSO Domains:
+                    </span>
+                    {client.allowedDomains.map((dom, i) => (
+                      <span
+                        key={i}
+                        className="inline-flex items-center rounded-md border border-indigo-200 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-950/40 px-2 py-0.5 text-[11px] font-mono font-medium text-indigo-700 dark:text-indigo-300"
+                      >
+                        @{dom}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 {/* Associated Projects Section */}
                 <div className="space-y-2 border-t border-border/60 pt-3">
                   <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground">

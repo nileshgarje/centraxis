@@ -101,6 +101,8 @@ model Client {
   slug             String         // e.g. "acme-corp"
   logo             String?
   contactEmail     String?
+  tenantId         String?        // Azure AD Tenant ID (GUID) of the client's corporate tenant
+  allowedDomains   String[]       @default([]) // e.g. ["acmecorp.com", "acme-global.com"]
   orgId            String
   organization     Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
   projects         Project[]
@@ -114,6 +116,7 @@ model Client {
   @@unique([orgId, slug])
   @@index([orgId])
   @@index([workflowId])
+  @@index([tenantId])
 }
 
 model ClientMember {
