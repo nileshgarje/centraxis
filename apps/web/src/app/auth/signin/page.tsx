@@ -12,6 +12,7 @@ import {
   Loader2,
   ShieldAlert,
 } from "lucide-react";
+import { CentvisLogo, CentraxisLogo } from "@centraxis/ui";
 
 const QUICK_TEST_ACCOUNTS = [
   {
@@ -78,22 +79,20 @@ function SignInForm() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4 sm:p-6 md:p-8">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 p-4 sm:p-6 md:p-8">
       <div className="w-full max-w-md space-y-6">
         {/* Brand Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white font-bold text-2xl shadow-xl shadow-blue-500/25">
-            C
-          </div>
-          <div className="flex items-center justify-center space-x-1.5 pt-2">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+        <div className="text-center space-y-3 flex flex-col items-center">
+          <CentvisLogo height={36} className="mb-1" />
+          <div className="flex items-center justify-center space-x-2">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
               Centraxis
             </h1>
-            <span className="rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-800 uppercase tracking-wider">
-              Centvis
+            <span className="rounded-md border border-indigo-500/20 bg-indigo-50 dark:bg-indigo-950/50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider font-mono">
+              Agile Platform
             </span>
           </div>
-          <p className="text-sm text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Sign in to access your enterprise Agile boards and AI story agent
           </p>
         </div>

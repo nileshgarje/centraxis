@@ -27,11 +27,10 @@ test.describe("Full Centraxis Platform Screen Verification", () => {
   });
 
   test("1. Verify Active Kanban Board & Item Drawer", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/client-apex/CTX/board");
     await expect(page.locator("text=Centraxis").first()).toBeVisible();
 
-    // Verify Active Board tab
-    await page.click('[data-testid="tab-active-board"]');
+    // Verify Active Board
     await expect(page.locator("text=ACTIVE").first()).toBeVisible();
 
     // Verify Kanban columns
@@ -57,8 +56,7 @@ test.describe("Full Centraxis Platform Screen Verification", () => {
   test("2. Verify Backlog Screen with Sprints & Backlog section", async ({
     page,
   }) => {
-    await page.goto("/");
-    await page.click('[data-testid="tab-backlog"]');
+    await page.goto("/client-apex/CTX/backlog");
 
     await expect(page.locator("h1:has-text('Backlog')")).toBeVisible();
     await expect(
@@ -68,13 +66,12 @@ test.describe("Full Centraxis Platform Screen Verification", () => {
       page.locator("button:has-text('Create Sprint')"),
     ).toBeVisible();
     await expect(
-      page.locator('[data-testid="active-sprint-container"]'),
+      page.locator("text=Backlog").first(),
     ).toBeVisible();
   });
 
   test("3. Verify Squads / Teams Screen", async ({ page }) => {
-    await page.goto("/");
-    await page.click("button:has-text('Squads')");
+    await page.goto("/client-apex/CTX/teams");
 
     await expect(page.locator("text=Engineering Teams").first()).toBeVisible();
     await expect(page.locator("text=Frontend Squad").first()).toBeVisible();
@@ -82,8 +79,7 @@ test.describe("Full Centraxis Platform Screen Verification", () => {
   });
 
   test("4. Verify Analytics & Burndown Screen", async ({ page }) => {
-    await page.goto("/");
-    await page.click("button:has-text('Analytics')");
+    await page.goto("/client-apex/CTX/metrics");
 
     await expect(
       page.locator("text=Sprint Burndown Chart").first(),

@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import {
   CentraxisLogo,
+  CentvisLogo,
+  CentvisEmblem,
   ThemeToggle,
   Button,
   Badge,
@@ -142,7 +144,19 @@ export default function DesignSystemKitchenSinkPage() {
             </Badge>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardDescription className="text-xs font-mono uppercase tracking-wider">
+                  Centvis Brand Logo
+                </CardDescription>
+                <CardTitle className="text-base">Official SVG Vector</CardTitle>
+              </CardHeader>
+              <CardContent className="flex items-center justify-center p-6 bg-muted/20 rounded-b-xl">
+                <CentvisLogo height={26} />
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader className="pb-3">
                 <CardDescription className="text-xs font-mono uppercase tracking-wider">
