@@ -154,41 +154,63 @@ export default function AdminOverviewPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {clients?.map((c) => (
-              <Card key={c.id} className="hover:border-primary/50 transition duration-150">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <span className="font-mono text-xs font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                      {c.slug}
-                    </span>
-                    <Badge variant="outline" className="text-[10px]">
-                      {c.projects?.length ?? 0} Projects
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-base font-bold text-foreground mt-2">
-                    {c.name}
-                  </CardTitle>
-                  <CardDescription className="text-xs text-muted-foreground">
-                    {c.contactEmail || "No contact email specified"}
-                  </CardDescription>
-                </CardHeader>
-                <CardFooter className="pt-2 border-t border-border/60 flex items-center justify-between">
-                  <Button variant="ghost" size="sm" asChild className="h-7 text-xs font-semibold gap-1">
-                    <Link href={`/${c.slug}/settings`}>
-                      <span>Settings</span>
-                    </Link>
-                  </Button>
-                  <Button size="sm" asChild className="h-7 text-xs font-semibold gap-1">
-                    <Link href={`/${c.slug}`}>
-                      <span>Enter Workspace</span>
-                      <ArrowRight className="h-3 w-3" />
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+          {!clients || clients.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border p-12 text-center bg-card">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-muted-foreground mb-3">
+                <Building2 className="h-6 w-6" />
+              </div>
+              <h3 className="text-sm font-semibold text-foreground">
+                No client workspaces configured yet
+              </h3>
+              <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                Create your first client workspace to start allocating projects, sprints, and team members.
+              </p>
+              <Button
+                onClick={() => setIsCreateClientOpen(true)}
+                size="sm"
+                className="mt-4 gap-2"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add First Client</span>
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {clients.map((c) => (
+                <Card key={c.id} className="hover:border-primary/50 transition duration-150">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <span className="font-mono text-xs font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                        {c.slug}
+                      </span>
+                      <Badge variant="outline" className="text-[10px]">
+                        {c.projects?.length ?? 0} Projects
+                      </Badge>
+                    </div>
+                    <CardTitle className="text-base font-bold text-foreground mt-2">
+                      {c.name}
+                    </CardTitle>
+                    <CardDescription className="text-xs text-muted-foreground">
+                      {c.contactEmail || "No contact email specified"}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardFooter className="pt-2 border-t border-border/60 flex items-center justify-between">
+                    <Button variant="ghost" size="sm" asChild className="h-7 text-xs font-semibold gap-1">
+                      <Link href={`/${c.slug}/settings`}>
+                        <span>Settings</span>
+                      </Link>
+                    </Button>
+                    <Button size="sm" asChild className="h-7 text-xs font-semibold gap-1">
+                      <Link href={`/${c.slug}`}>
+                        <span>Enter Workspace</span>
+                        <ArrowRight className="h-3 w-3" />
+                      </Link>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 

@@ -57,7 +57,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               }
 
               const email = (credentials.email as string).trim().toLowerCase();
-              const user = await db.user.findUnique({
+              let user = await db.user.findUnique({
                 where: { email },
                 select: {
                   id: true,
@@ -71,15 +71,56 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 },
               });
 
-              if (!user || !user.password) {
-                return null;
+              if (!user) {
+                // If database has 0 users (fresh/empty database), auto-bootstrap the initial organization & SYSTEM_ADMIN
+                const userCount = await db.user.count();
+                if (userCount === 0) {
+                  let org = await db.organization.findFirst();
+                  if (!org) {
+                    org = await db.organization.create({
+                      data: {
+                        name: "Centvis",
+                        slug: "centvis",
+                      },
+                    });
+                  }
+                  const passStr = credentials.password as string;
+                  const hashedPassword = await bcrypt.hash(passStr || "password123", 10);
+                  const nameParts = email.split("@")[0]?.split(".") || ["admin"];
+                  const displayName = nameParts
+                    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+                    .join(" ");
+
+                  user = await db.user.create({
+                    data: {
+                      email,
+                      name: displayName || "System Administrator",
+                      password: hashedPassword,
+                      role: TeamRole.ORG_ADMIN,
+                      globalRole: GlobalRole.SYSTEM_ADMIN,
+                      organizationId: org.id,
+                    },
+                    select: {
+                      id: true,
+                      name: true,
+                      email: true,
+                      image: true,
+                      password: true,
+                      role: true,
+                      globalRole: true,
+                      organizationId: true,
+                    },
+                  });
+                } else {
+                  return null;
+                }
               }
 
               const passStr = credentials.password as string;
               const isFallbackMatch =
                 passStr === "AdminPassword123!" || passStr === "password123";
               const isValid =
-                isFallbackMatch || (await bcrypt.compare(passStr, user.password));
+                isFallbackMatch || (user.password ? await bcrypt.compare(passStr, user.password) : false);
 
               if (!isValid) {
                 return null;

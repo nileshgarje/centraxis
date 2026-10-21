@@ -75,14 +75,6 @@ export function CreateProjectDialog({
   const [selectedClientId, setSelectedClientId] = useState<string>(defaultClientId ?? "");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      if (defaultClientId) {
-        setSelectedClientId(defaultClientId);
-      }
-    }
-  }, [isOpen, defaultClientId]);
-
   // Query clients for client assignment
   const { data: clients } = api.clients.list.useQuery(undefined, {
     enabled: isOpen,
@@ -114,10 +106,10 @@ export function CreateProjectDialog({
       setIsKeyManuallyEdited(false);
       setDescription("");
       setSelectedTeamIds([]);
-      setSelectedClientId("");
+      setSelectedClientId(defaultClientId ?? "");
       setErrorMessage(null);
     }
-  }, [isOpen]);
+  }, [isOpen, defaultClientId]);
 
   // Handle Project Name Change & Auto-generate Key
   const handleNameChange = (val: string) => {
@@ -144,6 +136,7 @@ export function CreateProjectDialog({
         utils.project.listTeams.invalidate(),
         utils.team.list.invalidate(),
         utils.clients.list.invalidate(),
+        utils.clients.getBySlug.invalidate(),
       ]);
       onClose();
       if (onProjectCreated && created?.id) {
