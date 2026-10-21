@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -34,16 +34,52 @@ const QUICK_TEST_ACCOUNTS = [
   },
 ];
 
+function getAuthErrorMessage(error: string | null): string | null {
+  if (!error) return null;
+  switch (error) {
+    case "OAuthAccountNotLinked":
+      return "An account with this email already exists under local credentials or verification code. We have enabled automatic account linking—please click 'Sign in with Microsoft Entra ID' again to link your corporate identity.";
+    case "OAuthSignin":
+    case "OAuthCallback":
+      return "Could not complete sign-in with Microsoft Entra ID. Please try again.";
+    case "OAuthCreateAccount":
+      return "Could not create user account via Microsoft Entra ID. Please contact your administrator.";
+    case "EmailCreateAccount":
+      return "Could not create user account with this email. Please contact your administrator.";
+    case "Callback":
+      return "Authentication callback failed. Please verify your credentials and try again.";
+    case "AccessDenied":
+      return "Access denied. Only authorized @centvis.com accounts or invited members may sign in.";
+    case "Configuration":
+      return "Authentication server configuration error. Please contact the administrator.";
+    case "Verification":
+      return "The 8-digit verification code was invalid or has expired.";
+    case "SessionRequired":
+      return "Please sign in to access that page.";
+    default:
+      return `Authentication error: ${error}`;
+  }
+}
+
 function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const errorParam = searchParams.get("error");
 
   const [email, setEmail] = useState("alex.morgan@centvis.com");
   const [password, setPassword] = useState("password123");
   const [isLoading, setIsLoading] = useState(false);
   const [isSsoLoading, setIsSsoLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(() =>
+    getAuthErrorMessage(errorParam),
+  );
+
+  useEffect(() => {
+    if (errorParam) {
+      setErrorMessage(getAuthErrorMessage(errorParam));
+    }
+  }, [errorParam]);
 
   const sendCodeMutation = api.auth.sendCode.useMutation();
 
@@ -135,6 +171,42 @@ function SignInForm() {
 
         {/* Card Container */}
         <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-xl shadow-slate-200/50 space-y-6">
+          {/* Prominent Error Banner at top of card */}
+          {errorMessage && (
+            <div className="flex flex-col space-y-2 rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-900 shadow-sm">
+              <div className="flex items-start space-x-2.5">
+                <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <div className="font-semibold text-red-800">
+                    Authentication Notice
+                  </div>
+                  <div className="text-slate-700 leading-relaxed">
+                    {errorMessage}
+                  </div>
+                </div>
+              </div>
+
+              {errorParam === "OAuthAccountNotLinked" && (
+                <div className="pt-2 border-t border-red-200/70 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleMicrosoftLogin}
+                    disabled={isSsoLoading}
+                    className="rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold px-3 py-1.5 text-[11px] transition shadow-sm"
+                  >
+                    Link & Sign In with Microsoft Entra ID
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleVerifyNewUser}
+                    className="rounded-lg border border-red-300 hover:bg-red-100/50 text-red-800 font-semibold px-3 py-1.5 text-[11px] transition"
+                  >
+                    Verify via 8-Digit Code
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           {/* 1. Microsoft Entra ID SSO Button */}
           <div className="space-y-2">
             <button
@@ -166,14 +238,6 @@ function SignInForm() {
               Local Dev Bypass
             </span>
           </div>
-
-          {/* Error Banner */}
-          {errorMessage && (
-            <div className="flex items-center space-x-2.5 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-800">
-              <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
 
           {/* 2. Credentials Form (Development Mode Bypass) */}
           <form onSubmit={handleCredentialsLogin} className="space-y-4">
