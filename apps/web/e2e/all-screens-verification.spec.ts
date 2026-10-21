@@ -28,7 +28,7 @@ test.describe("Full Centraxis Platform Screen Verification", () => {
 
   test("1. Verify Active Kanban Board & Item Drawer", async ({ page }) => {
     await page.goto("/client-apex/CTX/board");
-    await expect(page.locator("text=Centraxis").first()).toBeVisible();
+    await expect(page.locator('svg[aria-label="Centvis"]').first()).toBeVisible();
 
     // Verify Active Board
     await expect(page.locator("text=ACTIVE").first()).toBeVisible();

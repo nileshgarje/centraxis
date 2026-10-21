@@ -27,7 +27,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import {
-  CentraxisLogo,
+  CentvisLogo,
   ThemeToggle,
   Button,
   Badge,
@@ -177,7 +177,13 @@ export function Header({
         <div className="flex h-14 items-center justify-between gap-4">
           {/* Left Section: Logo + Project Dropdown */}
           <div className="flex items-center gap-4 shrink-0">
-            <CentraxisLogo size="md" />
+            <Link
+              href="/"
+              className="flex items-center hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+              title="Centvis"
+            >
+              <CentvisLogo height={26} />
+            </Link>
 
             <div className="h-4 w-px bg-border" />
 

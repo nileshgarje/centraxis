@@ -89,7 +89,13 @@ export default function DesignSystemKitchenSinkPage() {
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md px-6 py-3.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <CentraxisLogo size="md" />
+            <Link
+              href="/"
+              className="flex items-center hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+              title="Centvis"
+            >
+              <CentvisLogo height={26} />
+            </Link>
             <span className="hidden sm:inline-block text-xs font-mono px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
               Design System v2.0
             </span>

@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowLeft, User, Building2, Users, ShieldCheck } from "lucide-react";
-import { CentraxisLogo, ThemeToggle } from "@centraxis/ui";
+import { CentvisLogo, ThemeToggle } from "@centraxis/ui";
 
 const SETTINGS_NAV = [
   {
@@ -40,7 +40,13 @@ export default function SettingsLayout({
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur px-6">
         <div className="flex h-14 items-center justify-between gap-4 max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-4">
-            <CentraxisLogo size="md" />
+            <Link
+              href="/"
+              className="flex items-center hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+              title="Centvis"
+            >
+              <CentvisLogo height={26} />
+            </Link>
             <div className="h-4 w-px bg-border" />
             <Link
               href="/"

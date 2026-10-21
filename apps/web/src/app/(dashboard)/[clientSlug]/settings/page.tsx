@@ -35,7 +35,7 @@ import {
 } from "@centraxis/ui";
 import { useClient } from "~/context/client-context";
 import { api } from "~/trpc/react";
-import { CentraxisLogo } from "@centraxis/ui";
+import { CentvisLogo } from "@centraxis/ui";
 import { ClientProjectSwitcher } from "~/components/layout/client-project-switcher";
 
 export default function ClientSettingsPage() {
@@ -81,7 +81,13 @@ export default function ClientSettingsPage() {
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur px-6">
         <div className="flex h-14 items-center justify-between gap-4">
           <div className="flex items-center gap-4 shrink-0">
-            <CentraxisLogo size="md" />
+            <Link
+              href="/"
+              className="flex items-center hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+              title="Centvis"
+            >
+              <CentvisLogo height={26} />
+            </Link>
             <div className="h-4 w-px bg-border" />
             <ClientProjectSwitcher currentClientSlug={clientSlug} />
           </div>

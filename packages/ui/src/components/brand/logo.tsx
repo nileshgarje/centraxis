@@ -60,17 +60,29 @@ export function CentvisEmblem({
  */
 export function CentvisLogo({
   className,
-  height = 28,
+  height = 26,
+  style,
   ...props
 }: React.SVGProps<SVGSVGElement> & { height?: number | string }) {
+  const heightStyle =
+    height !== undefined
+      ? typeof height === "number"
+        ? `${height}px`
+        : height
+      : undefined;
+
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 327.549 57.437"
       height={height}
-      className={cn("h-auto max-h-8 w-auto shrink-0 select-none", className)}
+      role="img"
+      aria-label="Centvis"
+      style={{ height: heightStyle, ...style }}
+      className={cn("w-auto shrink-0 select-none", className)}
       {...props}
     >
+      <title>Centvis</title>
       <g transform="translate(-259.027 -270.659)">
         {/* White wedge in dark mode */}
         <path
