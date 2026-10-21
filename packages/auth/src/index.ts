@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db, TeamRole, GlobalRole } from "@centraxis/db";
 import { env } from "@centraxis/env";
+import { sendVerificationCodeEmail } from "./email";
 import type { UserTeamMembership } from "./types";
 import "./types";
 
@@ -40,6 +41,97 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           image: profile.picture ?? null,
           globalRole: GlobalRole.USER,
           role: TeamRole.DEVELOPER,
+        };
+      },
+    }),
+
+    // Email 8-Digit OTP Authentication for New or Unverified Accounts
+    Credentials({
+      id: "email-otp",
+      name: "Email OTP",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        code: { label: "Verification Code", type: "text" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.code) {
+          return null;
+        }
+
+        const email = (credentials.email as string).trim().toLowerCase();
+        const code = (credentials.code as string).trim();
+
+        // Verify 8-digit token in database
+        const validToken = await db.verificationToken.findFirst({
+          where: {
+            identifier: email,
+            token: code,
+            expires: { gt: new Date() },
+          },
+        });
+
+        if (!validToken) {
+          return null;
+        }
+
+        // Consume token
+        await db.verificationToken.deleteMany({
+          where: { identifier: email },
+        });
+
+        // Find or create user
+        let user = await db.user.findUnique({
+          where: { email },
+        });
+
+        const defaultOrg = await db.organization.findFirst({
+          orderBy: { createdAt: "asc" },
+        });
+
+        const isNilesh = email === "nilesh.garje@centvis.com";
+
+        if (!user) {
+          const nameParts = email.split("@")[0]?.split(".") || ["User"];
+          const formattedName = nameParts
+            .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+            .join(" ");
+
+          user = await db.user.create({
+            data: {
+              email,
+              name: formattedName,
+              emailVerified: new Date(),
+              organizationId: defaultOrg?.id,
+              globalRole: isNilesh ? GlobalRole.SYSTEM_ADMIN : GlobalRole.USER,
+              role: isNilesh ? TeamRole.ORG_ADMIN : TeamRole.DEVELOPER,
+            },
+          });
+        } else {
+          user = await db.user.update({
+            where: { id: user.id },
+            data: {
+              emailVerified: new Date(),
+              organizationId: user.organizationId || defaultOrg?.id,
+              ...(isNilesh
+                ? {
+                    globalRole: GlobalRole.SYSTEM_ADMIN,
+                    role: TeamRole.ORG_ADMIN,
+                  }
+                : {}),
+            },
+          });
+        }
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.image,
+          role: user.role,
+          globalRole: user.globalRole,
+          organizationId: user.organizationId,
+          isTemporary: user.isTemporary,
+          emailVerified: user.emailVerified,
         };
       },
     }),
@@ -224,22 +316,42 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
         }
 
+        // Check if user already exists in database with verified email
+        const existingUser = await db.user.findUnique({
+          where: { email: user.email.toLowerCase() },
+          select: { id: true, emailVerified: true, organizationId: true },
+        });
+
+        // If user does not exist or has not verified email yet, issue 8-digit verification code
+        if (!existingUser || !existingUser.emailVerified) {
+          const code = Math.floor(10000000 + Math.random() * 90000000).toString();
+          await db.verificationToken.deleteMany({
+            where: { identifier: user.email.toLowerCase() },
+          });
+          await db.verificationToken.create({
+            data: {
+              identifier: user.email.toLowerCase(),
+              token: code,
+              expires: new Date(Date.now() + 15 * 60 * 1000),
+            },
+          });
+
+          await sendVerificationCodeEmail({
+            to: user.email.toLowerCase(),
+            code,
+          });
+        }
+
         // Assign to default Organization if user has no orgId
         const defaultOrg = await db.organization.findFirst({
           orderBy: { createdAt: "asc" },
         });
 
-        if (defaultOrg) {
-          const dbUser = await db.user.findUnique({
-            where: { email: user.email.toLowerCase() },
+        if (defaultOrg && existingUser && !existingUser.organizationId) {
+          await db.user.update({
+            where: { id: existingUser.id },
+            data: { organizationId: defaultOrg.id },
           });
-
-          if (dbUser && !dbUser.organizationId) {
-            await db.user.update({
-              where: { id: dbUser.id },
-              data: { organizationId: defaultOrg.id },
-            });
-          }
         }
       }
       return true;
@@ -252,6 +364,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.globalRole = (user as any).globalRole;
         token.organizationId = (user as any).organizationId;
         token.isTemporary = (user as any).isTemporary;
+        token.emailVerified = (user as any).emailVerified;
       }
 
       if (token.id) {
@@ -260,6 +373,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           select: {
             id: true,
             email: true,
+            emailVerified: true,
             role: true,
             globalRole: true,
             organizationId: true,
@@ -296,6 +410,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 select: {
                   id: true,
                   email: true,
+                  emailVerified: true,
                   role: true,
                   globalRole: true,
                   organizationId: true,
@@ -316,6 +431,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.role = dbUser.role;
           token.globalRole = dbUser.globalRole;
           token.isTemporary = dbUser.isTemporary;
+          token.emailVerified = dbUser.emailVerified;
           token.memberships = dbUser.memberships as UserTeamMembership[];
         }
       }
@@ -335,6 +451,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             ? GlobalRole.SYSTEM_ADMIN
             : GlobalRole.USER);
         session.user.isTemporary = Boolean(token.isTemporary);
+        session.user.emailVerified = (token.emailVerified as Date | null) ?? null;
         session.user.memberships =
           (token.memberships as UserTeamMembership[]) ?? [];
       }

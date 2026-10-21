@@ -19,12 +19,14 @@
     "@centraxis/env": "workspace:*",
     "bcryptjs": "^3.0.2",
     "next": "^15.1.7",
-    "next-auth": "5.0.0-beta.25"
+    "next-auth": "5.0.0-beta.25",
+    "nodemailer": "^10.1.7"
   },
   "devDependencies": {
     "@centraxis/eslint-config": "workspace:*",
     "@centraxis/typescript-config": "workspace:*",
     "@types/bcryptjs": "^2.4.6",
+    "@types/nodemailer": "^8.0.2",
     "typescript": "^5.8.2"
   }
 }

@@ -10,9 +10,11 @@ export default function RootPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
 
+  const isVerified = Boolean(session?.user?.emailVerified);
+
   const { data: clients, isLoading: clientsLoading } =
     api.clients.list.useQuery(undefined, {
-      enabled: status === "authenticated",
+      enabled: status === "authenticated" && isVerified,
       retry: false,
     });
 
@@ -22,20 +24,31 @@ export default function RootPage() {
       return;
     }
 
-    if (status === "authenticated" && !clientsLoading) {
-      if (clients && clients.length > 0) {
-        const firstClient = clients[0]!;
-        router.replace(`/${firstClient.slug}`);
-      } else if (
-        session?.user?.globalRole === "SYSTEM_ADMIN" ||
-        session?.user?.role === "ORG_ADMIN"
-      ) {
-        router.replace("/admin");
-      } else {
-        router.replace("/settings/profile");
+    if (status === "authenticated") {
+      // If user does not exist or has not verified email with 8-digit code
+      if (!isVerified) {
+        const emailParam = session?.user?.email
+          ? `?email=${encodeURIComponent(session.user.email)}`
+          : "";
+        router.replace(`/auth/verify-email${emailParam}`);
+        return;
+      }
+
+      if (!clientsLoading) {
+        if (clients && clients.length > 0) {
+          const firstClient = clients[0]!;
+          router.replace(`/${firstClient.slug}`);
+        } else if (
+          session?.user?.globalRole === "SYSTEM_ADMIN" ||
+          session?.user?.role === "ORG_ADMIN"
+        ) {
+          router.replace("/admin");
+        } else {
+          router.replace("/settings/profile");
+        }
       }
     }
-  }, [status, clientsLoading, clients, session, router]);
+  }, [status, isVerified, clientsLoading, clients, session, router]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">

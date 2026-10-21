@@ -10,6 +10,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@auth/core": "^0.37.2",
     "@centraxis/ai": "workspace:*",
     "@centraxis/api": "workspace:*",
     "@centraxis/auth": "workspace:*",

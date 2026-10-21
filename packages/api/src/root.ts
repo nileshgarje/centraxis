@@ -13,8 +13,10 @@ import { workItemRouter } from "./routers/work-item";
 import { commentRouter } from "./routers/comment";
 import { notificationRouter } from "./routers/notification";
 import { workflowRouter } from "./routers/workflow";
+import { authRouter } from "./routers/auth";
 
 export const appRouter = createTRPCRouter({
+  auth: authRouter,
   org: orgRouter,
   clients: clientRouter,
   project: projectRouter,

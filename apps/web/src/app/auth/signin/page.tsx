@@ -11,8 +11,10 @@ import {
   AlertCircle,
   Loader2,
   ShieldAlert,
+  KeyRound,
 } from "lucide-react";
 import { CentvisLogo, CentraxisLogo } from "@centraxis/ui";
+import { api } from "~/trpc/react";
 
 const QUICK_TEST_ACCOUNTS = [
   {
@@ -43,6 +45,8 @@ function SignInForm() {
   const [isSsoLoading, setIsSsoLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const sendCodeMutation = api.auth.sendCode.useMutation();
+
   const handleCredentialsLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -57,6 +61,19 @@ function SignInForm() {
       });
 
       if (result?.error) {
+        // If credentials login failed, send 8-digit verification code for new/unverified user
+        try {
+          const res = await sendCodeMutation.mutateAsync({ email });
+          if (res.success) {
+            router.push(
+              `/auth/verify-email?email=${encodeURIComponent(email)}`,
+            );
+            return;
+          }
+        } catch {
+          // Fall back to credential error if sendCode is forbidden
+        }
+
         setErrorMessage(
           "Invalid email or password. Verify credentials and try again.",
         );
@@ -67,6 +84,25 @@ function SignInForm() {
     } catch (err: any) {
       setErrorMessage(
         err?.message || "An unexpected authentication error occurred.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyNewUser = async () => {
+    if (!email) {
+      setErrorMessage("Please enter your email address to receive an 8-digit code.");
+      return;
+    }
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      await sendCodeMutation.mutateAsync({ email });
+      router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
+    } catch (err: any) {
+      setErrorMessage(
+        err?.message || "Failed to send 8-digit verification code.",
       );
     } finally {
       setIsLoading(false);
@@ -197,6 +233,19 @@ function SignInForm() {
                 </>
               )}
             </button>
+
+            {/* First time / New User Verification Link */}
+            <div className="flex items-center justify-center pt-1">
+              <button
+                type="button"
+                onClick={handleVerifyNewUser}
+                disabled={isLoading}
+                className="flex items-center space-x-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-500 disabled:opacity-50 transition"
+              >
+                <KeyRound className="h-3.5 w-3.5" />
+                <span>New user? Verify email with 8-digit code</span>
+              </button>
+            </div>
           </form>
 
           {/* Quick-Fill Seeded Accounts */}
