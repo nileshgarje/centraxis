@@ -7,24 +7,18 @@ import {
   scrumMasterProcedure,
   adminProcedure,
 } from "../trpc";
+import { resolveValidOrgId } from "../services/organization";
 
 export const clientRouter = createTRPCRouter({
   /**
    * List all clients accessible to the current user with assigned projects and members
    */
   list: protectedProcedure.query(async ({ ctx }) => {
-    let orgId = ctx.session.user.organizationId;
-    if (!orgId) {
-      const user = await ctx.db.user.findUnique({
-        where: { id: ctx.session.user.id },
-        select: { organizationId: true },
-      });
-      orgId = user?.organizationId ?? null;
-    }
-
-    if (!orgId) {
-      return [];
-    }
+    const orgId = await resolveValidOrgId(
+      ctx.db,
+      ctx.session.user.id,
+      ctx.session.user.organizationId,
+    );
 
     const isSystemAdmin =
       ctx.session.user.globalRole === "SYSTEM_ADMIN" ||
@@ -214,34 +208,11 @@ export const clientRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      let orgId = ctx.session.user.organizationId;
-      if (!orgId) {
-        const user = await ctx.db.user.findUnique({
-          where: { id: ctx.session.user.id },
-          select: { organizationId: true },
-        });
-        orgId = user?.organizationId ?? null;
-      }
-
-      if (!orgId) {
-        const firstOrg = await ctx.db.organization.findFirst({
-          orderBy: { createdAt: "asc" },
-        });
-        if (firstOrg) {
-          orgId = firstOrg.id;
-          await ctx.db.user.update({
-            where: { id: ctx.session.user.id },
-            data: { organizationId: firstOrg.id },
-          });
-        }
-      }
-
-      if (!orgId) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "User must belong to an organization to create clients.",
-        });
-      }
+      const orgId = await resolveValidOrgId(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.organizationId,
+      );
 
       let baseSlug = (
         input.slug?.trim() ||
@@ -296,6 +267,12 @@ export const clientRouter = createTRPCRouter({
           contactEmail: input.contactEmail?.trim() || null,
           logo: input.logo?.trim() || null,
           orgId,
+          members: {
+            create: {
+              userId: ctx.session.user.id,
+              role: "CLIENT_ADMIN",
+            },
+          },
         },
       });
     }),

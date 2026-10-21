@@ -6,6 +6,7 @@ import {
   protectedProcedure,
   scrumMasterProcedure,
 } from "../trpc";
+import { resolveValidOrgId } from "../services/organization";
 
 export const projectRouter = createTRPCRouter({
   /**
@@ -424,20 +425,27 @@ export const projectRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      let orgId = ctx.session.user.organizationId;
-      if (!orgId) {
-        const user = await ctx.db.user.findUnique({
-          where: { id: ctx.session.user.id },
-          select: { organizationId: true },
+      let orgId: string;
+      if (input.clientId) {
+        const client = await ctx.db.client.findUnique({
+          where: { id: input.clientId },
+          select: { orgId: true },
         });
-        orgId = user?.organizationId ?? null;
-      }
-
-      if (!orgId) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "User must belong to an organization to create projects.",
-        });
+        if (client?.orgId) {
+          orgId = client.orgId;
+        } else {
+          orgId = await resolveValidOrgId(
+            ctx.db,
+            ctx.session.user.id,
+            ctx.session.user.organizationId,
+          );
+        }
+      } else {
+        orgId = await resolveValidOrgId(
+          ctx.db,
+          ctx.session.user.id,
+          ctx.session.user.organizationId,
+        );
       }
 
       const existing = await ctx.db.project.findUnique({
@@ -488,20 +496,27 @@ export const projectRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      let orgId = ctx.session.user.organizationId;
-      if (!orgId) {
-        const user = await ctx.db.user.findUnique({
-          where: { id: ctx.session.user.id },
-          select: { organizationId: true },
+      let orgId: string;
+      if (input.clientId) {
+        const client = await ctx.db.client.findUnique({
+          where: { id: input.clientId },
+          select: { orgId: true },
         });
-        orgId = user?.organizationId ?? null;
-      }
-
-      if (!orgId) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "User must belong to an organization to create projects.",
-        });
+        if (client?.orgId) {
+          orgId = client.orgId;
+        } else {
+          orgId = await resolveValidOrgId(
+            ctx.db,
+            ctx.session.user.id,
+            ctx.session.user.organizationId,
+          );
+        }
+      } else {
+        orgId = await resolveValidOrgId(
+          ctx.db,
+          ctx.session.user.id,
+          ctx.session.user.organizationId,
+        );
       }
 
       const existing = await ctx.db.project.findUnique({
