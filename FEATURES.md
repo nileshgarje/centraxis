@@ -265,9 +265,12 @@ Centraxis provides comprehensive sub-task lifecycle management directly within t
 ### Sub-Task Hierarchy & Execution
 
 - **Parent-Child Linkage**: Any Story, Feature, or Epic can nest multiple child sub-tasks linked via the `parentId` relational hierarchy in Prisma.
+- **Identical Full Edit Form**: Clicking on any sub-task title opens it in edit mode within the `WorkItemDrawer` (or full view page), granting sub-tasks the identical rich editing form as standard work items: Title, Issue Type selector, Status with workflow transitions, Priority, Assignee, Sprint, Story Points, Markdown Description editor, Acceptance Criteria, and Comment/Discussion Stream.
+- **Open in New Tab & Deep-Linking**: Every sub-task row in `SubTasksSection` features a direct deep link (`/[clientSlug]/[itemKey]`, e.g. `/client-apex/CTX-6`) with an external link icon opening in a new tab. In addition, the drawer header provides an "Open in new tab" link for sub-tasks.
+- **Parent Navigation & Back Stack**: Sub-task edit mode displays a clickable "Subtask of [Parent Key: Title]" banner and a header `← Back` button to effortlessly return to the parent work item in the drawer while preserving state.
 - **Roll-Up Metrics**: Header progress bar visually displays completion percentage (`X/Y Done (Z%)`) alongside an animated fill bar that transitions smoothly from slate to emerald.
 - **Interactive Checkbox Controls**: Click checkbox icons to instantaneously toggle sub-tasks between `TODO` and `DONE`, automatically striking through text and updating roll-up counts.
-- **Inline Title Editing**: Click on any sub-task title to enter inline edit mode and modify the title with instant keyboard confirmation (`Enter` to save, `Escape` to cancel).
+- **Inline Title Editing**: Quick title edit button (`Edit2`) allows inline renaming with instant keyboard confirmation (`Enter` to save, `Escape` to cancel).
 - **Scoped Assignee Reassignment**: Quick avatar dropdown allows assigning or re-assigning sub-tasks exclusively to users authorized on that project or client.
 - **Rapid Keyboard Entry**: Type in the `+ Add a subtask (press Enter)...` input and hit `Enter` to create sub-tasks seamlessly without losing focus.
 

@@ -19,6 +19,7 @@ import {
   ChevronRight,
   ExternalLink,
   GitFork,
+  ArrowLeft,
 } from "lucide-react";
 import { api } from "~/trpc/react";
 import { WorkflowViewerDialog } from "../workflow/workflow-viewer-dialog";
@@ -145,9 +146,40 @@ export function WorkItemDrawer({
 }: WorkItemDrawerProps) {
   const utils = api.useUtils();
 
+  const [activeItemId, setActiveItemId] = useState<string | null>(itemId);
+  const [parentHistory, setParentHistory] = useState<string[]>([]);
+
+  useEffect(() => {
+    setActiveItemId(itemId);
+    setParentHistory([]);
+  }, [itemId, isOpen]);
+
+  const handleOpenSubTask = (subTaskId: string) => {
+    if (activeItemId) {
+      setParentHistory((prev) => [...prev, activeItemId]);
+    }
+    setActiveItemId(subTaskId);
+  };
+
+  const handleBackToParent = (targetId?: string) => {
+    const destinationId =
+      targetId ||
+      (parentHistory.length > 0
+        ? parentHistory[parentHistory.length - 1]
+        : item?.parent?.id);
+    if (destinationId) {
+      setActiveItemId(destinationId);
+      setParentHistory((prev) => prev.filter((id) => id !== destinationId));
+    } else {
+      onClose();
+    }
+  };
+
+  const currentId = activeItemId || itemId;
+
   const { data: item, isLoading } = api.backlog.getItem.useQuery(
-    { id: itemId! },
-    { enabled: !!itemId && isOpen },
+    { id: currentId! },
+    { enabled: !!currentId && isOpen },
   );
 
   const { data: projectSprints } = api.sprint.list.useQuery(
@@ -164,6 +196,9 @@ export function WorkItemDrawer({
 
   // Local editable states
   const [title, setTitle] = useState("");
+  const [type, setType] = useState<
+    "STORY" | "TASK" | "BUG" | "FEATURE" | "EPIC"
+  >("STORY");
   const [description, setDescription] = useState("");
   const [acceptanceCriteria, setAcceptanceCriteria] = useState("");
   const [status, setStatus] = useState<string>("TODO");
@@ -190,8 +225,8 @@ export function WorkItemDrawer({
 
   // Workflow transitions query
   const { data: workflowData } = api.workflow.getAvailableTransitions.useQuery(
-    { workItemId: itemId! },
-    { enabled: !!itemId && isOpen },
+    { workItemId: currentId! },
+    { enabled: !!currentId && isOpen },
   );
 
   // Filter status options to only valid target statuses according to workflow
@@ -218,6 +253,7 @@ export function WorkItemDrawer({
   useEffect(() => {
     if (item) {
       setTitle(item.title);
+      setType(item.type as any);
       setDescription(item.description || "");
       setAcceptanceCriteria(item.acceptanceCriteria || "");
       setStatus(item.status);
@@ -250,7 +286,8 @@ export function WorkItemDrawer({
       setSaveSuccess(true);
       setErrorMessage(null);
       setTimeout(() => setSaveSuccess(false), 2000);
-      void utils.backlog.getItem.invalidate({ id: itemId! });
+      void utils.backlog.getItem.invalidate({ id: currentId! });
+      void utils.workItem.getSubTasks.invalidate();
       void utils.backlog.getItems.invalidate();
       void utils.backlog.getTree.invalidate();
       void utils.board.getBoardData.invalidate();
@@ -271,10 +308,11 @@ export function WorkItemDrawer({
     storyPoints?: number | null;
     assigneeId?: string | null;
     sprintId?: string | null;
+    type?: any;
   }) => {
-    if (!itemId) return;
+    if (!currentId) return;
     updateMutation.mutate({
-      id: itemId,
+      id: currentId,
       ...fields,
     });
   };
@@ -300,6 +338,20 @@ export function WorkItemDrawer({
         {/* Header Bar */}
         <div className="flex items-center justify-between border-b border-border pl-6 pr-14 py-3.5 bg-background bg-white dark:bg-slate-950 shrink-0 min-h-[57px]">
           <div className="flex items-center space-x-3">
+            {(parentHistory.length > 0 || !!item?.parent) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                type="button"
+                onClick={() => handleBackToParent()}
+                className="h-7 text-xs font-semibold gap-1 px-2 text-muted-foreground hover:text-foreground"
+                title="Back to parent work item"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span>Back</span>
+              </Button>
+            )}
+
             {item &&
               (fullViewUrl ? (
                 <a
@@ -412,6 +464,61 @@ export function WorkItemDrawer({
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+            {/* Parent breadcrumb & Issue Type Row */}
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              {item.parent && (
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-primary/5 px-2.5 py-1 rounded border border-primary/20">
+                  <Layers className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span>
+                    {item.type === "TASK" || item.type === "BUG"
+                      ? "Subtask of"
+                      : "Child of"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleBackToParent(item.parent?.id)}
+                    className="font-mono font-bold text-primary hover:underline"
+                    title={`View parent ${item.parent.key}`}
+                  >
+                    {item.parent.key}: {item.parent.title}
+                  </button>
+                </div>
+              )}
+
+              {/* Issue Type Selector */}
+              <Select
+                value={type}
+                onValueChange={(val) => {
+                  const newType = val as any;
+                  setType(newType);
+                  handleSaveField({ type: newType });
+                }}
+              >
+                <SelectTrigger className="h-7 w-auto gap-1.5 text-xs font-semibold">
+                  {(() => {
+                    const cfg =
+                      ITEM_TYPES.find((t) => t.type === type) ?? ITEM_TYPES[0];
+                    const Icon = cfg.icon;
+                    return <Icon className="h-3.5 w-3.5 text-primary" />;
+                  })()}
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ITEM_TYPES.map((t) => {
+                    const Icon = t.icon;
+                    return (
+                      <SelectItem key={t.type} value={t.type}>
+                        <div className="flex items-center space-x-2">
+                          <Icon className="h-3.5 w-3.5" />
+                          <span>{t.label}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Title Input */}
             <div>
               <input
@@ -604,7 +711,16 @@ export function WorkItemDrawer({
             </div>
 
             {/* Sub-Tasks Management with Progress Bar, Checkboxes & Inline Quick-Add */}
-            <SubTasksSection parentId={item.id} projectId={targetProjectId!} />
+            {!(
+              item.parent &&
+              (item.type === "TASK" || item.type === "BUG")
+            ) && (
+              <SubTasksSection
+                parentId={item.id}
+                projectId={targetProjectId!}
+                onOpenSubTask={handleOpenSubTask}
+              />
+            )}
 
             {/* Real Comments Stream with @Mentions & In-App Notifications */}
             <CommentSection workItemId={item.id} projectId={targetProjectId!} />
@@ -612,14 +728,14 @@ export function WorkItemDrawer({
         )}
 
         {/* Task Workflow Interactive Graph Viewer Dialog */}
-        {itemId && (
+        {currentId && (
           <WorkflowViewerDialog
             open={isWorkflowModalOpen}
             onOpenChange={setIsWorkflowModalOpen}
-            workItemId={itemId}
+            workItemId={currentId}
             itemKey={item?.key}
             onTransitionSuccess={() => {
-              void utils.backlog.getItem.invalidate({ id: itemId });
+              void utils.backlog.getItem.invalidate({ id: currentId });
               void utils.backlog.getItems.invalidate();
               void utils.board.getBoardData.invalidate();
             }}

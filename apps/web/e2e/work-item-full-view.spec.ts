@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Work Item Full View & Open in New Tab", () => {
+test.describe("Work Item & Sub-Task Full View and Edit Form", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/login");
     if (page.url().includes("/login") || page.url().includes("/auth/signin")) {
@@ -16,7 +16,7 @@ test.describe("Work Item Full View & Open in New Tab", () => {
     }
   });
 
-  test("should render the full view of a work item at /[clientSlug]/[itemKey]", async ({
+  test("1. should render the full view of a work item at /[clientSlug]/[itemKey]", async ({
     page,
   }) => {
     // Navigate directly to CTX-1 under client-apex
@@ -60,7 +60,7 @@ test.describe("Work Item Full View & Open in New Tab", () => {
     expect(page.url()).toContain("/client-apex/CTX/board");
   });
 
-  test("should provide open in new tab option on board card and in detail sheet", async ({
+  test("2. should provide open in new tab option on board card and in detail sheet", async ({
     page,
   }) => {
     await page.goto("/client-apex/CTX/board");
@@ -86,5 +86,77 @@ test.describe("Work Item Full View & Open in New Tab", () => {
       "/client-apex/CTX-1",
     );
     expect(await openInNewTabBtn.getAttribute("target")).toBe("_blank");
+  });
+
+  test("3. sub-tasks should have same edit form like work items and support open in new tab", async ({
+    page,
+  }) => {
+    // Open Story 1 (CTX-3) directly which has sub-tasks (CTX-5, CTX-6)
+    await page.goto("/client-apex/CTX-3");
+    await expect(page.getByText("Sub-Tasks & Checklist")).toBeVisible();
+    await expect(page.locator("text=CTX-6").first()).toBeVisible();
+
+    // Verify sub-task has "open in new tab" link
+    const subTaskNewTabLink = page
+      .locator('a[href="/client-apex/CTX-6"]')
+      .first();
+    await expect(subTaskNewTabLink).toBeVisible();
+    expect(await subTaskNewTabLink.getAttribute("target")).toBe("_blank");
+
+    // Click on the sub-task title to open it in edit mode
+    await page
+      .locator("text=Fix session callback missing active organizationId")
+      .first()
+      .click();
+
+    // Verify the sub-task now has the exact same edit form as a work item in the drawer:
+    const drawer = page.locator('[role="dialog"]');
+    await expect(drawer).toBeVisible();
+
+    // 1. Back button to return to parent
+    await expect(drawer.getByRole("button", { name: "Back" })).toBeVisible();
+
+    // 2. Subtask of parent banner
+    await expect(drawer.getByText("Subtask of")).toBeVisible();
+    await expect(drawer.getByRole("button", { name: /CTX-3/ })).toBeVisible();
+
+    // 3. Edit fields
+    await expect(
+      drawer.locator(
+        'input[value="Fix session callback missing active organizationId"]',
+      ),
+    ).toBeVisible();
+    await expect(
+      drawer.getByText("Description", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      drawer.getByText("Acceptance Criteria", { exact: false }),
+    ).toBeVisible();
+    await expect(drawer.getByText("Assignee", { exact: true })).toBeVisible();
+    await expect(drawer.getByText("Priority", { exact: true })).toBeVisible();
+
+    // 4. Sub-task drawer has "Open in new tab" button pointing to CTX-6
+    const subtaskDrawerNewTab = drawer.getByRole("link", {
+      name: "Open in new tab",
+    });
+    await expect(subtaskDrawerNewTab).toBeVisible();
+    expect(await subtaskDrawerNewTab.getAttribute("href")).toBe(
+      "/client-apex/CTX-6",
+    );
+
+    // 5. Test navigating back to parent
+    await drawer.getByRole("button", { name: "Back" }).click();
+    await expect(page.locator("text=CTX-3").first()).toBeVisible();
+
+    // 6. Navigate directly to sub-task in full page view (/client-apex/CTX-6)
+    await page.goto("/client-apex/CTX-6");
+    await expect(page.locator("text=CTX-6").first()).toBeVisible();
+    await expect(page.getByText("Subtask of")).toBeVisible();
+    await expect(
+      page.locator(
+        'input[value="Fix session callback missing active organizationId"]',
+      ),
+    ).toBeVisible();
+    await expect(page.getByText("Description", { exact: true })).toBeVisible();
   });
 });

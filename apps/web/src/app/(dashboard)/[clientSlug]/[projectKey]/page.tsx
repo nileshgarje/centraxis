@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { api } from "~/trpc/react";
 import { WorkflowViewerDialog } from "~/components/workflow/workflow-viewer-dialog";
+import { WorkItemDrawer } from "~/components/work-items/work-item-drawer";
 import {
   MarkdownEditor,
   Button,
@@ -186,6 +187,7 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isWorkflowModalOpen, setIsWorkflowModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [drawerSubTaskId, setDrawerSubTaskId] = useState<string | null>(null);
 
   // Synchronize state when work item data loads
   useEffect(() => {
@@ -523,7 +525,11 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
                     href={`/${clientSlug}/${item.parent.key}`}
                     className="flex items-center space-x-1 text-xs text-muted-foreground hover:text-primary transition"
                   >
-                    <span>Subtask of</span>
+                    <span>
+                      {item.type === "TASK" || item.type === "BUG"
+                        ? "Subtask of"
+                        : "Child of"}
+                    </span>
                     <span className="font-mono font-medium underline">
                       {item.parent.key}
                     </span>
@@ -580,9 +586,18 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
             </div>
 
             {/* Sub-tasks Section */}
-            <div className="rounded-xl border border-border bg-card p-6 shadow-2xs">
-              <SubTasksSection parentId={item.id} projectId={item.projectId} />
-            </div>
+            {!(
+              item.parent &&
+              (item.type === "TASK" || item.type === "BUG")
+            ) && (
+              <div className="rounded-xl border border-border bg-card p-6 shadow-2xs">
+                <SubTasksSection
+                  parentId={item.id}
+                  projectId={item.projectId}
+                  onOpenSubTask={(subTaskId) => setDrawerSubTaskId(subTaskId)}
+                />
+              </div>
+            )}
 
             {/* Comments & Discussion Feed */}
             <div className="rounded-xl border border-border bg-card p-6 shadow-2xs">
@@ -821,6 +836,16 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
             void utils.backlog.getItems.invalidate();
             void utils.board.getBoardData.invalidate();
           }}
+        />
+      )}
+
+      {/* Sub-Task Drawer when opened in edit mode */}
+      {drawerSubTaskId && item && (
+        <WorkItemDrawer
+          itemId={drawerSubTaskId}
+          isOpen={!!drawerSubTaskId}
+          onClose={() => setDrawerSubTaskId(null)}
+          projectId={item.projectId}
         />
       )}
     </div>

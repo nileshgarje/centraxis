@@ -10,7 +10,7 @@ import {
   User,
   Loader2,
   Edit2,
-  ChevronDown,
+  ExternalLink,
 } from "lucide-react";
 import {
   Button,
@@ -27,14 +27,35 @@ import {
   DropdownMenuLabel,
 } from "@centraxis/ui";
 import { api } from "~/trpc/react";
+import { useProject } from "~/context/project-context";
 
 interface SubTasksSectionProps {
   parentId: string;
   projectId: string;
+  onOpenSubTask?: (subTaskId: string) => void;
 }
 
-export function SubTasksSection({ parentId, projectId }: SubTasksSectionProps) {
+const PRIORITY_STYLES: Record<string, string> = {
+  URGENT: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
+  HIGH: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+  MEDIUM: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+  LOW: "bg-muted text-muted-foreground border-border",
+};
+
+export function SubTasksSection({
+  parentId,
+  projectId,
+  onOpenSubTask,
+}: SubTasksSectionProps) {
   const utils = api.useUtils();
+
+  let clientSlug: string | undefined;
+  try {
+    const proj = useProject();
+    clientSlug = proj.clientSlug;
+  } catch {
+    // If used outside ProjectProvider
+  }
 
   const [newTitle, setNewTitle] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -167,18 +188,27 @@ export function SubTasksSection({ parentId, projectId }: SubTasksSectionProps) {
             return (
               <div
                 key={task.id}
-                className="group flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-border bg-card hover:bg-muted/30 transition text-xs"
+                onClick={() => {
+                  if (editingId !== task.id && onOpenSubTask) {
+                    onOpenSubTask(task.id);
+                  }
+                }}
+                className={`group flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-border bg-card hover:bg-muted/30 hover:border-primary/40 transition text-xs ${
+                  onOpenSubTask ? "cursor-pointer" : ""
+                }`}
               >
                 {/* Left: Checkbox & Key & Title */}
                 <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                  {/* Status Toggle Checkbox */}
                   <button
                     type="button"
-                    onClick={() =>
+                    onClick={(e) => {
+                      e.stopPropagation();
                       toggleStatusMutation.mutate({
                         id: task.id,
                         status: isDone ? "TODO" : "DONE",
-                      })
-                    }
+                      });
+                    }}
                     disabled={toggleStatusMutation.isPending}
                     className="focus:outline-none shrink-0"
                     title={isDone ? "Mark as To Do" : "Mark as Done"}
@@ -190,18 +220,36 @@ export function SubTasksSection({ parentId, projectId }: SubTasksSectionProps) {
                     )}
                   </button>
 
-                  <span className="font-mono text-[11px] font-bold text-primary shrink-0">
-                    {task.key}
-                  </span>
+                  {/* Subtask Key Badge with New Tab Link */}
+                  {clientSlug ? (
+                    <a
+                      href={`/${clientSlug}/${task.key}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      title={`Open ${task.key} in new tab`}
+                      className="font-mono text-[11px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-1.5 py-0.5 rounded border border-primary/20 shrink-0 inline-flex items-center gap-1 group/link transition"
+                    >
+                      <span>{task.key}</span>
+                      <ExternalLink className="h-2.5 w-2.5 opacity-60 group-hover/link:opacity-100" />
+                    </a>
+                  ) : (
+                    <span className="font-mono text-[11px] font-bold text-primary shrink-0">
+                      {task.key}
+                    </span>
+                  )}
 
+                  {/* Title or Inline Edit */}
                   {editingId === task.id ? (
                     <input
                       type="text"
                       value={editTitle}
                       autoFocus
+                      onClick={(e) => e.stopPropagation()}
                       onChange={(e) => setEditTitle(e.target.value)}
                       onBlur={() => handleSaveInlineTitle(task.id)}
                       onKeyDown={(e) => {
+                        e.stopPropagation();
                         if (e.key === "Enter") handleSaveInlineTitle(task.id);
                         if (e.key === "Escape") setEditingId(null);
                       }}
@@ -209,24 +257,50 @@ export function SubTasksSection({ parentId, projectId }: SubTasksSectionProps) {
                     />
                   ) : (
                     <span
-                      onClick={() => {
-                        setEditingId(task.id);
-                        setEditTitle(task.title);
-                      }}
-                      className={`truncate cursor-pointer hover:underline flex-1 ${
+                      className={`truncate flex-1 ${
                         isDone
                           ? "line-through text-muted-foreground opacity-75"
                           : "text-foreground font-medium"
-                      }`}
-                      title="Click to edit title"
+                      } ${onOpenSubTask ? "group-hover:text-primary transition" : ""}`}
+                      title={
+                        onOpenSubTask ? "Click to open in edit mode" : undefined
+                      }
                     >
                       {task.title}
                     </span>
                   )}
+
+                  {/* Quick Inline Rename Icon */}
+                  {editingId !== task.id && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingId(task.id);
+                        setEditTitle(task.title);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition p-1 text-muted-foreground hover:text-foreground rounded"
+                      title="Quick inline rename"
+                    >
+                      <Edit2 className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
 
-                {/* Right: Quick Assignee Selector, Status Badge, Delete */}
-                <div className="flex items-center gap-2 shrink-0">
+                {/* Right: Quick Assignee Selector, Priority Badge, Status Badge, Open in New Tab, Delete */}
+                <div
+                  className="flex items-center gap-2 shrink-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Priority Badge */}
+                  <span
+                    className={`rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${
+                      PRIORITY_STYLES[task.priority] ?? PRIORITY_STYLES.MEDIUM
+                    }`}
+                  >
+                    {task.priority}
+                  </span>
+
                   {/* Assignee Quick Reassign Dropdown */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -305,6 +379,19 @@ export function SubTasksSection({ parentId, projectId }: SubTasksSectionProps) {
                   >
                     {task.status}
                   </Badge>
+
+                  {/* Open in New Tab Button */}
+                  {clientSlug && (
+                    <a
+                      href={`/${clientSlug}/${task.key}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="opacity-0 group-hover:opacity-100 transition p-1 text-muted-foreground hover:text-primary rounded hover:bg-muted"
+                      title="Open sub-task in new tab"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  )}
 
                   {/* Delete Button */}
                   <button
