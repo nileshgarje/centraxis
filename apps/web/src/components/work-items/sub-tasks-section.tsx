@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useSession } from "next-auth/react";
 import {
   CheckSquare,
   Plus,
@@ -16,6 +17,7 @@ import {
   Layers,
   Zap,
 } from "lucide-react";
+import { DueDateBadge } from "./due-date-badge";
 import {
   Button,
   Input,
@@ -116,6 +118,7 @@ export function SubTasksSection({
   projectId,
   onOpenSubTask,
 }: SubTasksSectionProps) {
+  const { data: session } = useSession();
   const utils = api.useUtils();
 
   let clientSlug: string | undefined;
@@ -364,6 +367,15 @@ export function SubTasksSection({
                   className="flex items-center gap-2 shrink-0"
                   onClick={(e) => e.stopPropagation()}
                 >
+                  {/* Due Date Badge */}
+                  {task.dueDate && (
+                    <DueDateBadge
+                      dueDate={task.dueDate}
+                      status={task.status}
+                      size="sm"
+                    />
+                  )}
+
                   {/* Priority Badge */}
                   <span
                     className={`rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${
@@ -405,6 +417,20 @@ export function SubTasksSection({
                       <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                         Reassign Sub-Task
                       </DropdownMenuLabel>
+                      {session?.user?.id &&
+                        task.assigneeId !== session.user.id && (
+                          <DropdownMenuItem
+                            onClick={() =>
+                              updateMutation.mutate({
+                                id: task.id,
+                                assigneeId: session.user.id,
+                              })
+                            }
+                            className="text-xs font-semibold text-primary cursor-pointer"
+                          >
+                            Assign to me
+                          </DropdownMenuItem>
+                        )}
                       <DropdownMenuItem
                         onClick={() =>
                           updateMutation.mutate({

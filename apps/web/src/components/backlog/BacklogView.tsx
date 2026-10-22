@@ -29,6 +29,7 @@ import {
 import { WorkItemDrawer } from "../work-items/work-item-drawer";
 import { CompleteSprintDialog } from "../sprints/complete-sprint-dialog";
 import { SubTaskTypeIcon } from "../work-items/sub-tasks-section";
+import { DueDateBadge } from "../work-items/due-date-badge";
 import {
   Button,
   Badge,
@@ -579,6 +580,15 @@ export function BacklogView({
                                         {item.priority}
                                       </Badge>
 
+                                      {/* Due Date Badge */}
+                                      {item.dueDate && (
+                                        <DueDateBadge
+                                          dueDate={item.dueDate}
+                                          status={item.status}
+                                          size="sm"
+                                        />
+                                      )}
+
                                       {/* Points subtle pill */}
                                       <div className="w-12 text-center shrink-0">
                                         {item.storyPoints !== null ? (
@@ -646,6 +656,13 @@ export function BacklogView({
                                               >
                                                 {child.type}
                                               </Badge>
+                                              {child.dueDate && (
+                                                <DueDateBadge
+                                                  dueDate={child.dueDate}
+                                                  status={child.status}
+                                                  size="sm"
+                                                />
+                                              )}
                                               <div className="w-12 text-center">
                                                 {child.storyPoints !== null && (
                                                   <span className="text-[10px] font-mono text-muted-foreground">
@@ -824,6 +841,15 @@ export function BacklogView({
                                   {item.priority}
                                 </Badge>
 
+                                {/* Due Date Badge */}
+                                {item.dueDate && (
+                                  <DueDateBadge
+                                    dueDate={item.dueDate}
+                                    status={item.status}
+                                    size="sm"
+                                  />
+                                )}
+
                                 <div className="w-12 text-center shrink-0">
                                   {item.storyPoints !== null ? (
                                     <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground">
@@ -884,6 +910,13 @@ export function BacklogView({
                                         >
                                           {child.type}
                                         </Badge>
+                                        {child.dueDate && (
+                                          <DueDateBadge
+                                            dueDate={child.dueDate}
+                                            status={child.status}
+                                            size="sm"
+                                          />
+                                        )}
                                         <div className="w-12 text-center">
                                           {child.storyPoints !== null && (
                                             <span className="text-[10px] font-mono text-muted-foreground">

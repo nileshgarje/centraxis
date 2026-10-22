@@ -111,6 +111,7 @@ export const workItemRouter = createTRPCRouter({
           .default(WorkItemPriority.MEDIUM),
         assigneeId: z.string().nullable().optional(),
         storyPoints: z.number().nullable().optional(),
+        dueDate: z.coerce.date().nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -172,6 +173,7 @@ export const workItemRouter = createTRPCRouter({
           priority: input.priority,
           status: WorkItemStatus.TODO,
           storyPoints: input.storyPoints,
+          dueDate: input.dueDate,
           rankOrder: nextRank,
           parentId: parent.id,
           projectId: parent.projectId,
@@ -233,6 +235,7 @@ export const workItemRouter = createTRPCRouter({
         title: z.string().min(1).optional(),
         assigneeId: z.string().nullable().optional(),
         priority: z.nativeEnum(WorkItemPriority).optional(),
+        dueDate: z.coerce.date().nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

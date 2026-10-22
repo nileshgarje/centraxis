@@ -360,6 +360,7 @@ model WorkItem {
   stateSlug          String?          @default("todo")
   priority           WorkItemPriority @default(MEDIUM)
   storyPoints        Float?
+  dueDate            DateTime?
   rankOrder          Float            @default(0)
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt

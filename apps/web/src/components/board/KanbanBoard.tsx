@@ -20,6 +20,7 @@ import {
 import { api } from "~/trpc/react";
 import { WorkItemDrawer } from "../work-items/work-item-drawer";
 import { CompleteSprintDialog } from "../sprints/complete-sprint-dialog";
+import { DueDateBadge } from "../work-items/due-date-badge";
 import { Button, Badge, toast } from "@centraxis/ui";
 import { useProject } from "~/context/project-context";
 
@@ -32,6 +33,7 @@ interface WorkItemCard {
   status: string;
   priority: string;
   storyPoints?: number | null;
+  dueDate?: Date | string | null;
   rankOrder: number;
   assignee?: {
     id: string;
@@ -420,6 +422,14 @@ export function KanbanBoard({
                                     >
                                       {card.priority}
                                     </span>
+
+                                    {card.dueDate && (
+                                      <DueDateBadge
+                                        dueDate={card.dueDate}
+                                        status={card.status}
+                                        size="sm"
+                                      />
+                                    )}
                                   </div>
 
                                   {card.storyPoints !== null && (

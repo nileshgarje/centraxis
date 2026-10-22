@@ -26,6 +26,7 @@ This document provides a comprehensive overview of all features and architectura
 - [18. 8-Digit Email Verification Access Gate](#18-8-digit-email-verification-access-gate)
 - [19. Centvis Brand Identity & UI Standardization](#19-centvis-brand-identity--ui-standardization)
 - [20. Dedicated Full Work Item View & New Tab Option](#20-dedicated-full-work-item-view--new-tab-option)
+- [21. Work Item Due Dates & "Assign to Me" Shortcut](#21-work-item-due-dates--assign-to-me-shortcut)
 
 ---
 
@@ -126,6 +127,7 @@ The board (`/[clientSlug]/[projectKey]/board`) is built with `@hello-pangea/dnd`
   - Item Type badge (Story, Task, Bug, Feature, Epic) with distinctive icons.
   - Issue key badge with hover copy trigger (e.g. `CTX-12`).
   - Priority indicator (`LOW`, `MEDIUM`, `HIGH`, `URGENT`).
+  - Due Date badge with dynamic color-coding (red for overdue, amber for <= 2 days, muted for future).
   - Fibonacci Story Points badge.
   - Subtask completion progress pill (e.g. `1/3 subtasks`).
   - Assignee avatar with fallback initials.
@@ -474,5 +476,36 @@ The dedicated full view delivers an expansive Jira/Linear-inspired workspace:
   - Complete **Activity & Discussion Feed** (`CommentSection`) with @mentions and Markdown formatting.
 - **Attributes Sidebar (4 Columns)**:
   - **Status Card**: Governed strictly by the active state-machine workflow engine.
-  - **Attributes Card**: Scoped Assignee selector, Priority selector, Fibonacci Story Points, and Sprint selector.
+  - **Attributes Card**: Scoped Assignee selector with "Assign to me" shortcut, Priority selector, Fibonacci Story Points, Sprint selector, and Due Date picker.
   - **History & People Card**: Reporter profile, creation timestamp, and last updated timestamp.
+
+---
+
+## 21. Work Item Due Dates & "Assign to Me" Shortcut
+
+Centraxis provides comprehensive due date tracking, intelligent visual timeline badges, and rapid one-click self-assignment across work items and sub-tasks:
+
+### Dynamic Due Date Badges & Color Coding
+
+- **Overdue (`diffDays < 0`)**:
+  - High-visibility red alert badge (`bg-red-500/10 text-red-600 border-red-500/30`) with an `AlertCircle` icon.
+  - Dynamic label indicating exact days overdue (e.g. `1d overdue (Oct 20)`, `5d overdue`).
+- **Due Soon (`diffDays <= 2`)**:
+  - Warning amber badge (`bg-amber-500/10 text-amber-600 border-amber-500/30`) with a `Clock` icon.
+  - Contextual status text (e.g. `Due today`, `Due tomorrow`, `Due in 2d`).
+- **Normal / Future Due Date (`diffDays > 2`)**:
+  - Subtle slate/muted badge (`bg-muted/60 text-muted-foreground border-border`) with a `Calendar` icon displaying the formatted target date (e.g. `Oct 28`).
+- **Completed Items (`status === "DONE"`)**:
+  - Soft muted badge with strikethrough styling to indicate timely delivery.
+
+### Everywhere Visibility
+
+- **Interactive Kanban Board**: Due date badges appear directly on board cards alongside priority badges, giving teams immediate visual awareness of approaching deadlines during daily standups.
+- **Sprint Backlog**: Displayed alongside item priority and story points for both sprint backlog items, backlog pool items, and expanded sub-task rows.
+- **Drawer & Full View Header**: Due date badges are pinned prominently in the header bar next to the issue key and status selector.
+
+### One-Click "Assign to Me"
+
+- **Context-Aware Quick Action**: When viewing any unassigned work item or an item assigned to someone else, an **"Assign to me"** shortcut appears directly beside the Assignee label in the `WorkItemDrawer`, `CreateItemDialog`, and full-page view.
+- **Sub-Task Quick Menu**: Sub-tasks also feature an "Assign to me" option inside their inline assignee dropdown menu.
+- **Automated State Sync**: Clicking the shortcut instantly provisions the session user ID, fires the tRPC update mutation, displays a "Saved" indicator, and smoothly hides the shortcut.

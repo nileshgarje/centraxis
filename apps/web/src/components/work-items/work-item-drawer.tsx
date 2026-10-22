@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import {
   Bookmark,
   CheckSquare,
@@ -23,6 +24,7 @@ import {
 } from "lucide-react";
 import { api } from "~/trpc/react";
 import { WorkflowViewerDialog } from "../workflow/workflow-viewer-dialog";
+import { DueDateBadge } from "./due-date-badge";
 import {
   MarkdownEditor,
   MarkdownRenderer,
@@ -204,7 +206,9 @@ export function WorkItemDrawer({
   const [status, setStatus] = useState<string>("TODO");
   const [priority, setPriority] = useState<string>("MEDIUM");
   const [storyPoints, setStoryPoints] = useState<number | null>(null);
+  const { data: session } = useSession();
   const [assigneeId, setAssigneeId] = useState<string>("");
+  const [dueDate, setDueDate] = useState<string>("");
   const [sprintId, setSprintId] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -260,6 +264,9 @@ export function WorkItemDrawer({
       setPriority(item.priority);
       setStoryPoints(item.storyPoints ?? null);
       setAssigneeId(item.assigneeId || "");
+      setDueDate(
+        item.dueDate ? new Date(item.dueDate).toISOString().split("T")[0]! : "",
+      );
       setSprintId(item.sprintId || "");
       setErrorMessage(null);
     }
@@ -307,6 +314,7 @@ export function WorkItemDrawer({
     priority?: any;
     storyPoints?: number | null;
     assigneeId?: string | null;
+    dueDate?: Date | null;
     sprintId?: string | null;
     type?: any;
   }) => {
@@ -389,6 +397,11 @@ export function WorkItemDrawer({
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Due Date Badge in Header */}
+            {dueDate && (
+              <DueDateBadge dueDate={dueDate} status={status} size="sm" />
+            )}
 
             {/* View Workflow Action Button */}
             <Button
@@ -536,12 +549,27 @@ export function WorkItemDrawer({
             </div>
 
             {/* Metadata Form Grid */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 rounded-lg border border-border bg-muted/30 p-3.5">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 rounded-lg border border-border bg-muted/30 p-3.5">
               {/* Assignee */}
               <div className="space-y-1.5">
-                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
-                  Assignee
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+                    Assignee
+                  </span>
+                  {session?.user?.id && assigneeId !== session.user.id && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAssigneeId(session.user.id);
+                        handleSaveField({ assigneeId: session.user.id });
+                      }}
+                      className="text-[10px] text-primary hover:underline font-semibold"
+                      title="Assign to me"
+                    >
+                      Assign to me
+                    </button>
+                  )}
+                </div>
                 <Select
                   value={assigneeId || "unassigned"}
                   onValueChange={(val) => {
@@ -665,6 +693,37 @@ export function WorkItemDrawer({
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Due Date */}
+              <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+                    Due Date
+                  </span>
+                  {dueDate && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDueDate("");
+                        handleSaveField({ dueDate: null });
+                      }}
+                      className="text-[10px] text-muted-foreground hover:text-destructive font-medium"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <input
+                  type="date"
+                  value={dueDate ? dueDate.split("T")[0] : ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setDueDate(val);
+                    handleSaveField({ dueDate: val ? new Date(val) : null });
+                  }}
+                  className="w-full h-8 text-xs font-medium rounded-md border border-input bg-background px-2 py-1 shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring text-foreground"
+                />
               </div>
             </div>
 

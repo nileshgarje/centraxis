@@ -3,6 +3,7 @@
 import React, { use, useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   Bookmark,
   CheckSquare,
@@ -26,6 +27,7 @@ import {
 import { api } from "~/trpc/react";
 import { WorkflowViewerDialog } from "~/components/workflow/workflow-viewer-dialog";
 import { WorkItemDrawer } from "~/components/work-items/work-item-drawer";
+import { DueDateBadge } from "~/components/work-items/due-date-badge";
 import {
   MarkdownEditor,
   Button,
@@ -169,6 +171,8 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
     { enabled: !!item?.id },
   );
 
+  const { data: session } = useSession();
+
   // Form states
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -177,6 +181,7 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
   const [priority, setPriority] = useState("MEDIUM");
   const [storyPoints, setStoryPoints] = useState<number | null>(null);
   const [assigneeId, setAssigneeId] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [sprintId, setSprintId] = useState("");
   const [type, setType] = useState<
     "STORY" | "TASK" | "BUG" | "FEATURE" | "EPIC"
@@ -199,6 +204,9 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
       setPriority(item.priority);
       setStoryPoints(item.storyPoints ?? null);
       setAssigneeId(item.assigneeId || "");
+      setDueDate(
+        item.dueDate ? new Date(item.dueDate).toISOString().split("T")[0]! : "",
+      );
       setSprintId(item.sprintId || "");
       setType(item.type as any);
       setErrorMessage(null);
@@ -261,6 +269,7 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
     priority?: any;
     storyPoints?: number | null;
     assigneeId?: string | null;
+    dueDate?: Date | null;
     sprintId?: string | null;
     type?: any;
   }) => {
@@ -520,6 +529,8 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
                   </SelectContent>
                 </Select>
 
+                {dueDate && <DueDateBadge dueDate={dueDate} status={status} />}
+
                 {item.parent && (
                   <Link
                     href={`/${clientSlug}/${item.parent.key}`}
@@ -634,6 +645,8 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
                   </SelectContent>
                 </Select>
 
+                {dueDate && <DueDateBadge dueDate={dueDate} status={status} />}
+
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
                   Allowed transitions are governed by the active{" "}
                   <button
@@ -658,10 +671,25 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
               <CardContent className="space-y-4">
                 {/* Assignee */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground flex items-center space-x-1.5">
-                    <User className="h-3.5 w-3.5" />
-                    <span>Assignee</span>
-                  </Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-medium text-muted-foreground flex items-center space-x-1.5">
+                      <User className="h-3.5 w-3.5" />
+                      <span>Assignee</span>
+                    </Label>
+                    {session?.user?.id && assigneeId !== session.user.id && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAssigneeId(session.user.id);
+                          handleSaveField({ assigneeId: session.user.id });
+                        }}
+                        className="text-[11px] text-primary hover:underline font-semibold"
+                        title="Assign to me"
+                      >
+                        Assign to me
+                      </button>
+                    )}
+                  </div>
                   <Select
                     value={assigneeId || "unassigned"}
                     onValueChange={(val) => {
@@ -769,6 +797,43 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Due Date */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-medium text-muted-foreground flex items-center space-x-1.5">
+                      <Calendar className="h-3.5 w-3.5" />
+                      <span>Due Date</span>
+                    </Label>
+                    {dueDate && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDueDate("");
+                          handleSaveField({ dueDate: null });
+                        }}
+                        className="text-[11px] text-muted-foreground hover:text-destructive font-medium"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="date"
+                    value={dueDate ? dueDate.split("T")[0] : ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setDueDate(val);
+                      handleSaveField({ dueDate: val ? new Date(val) : null });
+                    }}
+                    className="w-full h-8 text-xs font-medium rounded-md border border-input bg-background px-3 py-1 shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring text-foreground"
+                  />
+                  {dueDate && (
+                    <div className="pt-0.5">
+                      <DueDateBadge dueDate={dueDate} status={status} />
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

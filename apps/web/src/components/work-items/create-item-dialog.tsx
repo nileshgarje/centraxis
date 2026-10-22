@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import {
   Plus,
   Bookmark,
@@ -10,6 +11,7 @@ import {
   Zap,
   AlertCircle,
   Loader2,
+  Calendar,
 } from "lucide-react";
 import { api } from "~/trpc/react";
 import {
@@ -107,8 +109,10 @@ export function CreateItemDialog({
   const [priority, setPriority] = useState<
     "LOW" | "MEDIUM" | "HIGH" | "URGENT"
   >("MEDIUM");
+  const { data: session } = useSession();
   const [storyPoints, setStoryPoints] = useState<number | null>(3);
   const [assigneeId, setAssigneeId] = useState<string>("");
+  const [dueDate, setDueDate] = useState<string>("");
   const [sprintId, setSprintId] = useState<string>(defaultSprintId ?? "");
   const [parentId, setParentId] = useState<string>(defaultParentId ?? "");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -119,6 +123,7 @@ export function CreateItemDialog({
       setType(defaultType);
       setSprintId(defaultSprintId ?? "");
       setParentId(defaultParentId ?? "");
+      setDueDate("");
       setErrorMessage(null);
     }
   }, [isOpen, defaultType, defaultSprintId, defaultParentId]);
@@ -176,6 +181,7 @@ export function CreateItemDialog({
       setDescription("");
       setAcceptanceCriteria("");
       setStoryPoints(3);
+      setDueDate("");
       onClose();
     },
     onError: (err) => {
@@ -196,6 +202,7 @@ export function CreateItemDialog({
       priority,
       storyPoints,
       assigneeId: assigneeId || undefined,
+      dueDate: dueDate ? new Date(dueDate) : undefined,
       sprintId: sprintId || undefined,
       parentId: parentId || undefined,
       status: sprintId ? "TODO" : "BACKLOG",
@@ -415,12 +422,24 @@ export function CreateItemDialog({
 
               {/* Assignee */}
               <div className="space-y-1.5">
-                <Label
-                  htmlFor="item-assignee"
-                  className="block text-xs font-semibold text-foreground"
-                >
-                  Assignee
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label
+                    htmlFor="item-assignee"
+                    className="block text-xs font-semibold text-foreground"
+                  >
+                    Assignee
+                  </Label>
+                  {session?.user?.id && assigneeId !== session.user.id && (
+                    <button
+                      type="button"
+                      onClick={() => setAssigneeId(session.user.id)}
+                      className="text-[11px] text-primary hover:underline font-semibold"
+                      title="Assign to me"
+                    >
+                      Assign to me
+                    </button>
+                  )}
+                </div>
                 <Select
                   value={assigneeId || "unassigned"}
                   onValueChange={(val) =>
@@ -495,6 +514,35 @@ export function CreateItemDialog({
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Due Date */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label
+                    htmlFor="item-due-date"
+                    className="block text-xs font-semibold text-foreground flex items-center gap-1.5"
+                  >
+                    <Calendar className="h-3.5 w-3.5" />
+                    <span>Due Date (Optional)</span>
+                  </Label>
+                  {dueDate && (
+                    <button
+                      type="button"
+                      onClick={() => setDueDate("")}
+                      className="text-[11px] text-muted-foreground hover:text-destructive font-medium"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <input
+                  id="item-due-date"
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  className="w-full h-9 text-xs font-medium rounded-md border border-input bg-background px-3 py-1 shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring text-foreground"
+                />
               </div>
             </div>
           </div>
