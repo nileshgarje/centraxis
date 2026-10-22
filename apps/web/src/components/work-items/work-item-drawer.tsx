@@ -344,15 +344,16 @@ export function WorkItemDrawer({
         </SheetHeader>
 
         {/* Header Bar */}
-        <div className="flex items-center justify-between border-b border-border pl-6 pr-14 py-3.5 bg-background bg-white dark:bg-slate-950 shrink-0 min-h-[57px]">
-          <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-border pl-4 sm:pl-6 pr-12 sm:pr-14 py-2.5 bg-background shrink-0 min-h-[56px]">
+          {/* Left Group: Navigation & Status & Due Date */}
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
             {(parentHistory.length > 0 || !!item?.parent) && (
               <Button
                 variant="ghost"
                 size="sm"
                 type="button"
                 onClick={() => handleBackToParent()}
-                className="h-7 text-xs font-semibold gap-1 px-2 text-muted-foreground hover:text-foreground"
+                className="h-7 text-xs font-semibold gap-1 px-2 text-muted-foreground hover:text-foreground shrink-0"
                 title="Back to parent work item"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
@@ -366,14 +367,14 @@ export function WorkItemDrawer({
                   href={fullViewUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-mono text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 px-2 py-0.5 rounded border border-primary/20 transition flex items-center gap-1 group"
+                  className="font-mono text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 px-2 py-0.5 rounded border border-primary/20 transition flex items-center gap-1 group shrink-0"
                   title="Open full view in new tab"
                 >
                   <span>{item.key}</span>
                   <ExternalLink className="h-2.5 w-2.5 opacity-60 group-hover:opacity-100" />
                 </a>
               ) : (
-                <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
+                <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20 shrink-0">
                   {item.key}
                 </span>
               ))}
@@ -386,7 +387,7 @@ export function WorkItemDrawer({
                 handleSaveField({ status: val as any });
               }}
             >
-              <SelectTrigger className="h-7 w-auto min-w-[110px] text-xs font-semibold uppercase tracking-wider">
+              <SelectTrigger className="h-7 w-auto min-w-[95px] text-xs font-semibold uppercase tracking-wider shrink-0">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -402,6 +403,27 @@ export function WorkItemDrawer({
             {dueDate && (
               <DueDateBadge dueDate={dueDate} status={status} size="sm" />
             )}
+          </div>
+
+          {/* Right Group: Action buttons & Save status */}
+          <div className="flex items-center gap-2 shrink-0 ml-auto">
+            {/* Auto-save status indicator */}
+            <div className="flex items-center space-x-1 text-xs text-muted-foreground min-w-[60px] justify-end">
+              {isSaving && (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin text-primary shrink-0" />
+                  <span className="text-[11px]">Saving...</span>
+                </>
+              )}
+              {saveSuccess && (
+                <>
+                  <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" />
+                  <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                    Saved
+                  </span>
+                </>
+              )}
+            </div>
 
             {/* View Workflow Action Button */}
             <Button
@@ -413,7 +435,7 @@ export function WorkItemDrawer({
               title="Open task state-machine workflow viewer"
             >
               <GitFork className="h-3.5 w-3.5 text-primary" />
-              <span>View Workflow</span>
+              <span className="hidden sm:inline">Workflow</span>
             </Button>
 
             {/* Open in new tab button */}
@@ -427,28 +449,10 @@ export function WorkItemDrawer({
               >
                 <a href={fullViewUrl} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="h-3.5 w-3.5 text-primary" />
-                  <span>Open in new tab</span>
+                  <span className="hidden sm:inline">Open in new tab</span>
                 </a>
               </Button>
             )}
-
-            {/* Auto-save status indicator */}
-            <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-              {isSaving && (
-                <>
-                  <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                  <span>Saving...</span>
-                </>
-              )}
-              {saveSuccess && (
-                <>
-                  <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                    Saved
-                  </span>
-                </>
-              )}
-            </div>
           </div>
         </div>
 
@@ -508,13 +512,7 @@ export function WorkItemDrawer({
                 }}
               >
                 <SelectTrigger className="h-7 w-auto gap-1.5 text-xs font-semibold">
-                  {(() => {
-                    const cfg =
-                      ITEM_TYPES.find((t) => t.type === type) ?? ITEM_TYPES[0];
-                    const Icon = cfg.icon;
-                    return <Icon className="h-3.5 w-3.5 text-primary" />;
-                  })()}
-                  <SelectValue />
+                  <SelectValue placeholder="Type" />
                 </SelectTrigger>
                 <SelectContent>
                   {ITEM_TYPES.map((t) => {
@@ -549,9 +547,9 @@ export function WorkItemDrawer({
             </div>
 
             {/* Metadata Form Grid */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 rounded-lg border border-border bg-muted/30 p-3.5">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 rounded-lg border border-border bg-muted/30 p-3.5">
               {/* Assignee */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 min-w-0">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
                     Assignee
@@ -615,7 +613,7 @@ export function WorkItemDrawer({
               </div>
 
               {/* Sprint */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 min-w-0">
                 <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
                   Sprint
                 </span>
@@ -644,7 +642,7 @@ export function WorkItemDrawer({
               </div>
 
               {/* Priority */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 min-w-0">
                 <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
                   Priority
                 </span>
@@ -669,7 +667,7 @@ export function WorkItemDrawer({
               </div>
 
               {/* Story Points */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 min-w-0">
                 <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
                   Story Points
                 </span>
@@ -696,7 +694,7 @@ export function WorkItemDrawer({
               </div>
 
               {/* Due Date */}
-              <div className="space-y-1.5 col-span-2 sm:col-span-1">
+              <div className="space-y-1.5 col-span-2 sm:col-span-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
                     Due Date

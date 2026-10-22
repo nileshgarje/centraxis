@@ -363,10 +363,6 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
     );
   }
 
-  const currentTypeConfig =
-    ITEM_TYPES.find((t) => t.type === type) ?? ITEM_TYPES[0];
-  const TypeIcon = currentTypeConfig.icon;
-
   return (
     <div className="flex-1 overflow-y-auto bg-background">
       {/* Top Header & Breadcrumbs Bar */}
@@ -511,8 +507,7 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
                   }}
                 >
                   <SelectTrigger className="h-7 w-auto gap-1.5 text-xs font-semibold">
-                    <TypeIcon className="h-3.5 w-3.5 text-primary" />
-                    <SelectValue />
+                    <SelectValue placeholder="Type" />
                   </SelectTrigger>
                   <SelectContent>
                     {ITEM_TYPES.map((t) => {
