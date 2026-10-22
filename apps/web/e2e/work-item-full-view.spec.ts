@@ -96,6 +96,11 @@ test.describe("Work Item & Sub-Task Full View and Edit Form", () => {
     await expect(page.getByText("Sub-Tasks & Checklist")).toBeVisible();
     await expect(page.locator("text=CTX-6").first()).toBeVisible();
 
+    // Verify sub-task displays sub-task type icon
+    await expect(
+      page.locator('[data-testid="subtask-type-icon"]').first(),
+    ).toBeVisible();
+
     // Verify sub-task has "open in new tab" link
     const subTaskNewTabLink = page
       .locator('a[href="/client-apex/CTX-6"]')

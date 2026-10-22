@@ -11,6 +11,10 @@ import {
   Loader2,
   Edit2,
   ExternalLink,
+  Bookmark,
+  Bug,
+  Layers,
+  Zap,
 } from "lucide-react";
 import {
   Button,
@@ -41,6 +45,71 @@ const PRIORITY_STYLES: Record<string, string> = {
   MEDIUM: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
   LOW: "bg-muted text-muted-foreground border-border",
 };
+
+export const SUBTASK_TYPE_CONFIG: Record<
+  string,
+  {
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    color: string;
+    bgColor: string;
+  }
+> = {
+  TASK: {
+    label: "Sub-task",
+    icon: CheckSquare,
+    color: "text-sky-600 dark:text-sky-400",
+    bgColor: "bg-sky-50 dark:bg-sky-950/60 border-sky-200 dark:border-sky-800",
+  },
+  BUG: {
+    label: "Bug",
+    icon: Bug,
+    color: "text-red-600 dark:text-red-400",
+    bgColor: "bg-red-50 dark:bg-red-950/60 border-red-200 dark:border-red-800",
+  },
+  STORY: {
+    label: "Story",
+    icon: Bookmark,
+    color: "text-emerald-600 dark:text-emerald-400",
+    bgColor:
+      "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800",
+  },
+  FEATURE: {
+    label: "Feature",
+    icon: Layers,
+    color: "text-indigo-600 dark:text-indigo-400",
+    bgColor:
+      "bg-indigo-50 dark:bg-indigo-950/60 border-indigo-200 dark:border-indigo-800",
+  },
+  EPIC: {
+    label: "Epic",
+    icon: Zap,
+    color: "text-purple-600 dark:text-purple-400",
+    bgColor:
+      "bg-purple-50 dark:bg-purple-950/60 border-purple-200 dark:border-purple-800",
+  },
+};
+
+export function SubTaskTypeIcon({
+  type = "TASK",
+  className = "h-3 w-3",
+}: {
+  type?: string;
+  className?: string;
+}) {
+  const config = SUBTASK_TYPE_CONFIG[type] ?? SUBTASK_TYPE_CONFIG.TASK;
+  const Icon = config.icon;
+  return (
+    <span
+      className={`inline-flex items-center justify-center p-0.5 rounded border shrink-0 ${config.bgColor} ${config.color}`}
+      title={config.label}
+      data-testid="subtask-type-icon"
+      aria-label={config.label}
+    >
+      <Icon className={className} />
+    </span>
+  );
+}
 
 export function SubTasksSection({
   parentId,
@@ -219,6 +288,9 @@ export function SubTasksSection({
                       <Circle className="h-4 w-4 text-muted-foreground/60 hover:text-primary transition" />
                     )}
                   </button>
+
+                  {/* Sub-Task Icon */}
+                  <SubTaskTypeIcon type={task.type} />
 
                   {/* Subtask Key Badge with New Tab Link */}
                   {clientSlug ? (

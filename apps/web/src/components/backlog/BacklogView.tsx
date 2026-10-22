@@ -28,6 +28,7 @@ import {
 } from "../sprints/create-sprint-dialog";
 import { WorkItemDrawer } from "../work-items/work-item-drawer";
 import { CompleteSprintDialog } from "../sprints/complete-sprint-dialog";
+import { SubTaskTypeIcon } from "../work-items/sub-tasks-section";
 import {
   Button,
   Badge,
@@ -623,12 +624,18 @@ export function BacklogView({
                                           {item.children.map((child) => (
                                             <div
                                               key={child.id}
-                                              className="flex items-center gap-2.5 px-3 py-1.5 text-xs h-8"
+                                              onClick={() =>
+                                                setSelectedItemId(child.id)
+                                              }
+                                              className="group flex items-center gap-2.5 px-3 py-1.5 text-xs h-8 hover:bg-muted/40 cursor-pointer transition"
                                             >
-                                              <span className="font-mono text-[10px] text-muted-foreground">
+                                              <SubTaskTypeIcon
+                                                type={child.type}
+                                              />
+                                              <span className="font-mono text-[10px] text-muted-foreground group-hover:text-primary transition">
                                                 {child.key}
                                               </span>
-                                              <span className="flex-1 text-foreground truncate">
+                                              <span className="flex-1 text-foreground truncate group-hover:text-primary transition">
                                                 {child.title}
                                               </span>
                                               <Badge
@@ -857,12 +864,16 @@ export function BacklogView({
                                     {item.children.map((child) => (
                                       <div
                                         key={child.id}
-                                        className="flex items-center gap-2.5 px-3 py-1.5 text-xs h-8"
+                                        onClick={() =>
+                                          setSelectedItemId(child.id)
+                                        }
+                                        className="group flex items-center gap-2.5 px-3 py-1.5 text-xs h-8 hover:bg-muted/40 cursor-pointer transition"
                                       >
-                                        <span className="font-mono text-[10px] text-muted-foreground">
+                                        <SubTaskTypeIcon type={child.type} />
+                                        <span className="font-mono text-[10px] text-muted-foreground group-hover:text-primary transition">
                                           {child.key}
                                         </span>
-                                        <span className="flex-1 text-foreground truncate">
+                                        <span className="flex-1 text-foreground truncate group-hover:text-primary transition">
                                           {child.title}
                                         </span>
                                         <Badge
