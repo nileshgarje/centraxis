@@ -4,9 +4,20 @@ import React, { use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ShieldAlert, ArrowLeft, Loader2 } from "lucide-react";
-import { Button } from "@centraxis/ui";
+import {
+  Button,
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+  Separator,
+} from "@centraxis/ui";
 import { api } from "~/trpc/react";
 import { ClientProvider } from "~/context/client-context";
+import { AppSidebar } from "~/components/nav/app-sidebar";
+import { DynamicBreadcrumbs } from "~/components/nav/dynamic-breadcrumbs";
+import { CommandSearchInput } from "~/components/layout/command-search-input";
+import { GlobalCreateDropdown } from "~/components/layout/global-create-dropdown";
+import { NotificationPopover } from "~/components/layout/notification-popover";
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -74,7 +85,36 @@ export default function ClientLayout({ children, params }: ClientLayoutProps) {
 
   return (
     <ClientProvider client={client} clientSlug={clientSlug}>
-      {children}
+      <SidebarProvider>
+        {/* Sidebar-07 Component */}
+        <AppSidebar clientSlug={clientSlug} />
+
+        {/* Main Content Area */}
+        <SidebarInset className="flex flex-col min-h-screen bg-background">
+          {/* Streamlined Top Navigation Header */}
+          <header
+            data-testid="canvas-header"
+            className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-4 transition-[width,height] ease-linear bg-background sticky top-0 z-20"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <SidebarTrigger data-testid="sidebar-trigger" className="-ml-1" />
+              <Separator orientation="vertical" className="mr-2 h-4" />
+              <DynamicBreadcrumbs clientSlug={clientSlug} />
+            </div>
+
+            <div className="flex items-center gap-2.5 shrink-0">
+              <CommandSearchInput />
+              <NotificationPopover />
+              <GlobalCreateDropdown clientSlug={clientSlug} />
+            </div>
+          </header>
+
+          {/* Viewport Content */}
+          <div className="flex-1 overflow-y-auto">
+            {children}
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
     </ClientProvider>
   );
 }

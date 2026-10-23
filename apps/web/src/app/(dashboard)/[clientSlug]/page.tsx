@@ -26,7 +26,6 @@ import {
   CardFooter,
 } from "@centraxis/ui";
 import { useClient } from "~/context/client-context";
-import { Header } from "~/components/navigation/Header";
 import { CreateProjectDialog } from "~/components/projects/create-project-dialog";
 import { CreateItemDialog } from "~/components/work-items/create-item-dialog";
 import { CreateSprintDialog } from "~/components/sprints/create-sprint-dialog";
@@ -56,36 +55,8 @@ export default function ClientHomePage() {
   const firstProject = projectList[0];
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
-      {/* Shell Header */}
-      <Header
-        projects={projectList}
-        selectedProjectId={firstProject?.id ?? ""}
-        onSelectProject={(targetId) => {
-          const target = projectList.find((p) => p.id === targetId);
-          if (target) {
-            router.push(`/${clientSlug}/${target.key}/board`);
-          }
-        }}
-        activeTab="board"
-        onTabChange={(tab) => {
-          if (firstProject) {
-            router.push(
-              `/${clientSlug}/${firstProject.key}/${tab === "board" ? "board" : tab}`,
-            );
-          }
-        }}
-        onOpenAiModal={() => setIsAiModalOpen(true)}
-        onCreateItem={() => setIsCreateItemOpen(true)}
-        onCreateProject={() => setIsCreateProjectOpen(true)}
-        onCreateSprint={() => setIsCreateSprintOpen(true)}
-        onOpenInvite={() => setIsInviteUserOpen(true)}
-        onOpenCommandMenu={() => setIsCommandMenuOpen(true)}
-      />
-
-      {/* Main Container */}
-      <main className="flex-1 max-w-[1300px] w-full mx-auto px-6 py-8">
-        {/* Client Hero Banner */}
+    <div className="w-full max-w-[1400px] mx-auto px-6 py-8">
+      {/* Client Hero Banner */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-4">
@@ -228,7 +199,6 @@ export default function ClientHomePage() {
             </div>
           )}
         </div>
-      </main>
 
       <CreateProjectDialog
         isOpen={isCreateProjectOpen}

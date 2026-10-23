@@ -53,6 +53,16 @@
     --priority-medium: 217 91% 60%;
     --priority-high: 25 95% 53%;
     --priority-urgent: 0 84% 60%;
+
+    /* Sidebar Tokens (Light Mode) */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 245 82% 62%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 245 82% 62%;
   }
 
   .dark {
@@ -101,6 +111,16 @@
     --priority-medium: 217 91% 68%;
     --priority-high: 25 95% 62%;
     --priority-urgent: 0 84% 65%;
+
+    /* Sidebar Tokens (Dark Mode - Electric Indigo Slate Theme) */
+    --sidebar-background: 224 71% 4.5%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 245 82% 62%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 224 71% 8%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 215 27.9% 14%;
+    --sidebar-ring: 245 82% 62%;
   }
 }
 

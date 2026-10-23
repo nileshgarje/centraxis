@@ -6,7 +6,6 @@ import { useRouter, usePathname } from "next/navigation";
 import { ShieldAlert, ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@centraxis/ui";
 import { api } from "~/trpc/react";
-import { Header } from "~/components/navigation/Header";
 import { ProjectProvider, CreateItemDefaults } from "~/context/project-context";
 import { CreateItemDialog } from "~/components/work-items/create-item-dialog";
 import { CreateProjectDialog } from "~/components/projects/create-project-dialog";
@@ -84,6 +83,9 @@ export default function ProjectLayout({
 
   // Global Keyboard Shortcuts (Cmd+K / Ctrl+K, Cmd+J / Ctrl+J, and C)
   useEffect(() => {
+    const handleOpenCommand = () => setIsCommandMenuOpen(true);
+    window.addEventListener("open-command-menu", handleOpenCommand);
+
     const handleKeyDown = (e: KeyboardEvent) => {
       const isInput =
         ["INPUT", "TEXTAREA", "SELECT"].includes(
@@ -116,7 +118,10 @@ export default function ProjectLayout({
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("open-command-menu", handleOpenCommand);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [activeSprint?.id]);
 
   if (isLoading) {
@@ -185,93 +190,70 @@ export default function ProjectLayout({
       openCreateSprint={() => setIsCreateSprintOpen(true)}
       openAiModal={() => setIsAiModalOpen(true)}
     >
-      <div className="min-h-screen bg-background text-foreground flex flex-col relative">
-        <Header
-          projects={projectList}
-          selectedProjectId={project.id}
-          onSelectProject={(targetProjectId) => {
-            const target = allProjects?.find((p) => p.id === targetProjectId);
-            if (target) {
-              const targetClientSlug = target.client?.slug || clientSlug;
-              router.push(`/${targetClientSlug}/${target.key}/board`);
-            }
-          }}
-          activeSprintName={activeSprint?.name}
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          onOpenAiModal={() => setIsAiModalOpen(true)}
-          onCreateItem={() => handleOpenCreateItem()}
-          onCreateProject={() => setIsCreateProjectOpen(true)}
-          onCreateSprint={() => setIsCreateSprintOpen(true)}
-          onOpenInvite={() => setIsInviteUserOpen(true)}
-          onOpenCommandMenu={() => setIsCommandMenuOpen(true)}
-        />
-
-        <main className="flex-1 max-w-[1500px] w-full mx-auto px-6 py-6 md:px-8">
-          {children}
-        </main>
-
-        {/* Global Command Bar Dialog (Cmd+K / Ctrl+K) */}
-        <CommandMenu
-          isOpen={isCommandMenuOpen}
-          onClose={() => setIsCommandMenuOpen(false)}
-          projectId={project.id}
-          projects={projectList}
-          onSelectProject={(id) => {
-            const target = allProjects?.find((p) => p.id === id);
-            if (target) {
-              const targetClientSlug = target.client?.slug || clientSlug;
-              router.push(`/${targetClientSlug}/${target.key}/board`);
-            }
-          }}
-          onOpenCreateItem={() => handleOpenCreateItem()}
-          onOpenCreateSprint={() => setIsCreateSprintOpen(true)}
-          onOpenCreateProject={() => setIsCreateProjectOpen(true)}
-          onOpenAiStory={() => setIsAiModalOpen(true)}
-          onOpenInviteMember={() => setIsInviteUserOpen(true)}
-          onNavigateTab={handleTabChange}
-        />
-
-        {/* Create Work Item Modal Dialog */}
-        <CreateItemDialog
-          isOpen={isCreateItemOpen}
-          onClose={() => setIsCreateItemOpen(false)}
-          projectId={project.id}
-          defaultSprintId={createItemDefaults.sprintId ?? activeSprint?.id}
-          defaultParentId={createItemDefaults.parentId}
-          defaultType={createItemDefaults.type}
-        />
-
-        {/* Create Project Modal Dialog */}
-        <CreateProjectDialog
-          isOpen={isCreateProjectOpen}
-          onClose={() => setIsCreateProjectOpen(false)}
-          defaultClientId={project.clientId ?? undefined}
-          onProjectCreated={(id) => {
-            setIsCreateProjectOpen(false);
-          }}
-        />
-
-        {/* Create Sprint Modal Dialog */}
-        <CreateSprintDialog
-          isOpen={isCreateSprintOpen}
-          onClose={() => setIsCreateSprintOpen(false)}
-          projectId={project.id}
-        />
-
-        {/* Invite User Modal Dialog */}
-        <InviteUserDialog
-          isOpen={isInviteUserOpen}
-          onClose={() => setIsInviteUserOpen(false)}
-        />
-
-        {/* Centraxis AI Story Agent Modal Dialog (Cmd+J) */}
-        <AiStoryModal
-          isOpen={isAiModalOpen}
-          onClose={() => setIsAiModalOpen(false)}
-          projectId={project.id}
-        />
+      <div className="w-full max-w-[1600px] mx-auto p-4 sm:p-6 md:p-8">
+        {children}
       </div>
+
+      {/* Global Command Bar Dialog (Cmd+K / Ctrl+K) */}
+      <CommandMenu
+        isOpen={isCommandMenuOpen}
+        onClose={() => setIsCommandMenuOpen(false)}
+        projectId={project.id}
+        projects={projectList}
+        onSelectProject={(id) => {
+          const target = allProjects?.find((p) => p.id === id);
+          if (target) {
+            const targetClientSlug = target.client?.slug || clientSlug;
+            router.push(`/${targetClientSlug}/${target.key}/board`);
+          }
+        }}
+        onOpenCreateItem={() => handleOpenCreateItem()}
+        onOpenCreateSprint={() => setIsCreateSprintOpen(true)}
+        onOpenCreateProject={() => setIsCreateProjectOpen(true)}
+        onOpenAiStory={() => setIsAiModalOpen(true)}
+        onOpenInviteMember={() => setIsInviteUserOpen(true)}
+        onNavigateTab={handleTabChange}
+      />
+
+      {/* Create Work Item Modal Dialog */}
+      <CreateItemDialog
+        isOpen={isCreateItemOpen}
+        onClose={() => setIsCreateItemOpen(false)}
+        projectId={project.id}
+        defaultSprintId={createItemDefaults.sprintId ?? activeSprint?.id}
+        defaultParentId={createItemDefaults.parentId}
+        defaultType={createItemDefaults.type}
+      />
+
+      {/* Create Project Modal Dialog */}
+      <CreateProjectDialog
+        isOpen={isCreateProjectOpen}
+        onClose={() => setIsCreateProjectOpen(false)}
+        defaultClientId={project.clientId ?? undefined}
+        onProjectCreated={(id) => {
+          setIsCreateProjectOpen(false);
+        }}
+      />
+
+      {/* Create Sprint Modal Dialog */}
+      <CreateSprintDialog
+        isOpen={isCreateSprintOpen}
+        onClose={() => setIsCreateSprintOpen(false)}
+        projectId={project.id}
+      />
+
+      {/* Invite User Modal Dialog */}
+      <InviteUserDialog
+        isOpen={isInviteUserOpen}
+        onClose={() => setIsInviteUserOpen(false)}
+      />
+
+      {/* Centraxis AI Story Agent Modal Dialog (Cmd+J) */}
+      <AiStoryModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        projectId={project.id}
+      />
     </ProjectProvider>
   );
 }

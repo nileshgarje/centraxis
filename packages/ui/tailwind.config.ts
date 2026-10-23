@@ -69,6 +69,16 @@ export const centraxisTailwindConfig = {
           high: "hsl(var(--priority-high))",
           urgent: "hsl(var(--priority-urgent))",
         },
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar-background))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: "hsl(var(--sidebar-primary))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          accent: "hsl(var(--sidebar-accent))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
+        },
         centvis: {
           50: "#f0f0ff",
           100: "#e4e3ff",
