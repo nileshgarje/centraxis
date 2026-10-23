@@ -432,9 +432,9 @@ export default function MyWorkDashboardPage() {
                                 </TooltipTrigger>
                                 <TooltipContent
                                   side="top"
-                                  className="max-w-sm text-xs"
+                                  className="max-w-sm text-xs p-3 space-y-1"
                                 >
-                                  <p className="font-semibold">
+                                  <p className="font-semibold text-foreground">
                                     {item.key}: {item.title}
                                   </p>
                                   {item.description && (

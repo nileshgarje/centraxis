@@ -381,7 +381,7 @@ export function BoardFilterBar({
                             ? "ring-2 ring-primary ring-offset-2 ring-offset-background z-10"
                             : "opacity-80 hover:opacity-100"
                         }`}
-                        title={u.name || u.email || "Member"}
+                        aria-label={u.name || u.email || "Member"}
                       >
                         <Avatar className="h-7 w-7 border-2 border-background cursor-pointer">
                           <AvatarImage src={u.image ?? undefined} />
@@ -394,14 +394,19 @@ export function BoardFilterBar({
                         )}
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-xs">
-                      <p className="font-semibold">{u.name || "Member"}</p>
+                    <TooltipContent
+                      side="bottom"
+                      className="text-xs border border-border bg-popover text-popover-foreground shadow-md px-3 py-2 space-y-0.5"
+                    >
+                      <p className="font-semibold text-foreground text-xs leading-tight">
+                        {u.name || "Member"}
+                      </p>
                       {u.email && (
-                        <p className="text-[11px] text-muted-foreground">
+                        <p className="text-[11px] text-muted-foreground leading-tight">
                           {u.email}
                         </p>
                       )}
-                      <p className="text-[10px] text-primary mt-0.5 font-medium">
+                      <p className="text-[10px] text-primary font-semibold pt-0.5 leading-tight">
                         {isSelected ? "Click to unselect" : "Click to filter"}
                       </p>
                     </TooltipContent>

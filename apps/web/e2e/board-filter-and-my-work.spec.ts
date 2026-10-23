@@ -65,6 +65,19 @@ test.describe("Board/Backlog Filter Bar & Personal My Work Dashboard", () => {
     expect(await searchInput.inputValue()).toBe("");
     expect(page.url()).not.toContain("q=CTX-1");
 
+    // Verify Avatar Tooltip on hover
+    const firstAvatar = page.locator('[data-testid^="filter-avatar-"]').first();
+    if (await firstAvatar.isVisible()) {
+      await firstAvatar.hover();
+      // Tooltip should be visible with popover styling and high-contrast text
+      const tooltip = page.locator('[role="tooltip"]');
+      await expect(tooltip).toBeVisible();
+      await expect(tooltip.locator("p.font-semibold").first()).toBeVisible();
+      await expect(
+        tooltip.getByText(/Click to filter|Click to unselect/),
+      ).toBeVisible();
+    }
+
     // 4. Test "Only My Issues" filter shortcut
     const onlyMyIssuesBtn = page.locator(
       '[data-testid="filter-only-my-issues"]',
