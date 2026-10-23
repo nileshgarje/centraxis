@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import {
   Bookmark,
@@ -253,13 +253,15 @@ export function WorkItemDrawer({
     return STATUS_OPTIONS.filter((s) => targetStatusSet.has(s.value));
   }, [workflowData, status]);
 
+  const prevItemIdRef = useRef<string | null>(null);
+
   // Sync state when item data loads
   useEffect(() => {
     if (item) {
-      setTitle(item.title);
+      const isNewItem = prevItemIdRef.current !== item.id;
+      prevItemIdRef.current = item.id;
+
       setType(item.type as any);
-      setDescription(item.description || "");
-      setAcceptanceCriteria(item.acceptanceCriteria || "");
       setStatus(item.status);
       setPriority(item.priority);
       setStoryPoints(item.storyPoints ?? null);
@@ -269,8 +271,23 @@ export function WorkItemDrawer({
       );
       setSprintId(item.sprintId || "");
       setErrorMessage(null);
+
+      // Only re-initialize title, description, and acceptanceCriteria if switching to a new work item!
+      // This prevents background refetches from overwriting active typing.
+      if (isNewItem) {
+        setTitle(item.title);
+        setDescription(item.description || "");
+        setAcceptanceCriteria(item.acceptanceCriteria || "");
+      }
     }
   }, [item]);
+
+  // Reset tracked item ID when drawer closes
+  useEffect(() => {
+    if (!isOpen) {
+      prevItemIdRef.current = null;
+    }
+  }, [isOpen]);
 
   // Keyboard shortcut: Escape to close
   useEffect(() => {
@@ -288,12 +305,38 @@ export function WorkItemDrawer({
       setIsSaving(true);
       setErrorMessage(null);
     },
-    onSuccess: () => {
+    onSuccess: (updatedItem, variables) => {
       setIsSaving(false);
       setSaveSuccess(true);
       setErrorMessage(null);
       setTimeout(() => setSaveSuccess(false), 2000);
-      void utils.backlog.getItem.invalidate({ id: currentId! });
+
+      // Optimistically update tRPC item cache with the mutation result
+      if (currentId && updatedItem) {
+        utils.backlog.getItem.setData({ id: currentId }, (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            ...updatedItem,
+          };
+        });
+      }
+
+      const isContentOnlyUpdate =
+        (variables.description !== undefined ||
+          variables.acceptanceCriteria !== undefined) &&
+        variables.status === undefined &&
+        variables.type === undefined &&
+        variables.assigneeId === undefined &&
+        variables.sprintId === undefined &&
+        variables.parentId === undefined &&
+        variables.storyPoints === undefined &&
+        variables.dueDate === undefined &&
+        variables.title === undefined;
+
+      if (!isContentOnlyUpdate) {
+        void utils.backlog.getItem.invalidate({ id: currentId! });
+      }
       void utils.workItem.getSubTasks.invalidate();
       void utils.backlog.getItems.invalidate();
       void utils.backlog.getTree.invalidate();
@@ -736,11 +779,10 @@ export function WorkItemDrawer({
                 </span>
               </div>
               <MarkdownEditor
+                key={`desc-${currentId}`}
                 value={description}
-                onChange={(val) => {
-                  setDescription(val);
-                  handleSaveField({ description: val });
-                }}
+                onChange={setDescription}
+                onSave={(val) => handleSaveField({ description: val })}
                 minHeight="140px"
                 placeholder="Add a detailed description, architecture diagram references, or code snippets..."
               />
@@ -757,11 +799,10 @@ export function WorkItemDrawer({
                 </span>
               </div>
               <MarkdownEditor
+                key={`ac-${currentId}`}
                 value={acceptanceCriteria}
-                onChange={(val) => {
-                  setAcceptanceCriteria(val);
-                  handleSaveField({ acceptanceCriteria: val });
-                }}
+                onChange={setAcceptanceCriteria}
+                onSave={(val) => handleSaveField({ acceptanceCriteria: val })}
                 minHeight="110px"
                 placeholder="Scenario: Successful user login&#10;Given user is on /login&#10;When credentials are valid&#10;Then redirect to dashboard"
               />

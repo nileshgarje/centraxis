@@ -194,12 +194,14 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [drawerSubTaskId, setDrawerSubTaskId] = useState<string | null>(null);
 
+  const prevItemIdRef = useRef<string | null>(null);
+
   // Synchronize state when work item data loads
   useEffect(() => {
     if (item) {
-      setTitle(item.title);
-      setDescription(item.description || "");
-      setAcceptanceCriteria(item.acceptanceCriteria || "");
+      const isNewItem = prevItemIdRef.current !== item.id;
+      prevItemIdRef.current = item.id;
+
       setStatus(item.status);
       setPriority(item.priority);
       setStoryPoints(item.storyPoints ?? null);
@@ -210,6 +212,14 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
       setSprintId(item.sprintId || "");
       setType(item.type as any);
       setErrorMessage(null);
+
+      // Only re-initialize title, description, and acceptanceCriteria if switching to a new work item!
+      // This prevents background refetches from overwriting active typing.
+      if (isNewItem) {
+        setTitle(item.title);
+        setDescription(item.description || "");
+        setAcceptanceCriteria(item.acceptanceCriteria || "");
+      }
     }
   }, [item]);
 
@@ -238,17 +248,53 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
       setIsSaving(true);
       setErrorMessage(null);
     },
-    onSuccess: () => {
+    onSuccess: (updatedItem, variables) => {
       setIsSaving(false);
       setSaveSuccess(true);
       setErrorMessage(null);
       setTimeout(() => setSaveSuccess(false), 2000);
-      void utils.backlog.getItemByKey.invalidate({
-        clientSlug,
-        key: projectKey,
-      });
-      if (item?.id) {
-        void utils.backlog.getItem.invalidate({ id: item.id });
+
+      // Optimistically update tRPC item cache with the mutation result
+      if (item?.id && updatedItem) {
+        utils.backlog.getItem.setData({ id: item.id }, (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            ...updatedItem,
+          };
+        });
+        utils.backlog.getItemByKey.setData(
+          { clientSlug, key: projectKey },
+          (old) => {
+            if (!old) return old;
+            return {
+              ...old,
+              ...updatedItem,
+            };
+          },
+        );
+      }
+
+      const isContentOnlyUpdate =
+        (variables.description !== undefined ||
+          variables.acceptanceCriteria !== undefined) &&
+        variables.status === undefined &&
+        variables.type === undefined &&
+        variables.assigneeId === undefined &&
+        variables.sprintId === undefined &&
+        variables.parentId === undefined &&
+        variables.storyPoints === undefined &&
+        variables.dueDate === undefined &&
+        variables.title === undefined;
+
+      if (!isContentOnlyUpdate) {
+        void utils.backlog.getItemByKey.invalidate({
+          clientSlug,
+          key: projectKey,
+        });
+        if (item?.id) {
+          void utils.backlog.getItem.invalidate({ id: item.id });
+        }
       }
       void utils.backlog.getItems.invalidate();
       void utils.backlog.getTree.invalidate();
@@ -278,25 +324,6 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
       id: item.id,
       ...fields,
     });
-  };
-
-  // Debounced auto-save for description and acceptance criteria
-  const descDebounceRef = useRef<NodeJS.Timeout | null>(null);
-  const handleDescriptionChange = (val: string) => {
-    setDescription(val);
-    if (descDebounceRef.current) clearTimeout(descDebounceRef.current);
-    descDebounceRef.current = setTimeout(() => {
-      handleSaveField({ description: val.trim() || null });
-    }, 1000);
-  };
-
-  const acDebounceRef = useRef<NodeJS.Timeout | null>(null);
-  const handleAcChange = (val: string) => {
-    setAcceptanceCriteria(val);
-    if (acDebounceRef.current) clearTimeout(acDebounceRef.current);
-    acDebounceRef.current = setTimeout(() => {
-      handleSaveField({ acceptanceCriteria: val.trim() || null });
-    }, 1000);
   };
 
   const handleCopyLink = () => {
@@ -565,8 +592,12 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
               </Label>
               <div className="rounded-lg border border-border bg-card shadow-2xs">
                 <MarkdownEditor
+                  key={`desc-${item?.id}`}
                   value={description}
-                  onChange={handleDescriptionChange}
+                  onChange={setDescription}
+                  onSave={(val) =>
+                    handleSaveField({ description: val.trim() || null })
+                  }
                   placeholder="Add a detailed description... (Markdown supported)"
                   minHeight="180px"
                 />
@@ -583,8 +614,12 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
               </div>
               <div className="rounded-lg border border-border bg-card shadow-2xs">
                 <MarkdownEditor
+                  key={`ac-${item?.id}`}
                   value={acceptanceCriteria}
-                  onChange={handleAcChange}
+                  onChange={setAcceptanceCriteria}
+                  onSave={(val) =>
+                    handleSaveField({ acceptanceCriteria: val.trim() || null })
+                  }
                   placeholder="Given [context] When [action] Then [outcome]..."
                   minHeight="140px"
                 />

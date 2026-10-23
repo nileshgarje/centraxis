@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   useEditor,
   EditorContent,
@@ -143,15 +143,84 @@ const CustomCodeBlockLowlight = CodeBlockLowlight.extend({
 export interface MarkdownEditorProps {
   value?: string;
   onChange?: (markdown: string) => void;
+  onSave?: (markdown: string) => void;
+  onBlur?: () => void;
+  debounceMs?: number;
   placeholder?: string;
   minHeight?: string;
   className?: string;
   disabled?: boolean;
 }
 
+function useDebouncedCallback<T extends (...args: any[]) => any>(
+  callback: T,
+  delay: number,
+) {
+  const callbackRef = useRef(callback);
+  callbackRef.current = callback;
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastArgsRef = useRef<Parameters<T> | null>(null);
+
+  const flush = useCallback(() => {
+    if (timeoutRef.current && lastArgsRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+      const args = lastArgsRef.current;
+      lastArgsRef.current = null;
+      callbackRef.current(...args);
+    }
+  }, []);
+
+  const cancel = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+      lastArgsRef.current = null;
+    }
+  }, []);
+
+  const debounced = useCallback(
+    (...args: Parameters<T>) => {
+      lastArgsRef.current = args;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        timeoutRef.current = null;
+        const currentArgs = lastArgsRef.current;
+        lastArgsRef.current = null;
+        if (currentArgs) {
+          callbackRef.current(...currentArgs);
+        }
+      }, delay);
+    },
+    [delay],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current && lastArgsRef.current) {
+        clearTimeout(timeoutRef.current);
+        const args = lastArgsRef.current;
+        timeoutRef.current = null;
+        lastArgsRef.current = null;
+        callbackRef.current(...args);
+      }
+    };
+  }, []);
+
+  return useMemo(
+    () => Object.assign(debounced, { flush, cancel }),
+    [debounced, flush, cancel],
+  );
+}
+
 export function MarkdownEditor({
   value = "",
   onChange,
+  onSave,
+  onBlur,
+  debounceMs = 1200,
   placeholder = "Write in GitHub-flavored Markdown... (supports code blocks, checklists, Gherkin)",
   minHeight = "160px",
   className = "",
@@ -160,6 +229,21 @@ export function MarkdownEditor({
   const [activeTab, setActiveTab] = useState<"write" | "preview">("write");
   const [isMounted, setIsMounted] = useState(false);
   const lastEmittedValue = useRef(value);
+  const lastSavedValue = useRef(value);
+
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  const onSaveRef = useRef(onSave);
+  onSaveRef.current = onSave;
+  const onBlurRef = useRef(onBlur);
+  onBlurRef.current = onBlur;
+
+  const debouncedAutosave = useDebouncedCallback((newContent: string) => {
+    if (newContent !== lastSavedValue.current) {
+      lastSavedValue.current = newContent;
+      onSaveRef.current?.(newContent);
+    }
+  }, debounceMs);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -194,9 +278,19 @@ export function MarkdownEditor({
     },
     onUpdate: ({ editor }) => {
       // Extract clean GFM markdown directly
-      const markdown = (editor.storage as any).markdown?.getMarkdown() || "";
+      const markdown =
+        (editor.storage as any).markdown?.getMarkdown() ?? editor.getText() ?? "";
       lastEmittedValue.current = markdown;
-      onChange?.(markdown);
+      onChangeRef.current?.(markdown);
+      if (onSaveRef.current) {
+        debouncedAutosave(markdown);
+      }
+    },
+    onBlur: () => {
+      if (onSaveRef.current) {
+        debouncedAutosave.flush();
+      }
+      onBlurRef.current?.();
     },
   });
 
@@ -205,19 +299,33 @@ export function MarkdownEditor({
   }, []);
 
   // Synchronize when value changes externally (and differs from internal editor state)
+  // Only sync external updates if the editor is NOT currently focused by the user
+  // and the content is genuinely different to avoid caret resets and dropped letters
   useEffect(() => {
-    if (editor && value !== undefined && value !== lastEmittedValue.current) {
-      lastEmittedValue.current = value;
-      editor.commands.setContent(value);
+    if (!editor || editor.isDestroyed) return;
+    if (!editor.isFocused) {
+      const currentMarkdown =
+        (editor.storage as any).markdown?.getMarkdown?.() ?? "";
+      if (
+        value !== undefined &&
+        value !== currentMarkdown &&
+        value !== lastEmittedValue.current
+      ) {
+        lastEmittedValue.current = value;
+        lastSavedValue.current = value;
+        editor.commands.setContent(value ?? "", { emitUpdate: false });
+      }
     }
   }, [value, editor]);
 
   // Handle checklist toggles in Preview mode
   const handlePreviewChecklistChange = (updatedMarkdown: string) => {
     lastEmittedValue.current = updatedMarkdown;
-    onChange?.(updatedMarkdown);
+    lastSavedValue.current = updatedMarkdown;
+    onChangeRef.current?.(updatedMarkdown);
+    onSaveRef.current?.(updatedMarkdown);
     if (editor) {
-      editor.commands.setContent(updatedMarkdown);
+      editor.commands.setContent(updatedMarkdown, { emitUpdate: false });
     }
   };
 
