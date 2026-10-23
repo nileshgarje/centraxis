@@ -2,12 +2,15 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   Building2,
   Users,
   FolderGit2,
   Shield,
+  ShieldAlert,
+  ArrowLeft,
   Plus,
   ArrowRight,
   ExternalLink,
@@ -32,15 +35,60 @@ import { CreateClientDialog } from "~/components/clients/create-client-dialog";
 import { NotificationPopover } from "~/components/layout/notification-popover";
 
 export default function AdminOverviewPage() {
-  const { data: session } = useSession();
+  const router = useRouter();
+  const { data: session, status } = useSession();
   const [isCreateClientOpen, setIsCreateClientOpen] = useState(false);
 
+  const isSystemAdmin =
+    session?.user?.globalRole === "SYSTEM_ADMIN" ||
+    session?.user?.role === "ORG_ADMIN";
+
   const { data: clients, isLoading: clientsLoading } =
-    api.clients.list.useQuery();
+    api.clients.list.useQuery(undefined, { enabled: !!isSystemAdmin });
   const { data: members, isLoading: membersLoading } =
-    api.org.listMembers.useQuery();
+    api.org.listMembers.useQuery(undefined, { enabled: !!isSystemAdmin });
   const { data: projects, isLoading: projectsLoading } =
-    api.project.list.useQuery();
+    api.project.list.useQuery(undefined, { enabled: !!isSystemAdmin });
+
+  if (status === "loading") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-xs font-semibold text-muted-foreground">
+            Verifying administrative access...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isSystemAdmin) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4" data-testid="access-denied-screen">
+        <div className="w-full max-w-md rounded-2xl border border-destructive/20 bg-card p-8 text-center shadow-lg">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive mb-4">
+            <ShieldAlert className="h-7 w-7" />
+          </div>
+          <h1 className="text-lg font-bold text-foreground">
+            Access Denied
+          </h1>
+          <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+            You do not have administrative privileges to view or manage Global System Administration.
+          </p>
+          <div className="mt-6 flex flex-col gap-2">
+            <Button
+              onClick={() => router.push("/")}
+              className="w-full gap-2 text-xs"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>Back to Authorized Workspaces</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">

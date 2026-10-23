@@ -63,6 +63,18 @@ export function AppSidebarNav({ clientSlug }: AppSidebarNavProps) {
     session?.user?.globalRole === "SYSTEM_ADMIN" ||
     session?.user?.role === "ORG_ADMIN";
 
+  // Fetch client details to determine client membership role
+  const { data: client } = api.clients.getBySlug.useQuery(
+    { slug: clientSlug },
+    { enabled: !!clientSlug },
+  );
+
+  const currentClientMember = client?.members?.find(
+    (m) => m.userId === session?.user?.id,
+  );
+  const isClientAdmin =
+    isSystemAdmin || currentClientMember?.role === "CLIENT_ADMIN";
+
   // Identify active project key from pathname: /[clientSlug]/[projectKey]/...
   const pathParts = pathname.split("/").filter(Boolean);
   const currentProjectKey =
@@ -159,6 +171,14 @@ export function AppSidebarNav({ clientSlug }: AppSidebarNavProps) {
                 const isBacklogActive = pathname.startsWith(backlogPath);
                 const isSettingsActive = pathname.startsWith(settingsPath);
 
+                const userProjectMember = project.members?.find(
+                  (m) => m.userId === session?.user?.id,
+                );
+                const isProjectLead =
+                  isSystemAdmin ||
+                  isClientAdmin ||
+                  userProjectMember?.role === "PROJECT_LEAD";
+
                 return (
                   <Collapsible
                     key={project.id}
@@ -210,17 +230,19 @@ export function AppSidebarNav({ clientSlug }: AppSidebarNavProps) {
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
 
-                          <SidebarMenuSubItem>
-                            <SidebarMenuSubButton
-                              asChild
-                              isActive={isSettingsActive}
-                              data-testid={`project-settings-link-${project.key}`}
-                            >
-                              <Link href={settingsPath}>
-                                <span>Settings</span>
-                              </Link>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
+                          {isProjectLead && (
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={isSettingsActive}
+                                data-testid={`project-settings-link-${project.key}`}
+                              >
+                                <Link href={settingsPath}>
+                                  <span>Settings</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          )}
                         </SidebarMenuSub>
                       </CollapsibleContent>
                     </SidebarMenuItem>
@@ -232,55 +254,57 @@ export function AppSidebarNav({ clientSlug }: AppSidebarNavProps) {
         </SidebarGroupContent>
       </SidebarGroup>
 
-      {/* 3. Section: Workspace Management */}
-      <SidebarGroup className="mt-auto">
-        <SidebarGroupLabel>Workspace Operations</SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname.includes("/settings/members") || pathname.includes("/squads")}
-                tooltip="Squads & Teams"
-                data-testid="nav-squads-roles"
-              >
-                <Link href={`/${clientSlug}/settings/members`}>
-                  <Users className="size-4" />
-                  <span>Squads & Roles</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+      {/* 3. Section: Workspace Management (Visible only to Client Admins & System Admins) */}
+      {isClientAdmin && (
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupLabel>Workspace Operations</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.includes("/settings/members") || pathname.includes("/squads")}
+                  tooltip="Squads & Teams"
+                  data-testid="nav-squads-roles"
+                >
+                  <Link href={`/${clientSlug}/settings/members`}>
+                    <Users className="size-4" />
+                    <span>Squads & Roles</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
 
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname.includes("/settings/workflows")}
-                tooltip="Workflow Schemes"
-                data-testid="nav-workflow-schemes"
-              >
-                <Link href={`/${clientSlug}/settings/workflows`}>
-                  <Workflow className="size-4" />
-                  <span>Workflow Schemes</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.includes("/settings/workflows")}
+                  tooltip="Workflow Schemes"
+                  data-testid="nav-workflow-schemes"
+                >
+                  <Link href={`/${clientSlug}/settings/workflows`}>
+                    <Workflow className="size-4" />
+                    <span>Workflow Schemes</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
 
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === `/${clientSlug}/settings`}
-                tooltip="Client Workspace Settings"
-                data-testid="nav-client-settings"
-              >
-                <Link href={`/${clientSlug}/settings`}>
-                  <Settings className="size-4" />
-                  <span>Client Settings</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === `/${clientSlug}/settings`}
+                  tooltip="Client Workspace Settings"
+                  data-testid="nav-client-settings"
+                >
+                  <Link href={`/${clientSlug}/settings`}>
+                    <Settings className="size-4" />
+                    <span>Client Settings</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      )}
 
       <CreateProjectDialog
         isOpen={isCreateProjectOpen}

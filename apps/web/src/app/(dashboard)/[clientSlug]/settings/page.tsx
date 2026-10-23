@@ -2,10 +2,13 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   Building2,
   Users,
   Shield,
+  ShieldAlert,
   ArrowLeft,
   Mail,
   CheckCircle2,
@@ -39,12 +42,51 @@ import { CentvisLogo } from "@centraxis/ui";
 import { ClientProjectSwitcher } from "~/components/layout/client-project-switcher";
 
 export default function ClientSettingsPage() {
+  const router = useRouter();
+  const { data: session } = useSession();
   const utils = api.useUtils();
   const { client, clientSlug } = useClient();
+
+  const isSystemAdmin =
+    session?.user?.globalRole === "SYSTEM_ADMIN" ||
+    session?.user?.role === "ORG_ADMIN";
+
+  const userClientMember = client.members?.find(
+    (m) => m.userId === session?.user?.id,
+  );
+  const isClientAdmin = isSystemAdmin || userClientMember?.role === "CLIENT_ADMIN";
 
   const [name, setName] = useState(client.name);
   const [contactEmail, setContactEmail] = useState(client.contactEmail ?? "");
   const [isSaving, setIsSaving] = useState(false);
+
+  if (!isClientAdmin) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center px-4" data-testid="access-denied-screen">
+        <div className="w-full max-w-md rounded-2xl border border-destructive/20 bg-card p-8 text-center shadow-lg">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive mb-4">
+            <ShieldAlert className="h-7 w-7" />
+          </div>
+          <h1 className="text-lg font-bold text-foreground">
+            Access Denied
+          </h1>
+          <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+            You do not have administrative privileges to manage settings for client workspace{" "}
+            <span className="font-semibold text-foreground font-mono">"{clientSlug}"</span>.
+          </p>
+          <div className="mt-6 flex flex-col gap-2">
+            <Button
+              onClick={() => router.push(`/${clientSlug}`)}
+              className="w-full gap-2 text-xs"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>Back to Client Workspace</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const updateMutation = api.clients.update.useMutation({
     onSuccess: async () => {

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useSession } from "next-auth/react";
 import {
   Plus,
   Sparkles,
@@ -35,6 +36,8 @@ interface GlobalCreateDropdownProps {
 export function GlobalCreateDropdown({
   clientSlug,
 }: GlobalCreateDropdownProps) {
+  const { data: session } = useSession();
+
   // Try to read active project from context if mounted inside ProjectLayout
   let projectContext: ReturnType<typeof useProject> | null = null;
   try {
@@ -54,12 +57,26 @@ export function GlobalCreateDropdown({
 
   const targetProjectId = projectContext?.project?.id || fallbackProject?.id;
 
+  const isSystemAdmin =
+    session?.user?.globalRole === "SYSTEM_ADMIN" ||
+    session?.user?.role === "ORG_ADMIN";
+
+  const activeProject = projectContext?.project || fallbackProject;
+  const userMember = activeProject?.members?.find(
+    (m: any) => (m.user?.id ?? m.userId) === session?.user?.id,
+  );
+  const isViewer = !isSystemAdmin && userMember?.role === "VIEWER";
+
   // Modals state for standalone trigger
   const [isCreateItemOpen, setIsCreateItemOpen] = useState(false);
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
   const [isInviteUserOpen, setIsInviteUserOpen] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+
+  if (isViewer) {
+    return null;
+  }
 
   const handleOpenCreateItem = () => {
     if (projectContext?.openCreateItem) {

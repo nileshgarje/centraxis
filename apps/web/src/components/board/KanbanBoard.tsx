@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import {
   DragDropContext,
   Droppable,
@@ -108,13 +109,30 @@ export function KanbanBoard({
 }) {
   const utils = api.useUtils();
 
+  const { data: session } = useSession();
   let clientSlug: string | undefined;
+  let projectMembers: Array<{ userId: string; role: string }> | undefined;
   try {
     const proj = useProject();
     clientSlug = proj.clientSlug;
+    projectMembers = proj.project?.members?.map((m: any) => ({
+      userId: m.user?.id ?? m.userId,
+      role: m.role,
+    }));
   } catch {
     // If used outside ProjectProvider
   }
+
+  const isSystemAdmin =
+    session?.user?.globalRole === "SYSTEM_ADMIN" ||
+    session?.user?.role === "ORG_ADMIN";
+
+  const userProjectMember = projectMembers?.find(
+    (m) => m.userId === session?.user?.id,
+  );
+  const isProjectLead =
+    isSystemAdmin || userProjectMember?.role === "PROJECT_LEAD";
+  const isViewer = !isSystemAdmin && userProjectMember?.role === "VIEWER";
 
   const {
     data: boardData,
@@ -286,11 +304,12 @@ export function KanbanBoard({
               </div>
             </div>
 
-            {sprint && (
+            {sprint && isProjectLead && (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
+                data-testid="complete-sprint-button"
                 onClick={() => setIsCompleteDialogOpen(true)}
                 className="gap-1.5 text-xs h-8"
               >
@@ -299,9 +318,10 @@ export function KanbanBoard({
               </Button>
             )}
 
-            {onCreateItem && (
+            {onCreateItem && !isViewer && (
               <Button
                 size="sm"
+                data-testid="board-add-card-button"
                 onClick={() => onCreateItem({ sprintId: sprint?.id })}
                 className="gap-1 text-xs h-8"
               >
@@ -399,6 +419,7 @@ export function KanbanBoard({
                             key={card.id}
                             draggableId={card.id}
                             index={index}
+                            isDragDisabled={isViewer}
                           >
                             {(dragProvided, dragSnapshot) => (
                               <div
@@ -406,6 +427,7 @@ export function KanbanBoard({
                                 {...dragProvided.draggableProps}
                                 {...dragProvided.dragHandleProps}
                                 data-testid="work-item-card"
+                                data-drag-disabled={isViewer ? "true" : "false"}
                                 data-item-id={card.id}
                                 data-item-key={card.key}
                                 onClick={() => setSelectedCardId(card.id)}

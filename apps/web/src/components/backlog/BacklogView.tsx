@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useSession } from "next-auth/react";
 import {
   Layers,
   ChevronDown,
@@ -111,13 +112,30 @@ export function BacklogView({
 }: BacklogViewProps) {
   const utils = api.useUtils();
 
+  const { data: session } = useSession();
   let clientSlug: string | undefined;
+  let projectMembers: Array<{ userId: string; role: string }> | undefined;
   try {
     const proj = useProject();
     clientSlug = proj.clientSlug;
+    projectMembers = proj.project?.members?.map((m: any) => ({
+      userId: m.user?.id ?? m.userId,
+      role: m.role,
+    }));
   } catch {
     // If rendered outside ProjectProvider
   }
+
+  const isSystemAdmin =
+    session?.user?.globalRole === "SYSTEM_ADMIN" ||
+    session?.user?.role === "ORG_ADMIN";
+
+  const userProjectMember = projectMembers?.find(
+    (m) => m.userId === session?.user?.id,
+  );
+  const isProjectLead =
+    isSystemAdmin || userProjectMember?.role === "PROJECT_LEAD";
+  const isViewer = !isSystemAdmin && userProjectMember?.role === "VIEWER";
 
   const [isMounted, setIsMounted] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(
@@ -307,15 +325,18 @@ export function BacklogView({
           </p>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleOpenCreateSprint}
-          className="gap-1.5 h-8 text-xs shadow-xs"
-        >
-          <Calendar className="h-3.5 w-3.5" />
-          <span>Create Sprint</span>
-        </Button>
+        {isProjectLead && (
+          <Button
+            variant="outline"
+            size="sm"
+            data-testid="backlog-create-sprint-button"
+            onClick={handleOpenCreateSprint}
+            className="gap-1.5 h-8 text-xs shadow-xs"
+          >
+            <Calendar className="h-3.5 w-3.5" />
+            <span>Create Sprint</span>
+          </Button>
+        )}
       </div>
 
       {/* Error Alert */}
@@ -462,10 +483,11 @@ export function BacklogView({
                         )}
                       </div>
 
-                      {sprint.status === "PLANNED" && (
+                      {sprint.status === "PLANNED" && isProjectLead && (
                         <Button
                           size="sm"
                           variant="outline"
+                          data-testid={`start-sprint-button-${sprint.id}`}
                           className="h-7 text-xs gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
                           onClick={() =>
                             startSprintMutation.mutate({ sprintId: sprint.id })
@@ -477,10 +499,11 @@ export function BacklogView({
                         </Button>
                       )}
 
-                      {sprint.status === "ACTIVE" && (
+                      {sprint.status === "ACTIVE" && isProjectLead && (
                         <Button
                           size="sm"
                           variant="outline"
+                          data-testid={`complete-sprint-button-${sprint.id}`}
                           className="h-7 text-xs gap-1 text-primary border-primary/30 hover:bg-primary/10"
                           onClick={() => setSprintToComplete(sprint.id)}
                         >
@@ -513,6 +536,7 @@ export function BacklogView({
                                 key={item.id}
                                 draggableId={item.id}
                                 index={index}
+                                isDragDisabled={isViewer}
                               >
                                 {(dragProvided, dragSnapshot) => (
                                   <div
@@ -711,13 +735,15 @@ export function BacklogView({
                           {provided.placeholder}
 
                           {/* Quick-Add Row at the bottom of the Sprint */}
-                          <div className="border-t border-border bg-muted/20 p-2">
-                            <InlineCreateRow
-                              projectId={projectId}
-                              sprintId={sprint.id}
-                              placeholder={`+ Add item to ${sprint.name}...`}
-                            />
-                          </div>
+                          {!isViewer && (
+                            <div className="border-t border-border bg-muted/20 p-2">
+                              <InlineCreateRow
+                                projectId={projectId}
+                                sprintId={sprint.id}
+                                placeholder={`+ Add item to ${sprint.name}...`}
+                              />
+                            </div>
+                          )}
                         </div>
                       )}
                     </Droppable>
@@ -787,6 +813,7 @@ export function BacklogView({
                           key={item.id}
                           draggableId={item.id}
                           index={index}
+                          isDragDisabled={isViewer}
                         >
                           {(dragProvided, dragSnapshot) => (
                             <div
@@ -965,13 +992,15 @@ export function BacklogView({
                     {provided.placeholder}
 
                     {/* Quick-Add Row for Backlog */}
-                    <div className="border-t border-border bg-muted/20 p-2">
-                      <InlineCreateRow
-                        projectId={projectId}
-                        sprintId={null}
-                        placeholder="+ Add issue to Backlog..."
-                      />
-                    </div>
+                    {!isViewer && (
+                      <div className="border-t border-border bg-muted/20 p-2">
+                        <InlineCreateRow
+                          projectId={projectId}
+                          sprintId={null}
+                          placeholder="+ Add issue to Backlog..."
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </Droppable>
