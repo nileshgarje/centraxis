@@ -173,14 +173,14 @@ export function AppSidebarNav({ clientSlug }: AppSidebarNavProps) {
                           isActive={isProjectActive && !isBoardActive && !isBacklogActive && !isSettingsActive}
                           data-testid={`project-trigger-${project.key}`}
                         >
-                          <FolderKanban className="size-4 text-primary" />
+                          <FolderKanban className="size-4" />
                           <span className="truncate flex-1 font-medium text-xs">
                             <span className="font-mono text-muted-foreground mr-1.5 font-bold">
                               {project.key}
                             </span>
                             {project.name}
                           </span>
-                          <ChevronRight className="ml-auto size-3.5 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 text-muted-foreground" />
+                          <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
 
@@ -192,8 +192,7 @@ export function AppSidebarNav({ clientSlug }: AppSidebarNavProps) {
                               isActive={isBoardActive}
                               data-testid={`project-board-link-${project.key}`}
                             >
-                              <Link href={boardPath} className="flex items-center gap-2">
-                                <Kanban className="size-3.5 text-muted-foreground" />
+                              <Link href={boardPath}>
                                 <span>Board</span>
                               </Link>
                             </SidebarMenuSubButton>
@@ -205,8 +204,7 @@ export function AppSidebarNav({ clientSlug }: AppSidebarNavProps) {
                               isActive={isBacklogActive}
                               data-testid={`project-backlog-link-${project.key}`}
                             >
-                              <Link href={backlogPath} className="flex items-center gap-2">
-                                <Layers className="size-3.5 text-muted-foreground" />
+                              <Link href={backlogPath}>
                                 <span>Backlog</span>
                               </Link>
                             </SidebarMenuSubButton>
@@ -218,8 +216,7 @@ export function AppSidebarNav({ clientSlug }: AppSidebarNavProps) {
                               isActive={isSettingsActive}
                               data-testid={`project-settings-link-${project.key}`}
                             >
-                              <Link href={settingsPath} className="flex items-center gap-2">
-                                <Settings className="size-3.5 text-muted-foreground" />
+                              <Link href={settingsPath}>
                                 <span>Settings</span>
                               </Link>
                             </SidebarMenuSubButton>

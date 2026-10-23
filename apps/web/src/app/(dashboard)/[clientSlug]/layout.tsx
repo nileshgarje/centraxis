@@ -89,12 +89,12 @@ export default function ClientLayout({ children, params }: ClientLayoutProps) {
         {/* Sidebar-07 Component */}
         <AppSidebar clientSlug={clientSlug} />
 
-        {/* Main Content Area */}
-        <SidebarInset className="flex flex-col min-h-screen bg-background">
-          {/* Streamlined Top Navigation Header */}
+        {/* Canonical SidebarInset Canvas */}
+        <SidebarInset>
+          {/* Top Sticky Header */}
           <header
             data-testid="canvas-header"
-            className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-4 transition-[width,height] ease-linear bg-background sticky top-0 z-20"
+            className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4 sticky top-0 z-20 bg-background"
           >
             <div className="flex items-center gap-2 min-w-0">
               <SidebarTrigger data-testid="sidebar-trigger" className="-ml-1" />
@@ -109,8 +109,8 @@ export default function ClientLayout({ children, params }: ClientLayoutProps) {
             </div>
           </header>
 
-          {/* Viewport Content */}
-          <div className="flex-1 overflow-y-auto">
+          {/* Inset Canvas Viewport */}
+          <div className="flex flex-1 flex-col gap-4 p-4 pt-0 overflow-y-auto">
             {children}
           </div>
         </SidebarInset>

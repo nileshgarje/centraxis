@@ -20,7 +20,7 @@ export function AppSidebar({ clientSlug, ...props }: AppSidebarProps) {
   return (
     <Sidebar
       collapsible="icon"
-      className="border-r border-sidebar-border"
+      variant="inset"
       data-testid="app-sidebar"
       {...props}
     >

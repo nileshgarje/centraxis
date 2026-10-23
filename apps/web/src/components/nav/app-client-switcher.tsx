@@ -64,7 +64,7 @@ export function AppClientSwitcher({
                 data-testid="client-switcher-button"
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               >
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-semibold shadow-xs">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   {activeClient?.logo ? (
                     <img
                       src={activeClient.logo}
@@ -76,26 +76,26 @@ export function AppClientSwitcher({
                   )}
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold text-sidebar-foreground">
+                  <span className="truncate font-semibold">
                     {activeClient?.name || (isLoading ? "Loading..." : "Centraxis")}
                   </span>
                   <span className="truncate text-xs text-muted-foreground">
                     {activeClient?.tenantId ? "Enterprise Tenant" : "Client Workspace"}
                   </span>
                 </div>
-                <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
+                <ChevronsUpDown className="ml-auto" />
               </SidebarMenuButton>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent
-              className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg bg-popover border border-border shadow-lg"
+              className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg bg-popover text-popover-foreground shadow-lg border border-border"
               align="start"
               side={isMobile ? "bottom" : "right"}
               sideOffset={4}
               data-testid="client-switcher-dropdown"
             >
-              <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Clients / Workspaces
+              <DropdownMenuLabel className="text-xs text-muted-foreground">
+                Clients
               </DropdownMenuLabel>
 
               {clientList.map((client) => {
@@ -108,31 +108,22 @@ export function AppClientSwitcher({
                     key={client.id}
                     data-testid={`client-switcher-item-${client.slug}`}
                     onClick={() => handleSelectClient(client.slug)}
-                    className="flex items-center justify-between gap-2 p-2 cursor-pointer"
+                    className="gap-2 p-2 cursor-pointer font-medium"
                   >
-                    <div className="flex items-center gap-2">
-                      <div className="flex size-6 items-center justify-center rounded-md border border-border bg-background">
-                        {client.logo ? (
-                          <img
-                            src={client.logo}
-                            alt={client.name}
-                            className="size-4 rounded object-cover"
-                          />
-                        ) : (
-                          <Building2 className="size-3 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-xs font-medium text-foreground">
-                          {client.name}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground font-mono">
-                          /{client.slug}
-                        </span>
-                      </div>
+                    <div className="flex size-6 items-center justify-center rounded-sm border">
+                      {client.logo ? (
+                        <img
+                          src={client.logo}
+                          alt={client.name}
+                          className="size-4 shrink-0 rounded object-cover"
+                        />
+                      ) : (
+                        <Building2 className="size-4 shrink-0 text-muted-foreground" />
+                      )}
                     </div>
+                    <span className="truncate flex-1">{client.name}</span>
                     {isSelected && (
-                      <Check className="size-3.5 text-primary shrink-0" />
+                      <Check className="size-3.5 text-primary shrink-0 ml-auto" />
                     )}
                   </DropdownMenuItem>
                 );

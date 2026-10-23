@@ -80,12 +80,12 @@ export function AppSidebarUser() {
                   {user.email}
                 </span>
               </div>
-              <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
+              <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
 
           <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg bg-popover border border-border shadow-lg"
+            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg bg-popover text-popover-foreground shadow-lg border border-border"
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}
