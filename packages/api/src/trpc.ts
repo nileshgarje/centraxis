@@ -3,6 +3,7 @@ import superjson from "superjson";
 import { ZodError } from "zod";
 import type { Session, UserTeamMembership } from "@centraxis/auth";
 import { db, TeamRole } from "@centraxis/db";
+import { checkRateLimit, type RateLimitTier } from "./ratelimit";
 
 /**
  * 1. CONTEXT
@@ -137,22 +138,58 @@ export const scrumMasterProcedure = protectedProcedure.use(({ ctx, next }) => {
 });
 
 /**
- * Developer procedure: allows developers, scrum masters, and admins to contribute.
+ * Reusable rate limiting middleware factory
  */
-export const developerProcedure = protectedProcedure.use(({ ctx, next }) => {
-  const user = ctx.session.user;
-  const isViewerOnly =
-    user.role === TeamRole.VIEWER &&
-    !(user.memberships as UserTeamMembership[] | undefined)?.some(
-      (m: UserTeamMembership) => m.role !== TeamRole.VIEWER,
-    );
+export const enforceRateLimit = (tier: RateLimitTier) =>
+  t.middleware(async ({ ctx, next }) => {
+    const forwarded = ctx.headers?.get("x-forwarded-for");
+    const ip = forwarded ? forwarded.split(",")[0]?.trim() : "127.0.0.1";
+    const identifier = ctx.session?.user?.id || ip || "127.0.0.1";
 
-  if (isViewerOnly) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Read-only accounts cannot modify agile project records.",
-    });
-  }
+    const result = await checkRateLimit(tier, identifier);
+    if (!result.success) {
+      throw new TRPCError({
+        code: "TOO_MANY_REQUESTS",
+        message: "Rate limit exceeded. Please wait before making more requests.",
+      });
+    }
 
-  return next({ ctx });
-});
+    return next();
+  });
+
+/**
+ * Developer procedure: allows developers, scrum masters, and admins to contribute.
+ * Rate limited to 60 requests per minute.
+ */
+export const developerProcedure = protectedProcedure
+  .use(enforceRateLimit("mutation"))
+  .use(({ ctx, next }) => {
+    const user = ctx.session.user;
+    const isViewerOnly =
+      user.role === TeamRole.VIEWER &&
+      !(user.memberships as UserTeamMembership[] | undefined)?.some(
+        (m: UserTeamMembership) => m.role !== TeamRole.VIEWER,
+      );
+
+    if (isViewerOnly) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Read-only accounts cannot modify agile project records.",
+      });
+    }
+
+    return next({ ctx });
+  });
+
+/**
+ * Protected mutation procedure: rate limited to 60 requests per minute.
+ */
+export const protectedMutationProcedure = protectedProcedure.use(
+  enforceRateLimit("mutation"),
+);
+
+/**
+ * AI generation procedure: rate limited to 10 requests per minute.
+ */
+export const aiProcedure = protectedProcedure.use(enforceRateLimit("ai"));
+

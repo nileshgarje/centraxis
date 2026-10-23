@@ -1,7 +1,15 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { NotificationType, TeamRole } from "@centraxis/db";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  protectedMutationProcedure,
+} from "../trpc";
+import {
+  assertUserCanAccessWorkItem,
+  assertUserCanModifyComment,
+} from "../auth-guards";
 
 export const commentRouter = createTRPCRouter({
   /**
@@ -10,6 +18,12 @@ export const commentRouter = createTRPCRouter({
   listByWorkItem: protectedProcedure
     .input(z.object({ workItemId: z.string() }))
     .query(async ({ ctx, input }) => {
+      await assertUserCanAccessWorkItem(
+        ctx.db,
+        ctx.session.user,
+        input.workItemId,
+      );
+
       return ctx.db.comment.findMany({
         where: { workItemId: input.workItemId },
         include: {
@@ -42,7 +56,7 @@ export const commentRouter = createTRPCRouter({
   /**
    * Create a new comment with rich @mention parsing and notifications
    */
-  create: protectedProcedure
+  create: protectedMutationProcedure
     .input(
       z.object({
         workItemId: z.string(),
@@ -50,6 +64,13 @@ export const commentRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await assertUserCanAccessWorkItem(
+        ctx.db,
+        ctx.session.user,
+        input.workItemId,
+        { requireWrite: true },
+      );
+
       const authorId = ctx.session.user.id;
       const authorName = ctx.session.user.name || "Team Member";
 
@@ -223,32 +244,10 @@ export const commentRouter = createTRPCRouter({
   /**
    * Delete comment (Author or Admin)
    */
-  delete: protectedProcedure
+  delete: protectedMutationProcedure
     .input(z.object({ commentId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const comment = await ctx.db.comment.findUnique({
-        where: { id: input.commentId },
-        select: { id: true, authorId: true },
-      });
-
-      if (!comment) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Comment not found.",
-        });
-      }
-
-      const isAuthor = comment.authorId === ctx.session.user.id;
-      const isAdmin =
-        ctx.session.user.globalRole === "SYSTEM_ADMIN" ||
-        ctx.session.user.role === TeamRole.ORG_ADMIN;
-
-      if (!isAuthor && !isAdmin) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You do not have permission to delete this comment.",
-        });
-      }
+      await assertUserCanModifyComment(ctx.db, ctx.session.user, input.commentId);
 
       return ctx.db.comment.delete({
         where: { id: input.commentId },

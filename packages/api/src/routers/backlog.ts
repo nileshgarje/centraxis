@@ -12,6 +12,10 @@ import {
   developerProcedure,
 } from "../trpc";
 import {
+  assertUserHasProjectAccess,
+  assertUserCanAccessWorkItem,
+} from "../auth-guards";
+import {
   resolveWorkflowForProject,
   mapCategoryToStatus,
   mapStatusToDefaultSlug,
@@ -118,6 +122,12 @@ export const backlogRouter = createTRPCRouter({
           message: "Work item not found",
         });
       }
+
+      await assertUserHasProjectAccess(
+        ctx.db,
+        ctx.session.user,
+        item.project.id,
+      );
 
       return item;
     }),
@@ -228,6 +238,12 @@ export const backlogRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      await assertUserHasProjectAccess(
+        ctx.db,
+        ctx.session.user,
+        input.projectId,
+      );
+
       const whereClause: Record<string, unknown> = {
         projectId: input.projectId,
       };
@@ -286,6 +302,12 @@ export const backlogRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      await assertUserHasProjectAccess(
+        ctx.db,
+        ctx.session.user,
+        input.projectId,
+      );
+
       const rootItems = await ctx.db.workItem.findMany({
         where: {
           projectId: input.projectId,
@@ -326,9 +348,9 @@ export const backlogRouter = createTRPCRouter({
     .input(
       z.object({
         projectId: z.string(),
-        title: z.string().min(1, "Title is required").max(200),
-        description: z.string().optional(),
-        acceptanceCriteria: z.string().optional(),
+        title: z.string().min(1, "Title is required").max(255),
+        description: z.string().max(50000).optional(),
+        acceptanceCriteria: z.string().max(50000).optional(),
         type: z.nativeEnum(WorkItemType).default(WorkItemType.STORY),
         priority: z
           .nativeEnum(WorkItemPriority)
@@ -342,6 +364,13 @@ export const backlogRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await assertUserHasProjectAccess(
+        ctx.db,
+        ctx.session.user,
+        input.projectId,
+        { requireWrite: true },
+      );
+
       const project = await ctx.db.project.findUnique({
         where: { id: input.projectId },
         select: { key: true },
@@ -415,9 +444,9 @@ export const backlogRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string(),
-        title: z.string().min(1).optional(),
-        description: z.string().nullable().optional(),
-        acceptanceCriteria: z.string().nullable().optional(),
+        title: z.string().min(1).max(255).optional(),
+        description: z.string().max(50000).nullable().optional(),
+        acceptanceCriteria: z.string().max(50000).nullable().optional(),
         type: z.nativeEnum(WorkItemType).optional(),
         status: z.nativeEnum(WorkItemStatus).optional(),
         priority: z.nativeEnum(WorkItemPriority).optional(),
@@ -431,17 +460,14 @@ export const backlogRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
 
+      const existing = await assertUserCanAccessWorkItem(
+        ctx.db,
+        ctx.session.user,
+        id,
+        { requireWrite: true },
+      );
+
       if (data.assigneeId) {
-        const existing = await ctx.db.workItem.findUnique({
-          where: { id },
-          select: { projectId: true },
-        });
-        if (!existing) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Target work item does not exist.",
-          });
-        }
         const isAssignable = await isUserAssignableToProject(
           ctx.db,
           existing.projectId,
@@ -543,6 +569,10 @@ export const backlogRouter = createTRPCRouter({
       const { itemId, prevRank, nextRank, targetSprintId, targetStatus } =
         input;
 
+      await assertUserCanAccessWorkItem(ctx.db, ctx.session.user, itemId, {
+        requireWrite: true,
+      });
+
       let newRank: number;
       if (prevRank === null && nextRank === null) {
         newRank = 1000;
@@ -577,6 +607,10 @@ export const backlogRouter = createTRPCRouter({
   deleteItem: developerProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      await assertUserCanAccessWorkItem(ctx.db, ctx.session.user, input.id, {
+        requireWrite: true,
+      });
+
       return ctx.db.workItem.delete({
         where: { id: input.id },
       });

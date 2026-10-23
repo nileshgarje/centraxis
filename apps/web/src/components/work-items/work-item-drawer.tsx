@@ -280,6 +280,9 @@ export function WorkItemDrawer({
         setTitle(item.title);
         setDescription(item.description || "");
         setAcceptanceCriteria(item.acceptanceCriteria || "");
+      } else {
+        // Sync fresh title from server when updated
+        setTitle(item.title);
       }
     }
   }, [item]);

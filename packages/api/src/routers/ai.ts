@@ -6,13 +6,15 @@ import {
   createTRPCRouter,
   protectedProcedure,
   developerProcedure,
+  aiProcedure,
 } from "../trpc";
+import { assertUserHasProjectAccess } from "../auth-guards";
 
 export const aiRouter = createTRPCRouter({
   /**
    * Generate an INVEST-compliant user story from a brief feature description
    */
-  generateStoryFromPrompt: protectedProcedure
+  generateStoryFromPrompt: aiProcedure
     .input(
       z.object({
         prompt: z.string().min(5, "Prompt must be at least 5 characters long"),
@@ -23,6 +25,8 @@ export const aiRouter = createTRPCRouter({
       let projectContext: string | undefined;
 
       if (input.projectId) {
+        await assertUserHasProjectAccess(ctx.db, ctx.session.user, input.projectId);
+
         const project = await ctx.db.project.findUnique({
           where: { id: input.projectId },
           select: { name: true, key: true, description: true },
@@ -55,6 +59,10 @@ export const aiRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await assertUserHasProjectAccess(ctx.db, ctx.session.user, input.projectId, {
+        requireWrite: true,
+      });
+
       const project = await ctx.db.project.findUnique({
         where: { id: input.projectId },
         select: { key: true },

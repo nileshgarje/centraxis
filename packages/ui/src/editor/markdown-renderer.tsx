@@ -4,9 +4,67 @@ import React, { useState } from "react";
 import { marked, type Token, type Tokens } from "marked";
 import { common, createLowlight } from "lowlight";
 import { Check, Copy, Code2, ExternalLink } from "lucide-react";
+import DOMPurify from "dompurify";
 
 // Initialize lowlight with common programming languages
 const lowlight = createLowlight(common);
+
+/**
+ * Validates and sanitizes link and image URLs to prevent javascript: or data: XSS payloads
+ */
+function isSafeUrl(url: string): boolean {
+  if (!url) return false;
+  const trimmed = url.trim().toLowerCase();
+  // Strip control characters
+  const clean = trimmed.replace(/[\x00-\x1F\x7F]/g, "");
+  if (
+    clean.startsWith("javascript:") ||
+    clean.startsWith("vbscript:") ||
+    clean.startsWith("data:")
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function sanitizeHref(url: string): string {
+  if (!isSafeUrl(url)) {
+    return "#";
+  }
+  if (typeof window !== "undefined") {
+    return DOMPurify.sanitize(url);
+  }
+  return url;
+}
+
+function sanitizeHtml(dirty: string): string {
+  if (typeof window !== "undefined") {
+    return DOMPurify.sanitize(dirty, {
+      FORBID_TAGS: [
+        "script",
+        "iframe",
+        "object",
+        "embed",
+        "form",
+        "input",
+        "base",
+      ],
+      FORBID_ATTR: [
+        "onerror",
+        "onload",
+        "onclick",
+        "onmouseover",
+        "onfocus",
+        "onblur",
+      ],
+    });
+  }
+  return dirty
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, "")
+    .replace(/\s+on\w+="[^"]*"/gi, "")
+    .replace(/\s+on\w+='[^']*'/gi, "");
+}
 
 interface MarkdownRendererProps {
   content?: string | null;
@@ -406,6 +464,19 @@ export function MarkdownRenderer({
         return <hr key={idx} className="my-4 border-slate-200" />;
       }
 
+      case "html": {
+        const hToken = token as Tokens.HTML;
+        const sanitized = sanitizeHtml(hToken.text);
+        if (!sanitized.trim()) return null;
+        return (
+          <div
+            key={idx}
+            dangerouslySetInnerHTML={{ __html: sanitized }}
+            className="my-1.5"
+          />
+        );
+      }
+
       default:
         return null;
     }
@@ -444,19 +515,32 @@ export function MarkdownRenderer({
               {t.text}
             </del>
           );
+        case "html": {
+          const hToken = t as Tokens.HTML;
+          const sanitized = sanitizeHtml(hToken.text);
+          if (!sanitized.trim()) return null;
+          return (
+            <span
+              key={i}
+              dangerouslySetInnerHTML={{ __html: sanitized }}
+            />
+          );
+        }
         case "image": {
           const img = t as Tokens.Image;
+          const safeSrc = isSafeUrl(img.href) ? sanitizeHref(img.href) : "";
+          if (!safeSrc) return null;
           return (
             <span key={i} className="inline-block my-1.5 max-w-full">
               <img
-                src={img.href}
+                src={safeSrc}
                 alt={img.text || "Attached image"}
                 title={img.title || undefined}
                 className="max-h-96 rounded-lg border border-slate-200 dark:border-slate-800 object-contain shadow-xs inline-block max-w-full hover:opacity-95 transition cursor-pointer"
                 loading="lazy"
                 onClick={() => {
-                  if (typeof window !== "undefined") {
-                    window.open(img.href, "_blank");
+                  if (typeof window !== "undefined" && isSafeUrl(safeSrc)) {
+                    window.open(safeSrc, "_blank");
                   }
                 }}
               />
@@ -470,10 +554,11 @@ export function MarkdownRenderer({
         }
         case "link": {
           const l = t as Tokens.Link;
+          const safeHref = sanitizeHref(l.href);
           return (
             <a
               key={i}
-              href={l.href}
+              href={safeHref}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center text-blue-600 underline hover:text-blue-800"

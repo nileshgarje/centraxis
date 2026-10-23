@@ -8,8 +8,13 @@ export {
   adminProcedure,
   scrumMasterProcedure,
   developerProcedure,
+  protectedMutationProcedure,
+  aiProcedure,
+  enforceRateLimit,
   type Context,
 } from "./trpc";
+export * from "./ratelimit";
+export * from "./auth-guards";
 
 import type { inferRouterOutputs, inferRouterInputs } from "@trpc/server";
 import type { AppRouter } from "./root";

@@ -10,7 +10,12 @@ import {
   createTRPCRouter,
   protectedProcedure,
   developerProcedure,
+  protectedMutationProcedure,
 } from "../trpc";
+import {
+  assertUserCanAccessWorkItem,
+  assertUserCanDeleteAttachment,
+} from "../auth-guards";
 
 async function isUserAssignableToProject(
   db: any,
@@ -58,6 +63,12 @@ export const workItemRouter = createTRPCRouter({
   getSubTasks: protectedProcedure
     .input(z.object({ parentId: z.string() }))
     .query(async ({ ctx, input }) => {
+      await assertUserCanAccessWorkItem(
+        ctx.db,
+        ctx.session.user,
+        input.parentId,
+      );
+
       const parent = await ctx.db.workItem.findUnique({
         where: { id: input.parentId },
         select: { id: true, key: true, title: true, status: true },
@@ -104,7 +115,7 @@ export const workItemRouter = createTRPCRouter({
     .input(
       z.object({
         parentId: z.string(),
-        title: z.string().min(1, "Title is required").max(200),
+        title: z.string().min(1, "Title is required").max(255),
         type: z.nativeEnum(WorkItemType).default(WorkItemType.TASK),
         priority: z
           .nativeEnum(WorkItemPriority)
@@ -115,6 +126,13 @@ export const workItemRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await assertUserCanAccessWorkItem(
+        ctx.db,
+        ctx.session.user,
+        input.parentId,
+        { requireWrite: true },
+      );
+
       const parent = await ctx.db.workItem.findUnique({
         where: { id: input.parentId },
         include: {
@@ -202,6 +220,10 @@ export const workItemRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await assertUserCanAccessWorkItem(ctx.db, ctx.session.user, input.id, {
+        requireWrite: true,
+      });
+
       const item = await ctx.db.workItem.findUnique({
         where: { id: input.id },
         select: { id: true, parentId: true },
@@ -232,7 +254,7 @@ export const workItemRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string(),
-        title: z.string().min(1).optional(),
+        title: z.string().min(1).max(255).optional(),
         assigneeId: z.string().nullable().optional(),
         priority: z.nativeEnum(WorkItemPriority).optional(),
         dueDate: z.coerce.date().nullable().optional(),
@@ -240,17 +262,13 @@ export const workItemRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
-      const item = await ctx.db.workItem.findUnique({
-        where: { id },
-        select: { id: true, projectId: true },
-      });
 
-      if (!item) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Sub-task not found.",
-        });
-      }
+      const item = await assertUserCanAccessWorkItem(
+        ctx.db,
+        ctx.session.user,
+        id,
+        { requireWrite: true },
+      );
 
       if (data.assigneeId) {
         const isAssignable = await isUserAssignableToProject(
@@ -283,6 +301,10 @@ export const workItemRouter = createTRPCRouter({
   deleteSubTask: developerProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      await assertUserCanAccessWorkItem(ctx.db, ctx.session.user, input.id, {
+        requireWrite: true,
+      });
+
       return ctx.db.workItem.delete({
         where: { id: input.id },
       });
@@ -294,6 +316,12 @@ export const workItemRouter = createTRPCRouter({
   getAttachments: protectedProcedure
     .input(z.object({ workItemId: z.string() }))
     .query(async ({ ctx, input }) => {
+      await assertUserCanAccessWorkItem(
+        ctx.db,
+        ctx.session.user,
+        input.workItemId,
+      );
+
       return ctx.db.attachment.findMany({
         where: { workItemId: input.workItemId },
         include: {
@@ -308,48 +336,10 @@ export const workItemRouter = createTRPCRouter({
   /**
    * Delete an attachment
    */
-  deleteAttachment: protectedProcedure
+  deleteAttachment: protectedMutationProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const attachment = await ctx.db.attachment.findUnique({
-        where: { id: input.id },
-        select: {
-          id: true,
-          uploaderId: true,
-          fileUrl: true,
-          workItem: { select: { projectId: true } },
-        },
-      });
-
-      if (!attachment) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Attachment not found.",
-        });
-      }
-
-      const isUploader = attachment.uploaderId === ctx.session.user.id;
-      const isAdmin =
-        ctx.session.user.globalRole === "SYSTEM_ADMIN" ||
-        ctx.session.user.role === "ORG_ADMIN";
-
-      let isProjectMember = false;
-      if (!isUploader && !isAdmin && attachment.workItem?.projectId) {
-        const pm = await ctx.db.projectMember.findFirst({
-          where: {
-            projectId: attachment.workItem.projectId,
-            userId: ctx.session.user.id,
-          },
-        });
-        isProjectMember = !!pm;
-      }
-
-      if (!isUploader && !isAdmin && !isProjectMember) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You do not have permission to delete this attachment.",
-        });
-      }
+      await assertUserCanDeleteAttachment(ctx.db, ctx.session.user, input.id);
 
       return ctx.db.attachment.delete({
         where: { id: input.id },

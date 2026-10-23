@@ -39,6 +39,8 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^4.4.0",
+    "dompurify": "^3.4.17",
+    "isomorphic-dompurify": "^4.6.0",
     "lowlight": "^3.3.0",
     "lucide-react": "^0.475.0",
     "marked": "^18.1.1",
@@ -51,6 +53,7 @@
   "devDependencies": {
     "@centraxis/eslint-config": "workspace:*",
     "@centraxis/typescript-config": "workspace:*",
+    "@types/dompurify": "^3.2.0",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "react": "^19.0.0",
