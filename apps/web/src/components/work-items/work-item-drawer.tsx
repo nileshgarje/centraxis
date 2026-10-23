@@ -25,6 +25,8 @@ import {
 import { api } from "~/trpc/react";
 import { WorkflowViewerDialog } from "../workflow/workflow-viewer-dialog";
 import { DueDateBadge } from "./due-date-badge";
+import { InlineTitleEditor } from "./inline-title-editor";
+import { AttachmentsSection } from "./attachments-section";
 import {
   MarkdownEditor,
   MarkdownRenderer,
@@ -293,6 +295,16 @@ export function WorkItemDrawer({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
+        // If an input, textarea, or contenteditable editor is currently focused, allow it to handle Escape first
+        const activeEl = document.activeElement;
+        if (
+          activeEl &&
+          (activeEl.tagName === "INPUT" ||
+            activeEl.tagName === "TEXTAREA" ||
+            activeEl.getAttribute("contenteditable") === "true")
+        ) {
+          return;
+        }
         onClose();
       }
     };
@@ -377,6 +389,18 @@ export function WorkItemDrawer({
     >
       <SheetContent
         side="right"
+        onEscapeKeyDown={(e) => {
+          // Prevent Radix Sheet from closing if active focus is inside an input, textarea, or contenteditable editor
+          const activeEl = document.activeElement;
+          if (
+            activeEl &&
+            (activeEl.tagName === "INPUT" ||
+              activeEl.tagName === "TEXTAREA" ||
+              activeEl.getAttribute("contenteditable") === "true")
+          ) {
+            e.preventDefault();
+          }
+        }}
         className="w-full sm:max-w-2xl md:max-w-3xl h-full p-0 flex flex-col overflow-hidden bg-background border-border shadow-2xl"
       >
         <SheetHeader className="sr-only">
@@ -573,19 +597,15 @@ export function WorkItemDrawer({
               </Select>
             </div>
 
-            {/* Title Input */}
+            {/* Title Inline Editor */}
             <div>
-              <input
-                type="text"
+              <InlineTitleEditor
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onBlur={() => {
-                  if (title.trim() && title !== item.title) {
-                    handleSaveField({ title: title.trim() });
-                  }
+                onSave={(newTitle) => {
+                  setTitle(newTitle);
+                  handleSaveField({ title: newTitle });
                 }}
                 placeholder="Issue title..."
-                className="w-full text-xl font-bold tracking-tight text-foreground bg-transparent border-none px-0 py-1 focus:outline-none focus:ring-0 placeholder:text-muted-foreground"
               />
             </div>
 
@@ -783,6 +803,14 @@ export function WorkItemDrawer({
                 value={description}
                 onChange={setDescription}
                 onSave={(val) => handleSaveField({ description: val })}
+                uploadExtraData={currentId ? { workItemId: currentId } : undefined}
+                onAttachmentUploaded={() => {
+                  if (currentId) {
+                    void utils.workItem.getAttachments.invalidate({
+                      workItemId: currentId,
+                    });
+                  }
+                }}
                 minHeight="140px"
                 placeholder="Add a detailed description, architecture diagram references, or code snippets..."
               />
@@ -803,8 +831,24 @@ export function WorkItemDrawer({
                 value={acceptanceCriteria}
                 onChange={setAcceptanceCriteria}
                 onSave={(val) => handleSaveField({ acceptanceCriteria: val })}
+                uploadExtraData={currentId ? { workItemId: currentId } : undefined}
+                onAttachmentUploaded={() => {
+                  if (currentId) {
+                    void utils.workItem.getAttachments.invalidate({
+                      workItemId: currentId,
+                    });
+                  }
+                }}
                 minHeight="110px"
                 placeholder="Scenario: Successful user login&#10;Given user is on /login&#10;When credentials are valid&#10;Then redirect to dashboard"
+              />
+            </div>
+
+            {/* 3. Attachments Gallery (Jira-style File & Screenshot Assets) */}
+            <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
+              <AttachmentsSection
+                workItemId={item.id}
+                projectId={targetProjectId!}
               />
             </div>
 

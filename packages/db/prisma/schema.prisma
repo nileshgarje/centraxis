@@ -162,6 +162,7 @@ model User {
   comments          Comment[]
   mentions          Mention[]
   notifications     Notification[]
+  attachments       Attachment[]
 }
 
 model Invitation {
@@ -384,6 +385,7 @@ model WorkItem {
 
   aiStoryLogs        AiStoryLog[]
   comments           Comment[]
+  attachments        Attachment[]
 
   @@unique([projectId, key])
   @@index([projectId, status])
@@ -539,4 +541,25 @@ model WorkflowTransition {
   @@index([workflowId, fromStateId])
   @@index([workflowId, toStateId])
 }
+
+// ------------------------------------------------------
+// File Attachments
+// ------------------------------------------------------
+
+model Attachment {
+  id         String   @id @default(cuid())
+  filename   String
+  fileUrl    String
+  fileSize   Int      // in bytes
+  mimeType   String
+  workItemId String
+  workItem   WorkItem @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  uploaderId String
+  uploader   User     @relation(fields: [uploaderId], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@index([workItemId])
+  @@index([uploaderId])
+}
+
 

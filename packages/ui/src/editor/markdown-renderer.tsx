@@ -444,6 +444,30 @@ export function MarkdownRenderer({
               {t.text}
             </del>
           );
+        case "image": {
+          const img = t as Tokens.Image;
+          return (
+            <span key={i} className="inline-block my-1.5 max-w-full">
+              <img
+                src={img.href}
+                alt={img.text || "Attached image"}
+                title={img.title || undefined}
+                className="max-h-96 rounded-lg border border-slate-200 dark:border-slate-800 object-contain shadow-xs inline-block max-w-full hover:opacity-95 transition cursor-pointer"
+                loading="lazy"
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    window.open(img.href, "_blank");
+                  }
+                }}
+              />
+              {img.text && (
+                <span className="block text-[11px] text-slate-500 mt-0.5 italic">
+                  {img.text}
+                </span>
+              )}
+            </span>
+          );
+        }
         case "link": {
           const l = t as Tokens.Link;
           return (

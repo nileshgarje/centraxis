@@ -101,6 +101,14 @@ export const backlogRouter = createTRPCRouter({
             },
             orderBy: { rankOrder: "asc" },
           },
+          attachments: {
+            include: {
+              uploader: {
+                select: { id: true, name: true, image: true, email: true },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+          },
         },
       });
 
@@ -164,6 +172,14 @@ export const backlogRouter = createTRPCRouter({
               dueDate: true,
             },
             orderBy: { rankOrder: "asc" },
+          },
+          attachments: {
+            include: {
+              uploader: {
+                select: { id: true, name: true, image: true, email: true },
+              },
+            },
+            orderBy: { createdAt: "desc" },
           },
         },
       });

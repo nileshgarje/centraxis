@@ -28,6 +28,8 @@ import { api } from "~/trpc/react";
 import { WorkflowViewerDialog } from "~/components/workflow/workflow-viewer-dialog";
 import { WorkItemDrawer } from "~/components/work-items/work-item-drawer";
 import { DueDateBadge } from "~/components/work-items/due-date-badge";
+import { InlineTitleEditor } from "~/components/work-items/inline-title-editor";
+import { AttachmentsSection } from "~/components/work-items/attachments-section";
 import {
   MarkdownEditor,
   Button,
@@ -570,18 +572,15 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
                 )}
               </div>
 
-              {/* Title Input */}
-              <input
-                type="text"
+              {/* Title Inline Editor */}
+              <InlineTitleEditor
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onBlur={() => {
-                  if (title !== item.title && title.trim()) {
-                    handleSaveField({ title: title.trim() });
-                  }
+                onSave={(newTitle) => {
+                  setTitle(newTitle);
+                  handleSaveField({ title: newTitle });
                 }}
                 placeholder="Issue title"
-                className="w-full text-2xl font-bold bg-transparent border-0 border-b border-transparent hover:border-border focus:border-primary focus:outline-hidden px-1 py-1 text-foreground transition placeholder:text-muted-foreground/50"
+                className="text-2xl font-bold"
               />
             </div>
 
@@ -598,6 +597,14 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
                   onSave={(val) =>
                     handleSaveField({ description: val.trim() || null })
                   }
+                  uploadExtraData={{ workItemId: item?.id }}
+                  onAttachmentUploaded={() => {
+                    if (item?.id) {
+                      void utils.workItem.getAttachments.invalidate({
+                        workItemId: item.id,
+                      });
+                    }
+                  }}
                   placeholder="Add a detailed description... (Markdown supported)"
                   minHeight="180px"
                 />
@@ -620,10 +627,26 @@ export default function WorkItemFullPage({ params }: WorkItemPageProps) {
                   onSave={(val) =>
                     handleSaveField({ acceptanceCriteria: val.trim() || null })
                   }
+                  uploadExtraData={{ workItemId: item?.id }}
+                  onAttachmentUploaded={() => {
+                    if (item?.id) {
+                      void utils.workItem.getAttachments.invalidate({
+                        workItemId: item.id,
+                      });
+                    }
+                  }}
                   placeholder="Given [context] When [action] Then [outcome]..."
                   minHeight="140px"
                 />
               </div>
+            </div>
+
+            {/* Attachments Section */}
+            <div className="rounded-xl border border-border bg-card p-6 shadow-2xs">
+              <AttachmentsSection
+                workItemId={item.id}
+                projectId={item.projectId}
+              />
             </div>
 
             {/* Sub-tasks Section */}

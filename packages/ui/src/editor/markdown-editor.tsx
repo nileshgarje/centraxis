@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { Node as TiptapNode, mergeAttributes } from "@tiptap/core";
 import {
   useEditor,
   EditorContent,
@@ -35,6 +36,9 @@ import {
   Copy,
   Eye,
   PenTool,
+  Paperclip,
+  UploadCloud,
+  Loader2,
 } from "lucide-react";
 import { MarkdownRenderer } from "./markdown-renderer";
 
@@ -140,6 +144,35 @@ const CustomCodeBlockLowlight = CodeBlockLowlight.extend({
   defaultLanguage: "typescript",
 });
 
+const CustomMarkdownImage = TiptapNode.create({
+  name: "image",
+  inline: false,
+  group: "block",
+  draggable: true,
+  addAttributes() {
+    return {
+      src: { default: null },
+      alt: { default: null },
+      title: { default: null },
+    };
+  },
+  parseHTML() {
+    return [{ tag: "img[src]" }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "img",
+      mergeAttributes(
+        {
+          class:
+            "rounded-lg max-h-96 object-contain my-2 border border-slate-200 dark:border-slate-800 shadow-xs",
+        },
+        HTMLAttributes,
+      ),
+    ];
+  },
+});
+
 export interface MarkdownEditorProps {
   value?: string;
   onChange?: (markdown: string) => void;
@@ -150,6 +183,10 @@ export interface MarkdownEditorProps {
   minHeight?: string;
   className?: string;
   disabled?: boolean;
+  onUpload?: (file: File) => Promise<{ fileUrl: string; filename: string; id?: string }>;
+  uploadEndpoint?: string;
+  uploadExtraData?: Record<string, string | null | undefined>;
+  onAttachmentUploaded?: (attachment: any) => void;
 }
 
 function useDebouncedCallback<T extends (...args: any[]) => any>(
@@ -225,9 +262,16 @@ export function MarkdownEditor({
   minHeight = "160px",
   className = "",
   disabled = false,
+  onUpload,
+  uploadEndpoint = "/api/upload",
+  uploadExtraData,
+  onAttachmentUploaded,
 }: MarkdownEditorProps) {
   const [activeTab, setActiveTab] = useState<"write" | "preview">("write");
   const [isMounted, setIsMounted] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const lastEmittedValue = useRef(value);
   const lastSavedValue = useRef(value);
 
@@ -237,6 +281,8 @@ export function MarkdownEditor({
   onSaveRef.current = onSave;
   const onBlurRef = useRef(onBlur);
   onBlurRef.current = onBlur;
+  const onAttachmentUploadedRef = useRef(onAttachmentUploaded);
+  onAttachmentUploadedRef.current = onAttachmentUploaded;
 
   const debouncedAutosave = useDebouncedCallback((newContent: string) => {
     if (newContent !== lastSavedValue.current) {
@@ -244,6 +290,89 @@ export function MarkdownEditor({
       onSaveRef.current?.(newContent);
     }
   }, debounceMs);
+
+  const uploadAndInsertFile = async (file: File) => {
+    if (!editor || disabled) return;
+    setIsUploading(true);
+
+    const isImage = file.type.startsWith("image/");
+    const safeName = file.name || (isImage ? "image.png" : "attachment");
+    const placeholder = isImage
+      ? `![Uploading ${safeName}...]()\n`
+      : `[Uploading ${safeName}...]()\n`;
+
+    // Insert placeholder at current caret position or at the end
+    editor.commands.insertContent(placeholder);
+
+    try {
+      let result: { fileUrl: string; filename: string; id?: string };
+      if (onUpload) {
+        result = await onUpload(file);
+      } else {
+        const formData = new FormData();
+        formData.append("file", file);
+        if (uploadExtraData) {
+          for (const [k, v] of Object.entries(uploadExtraData)) {
+            if (v) formData.append(k, v);
+          }
+        }
+        const endpoint = uploadEndpoint || "/api/upload";
+        const res = await fetch(endpoint, {
+          method: "POST",
+          body: formData,
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(
+            errData.error || `Upload failed with status ${res.status}`,
+          );
+        }
+        result = await res.json();
+      }
+
+      // Replace placeholder with final markdown syntax
+      const finalMarkdownToken = isImage
+        ? `![${result.filename || safeName}](${result.fileUrl})\n`
+        : `[📎 ${result.filename || safeName}](${result.fileUrl})\n`;
+
+      const currentDocMarkdown =
+        (editor.storage as any).markdown?.getMarkdown() ??
+        editor.getText() ??
+        "";
+
+      if (currentDocMarkdown.includes(placeholder)) {
+        const updated = currentDocMarkdown.replace(
+          placeholder,
+          finalMarkdownToken,
+        );
+        lastEmittedValue.current = updated;
+        editor.commands.setContent(updated, { emitUpdate: true });
+        onChangeRef.current?.(updated);
+        debouncedAutosave(updated);
+      } else {
+        editor.commands.insertContent(finalMarkdownToken);
+      }
+
+      onAttachmentUploadedRef.current?.(result);
+    } catch (err: any) {
+      console.error("Failed to upload file attachment:", err);
+      const currentDocMarkdown =
+        (editor.storage as any).markdown?.getMarkdown() ??
+        editor.getText() ??
+        "";
+      const updated = currentDocMarkdown.replace(
+        placeholder,
+        `> ⚠️ *Failed to upload ${safeName} (${err?.message || "Error"})*\n`,
+      );
+      lastEmittedValue.current = updated;
+      editor.commands.setContent(updated, { emitUpdate: true });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const uploadAndInsertFileRef = useRef(uploadAndInsertFile);
+  uploadAndInsertFileRef.current = uploadAndInsertFile;
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -253,6 +382,7 @@ export function MarkdownEditor({
         codeBlock: false,
       }),
       CustomCodeBlockLowlight,
+      CustomMarkdownImage,
       TaskList,
       TaskItem.configure({
         nested: true,
@@ -274,6 +404,38 @@ export function MarkdownEditor({
       attributes: {
         class: `prose-sm max-w-none focus:outline-none p-3.5 text-slate-900 text-sm leading-relaxed`,
         style: `min-height: ${minHeight};`,
+      },
+      handlePaste: (_view, event) => {
+        const files = event.clipboardData?.files;
+        if (files && files.length > 0) {
+          const filesToUpload = Array.from(files).filter(
+            (f) =>
+              f.type.startsWith("image/") ||
+              f.type === "application/pdf" ||
+              f.type.startsWith("text/"),
+          );
+          if (filesToUpload.length > 0) {
+            event.preventDefault();
+            for (const file of filesToUpload) {
+              void uploadAndInsertFileRef.current(file);
+            }
+            return true;
+          }
+        }
+        return false;
+      },
+      handleDrop: (_view, event, _slice, moved) => {
+        if (moved) return false;
+        const files = event.dataTransfer?.files;
+        if (files && files.length > 0) {
+          event.preventDefault();
+          setIsDraggingOver(false);
+          for (const file of Array.from(files)) {
+            void uploadAndInsertFileRef.current(file);
+          }
+          return true;
+        }
+        return false;
       },
     },
     onUpdate: ({ editor }) => {
@@ -360,8 +522,49 @@ export function MarkdownEditor({
 
   return (
     <div
-      className={`overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 ${className}`}
+      onDragOver={(e) => {
+        if (!disabled && e.dataTransfer?.types?.includes("Files")) {
+          e.preventDefault();
+          setIsDraggingOver(true);
+        }
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as globalThis.Node)) {
+          setIsDraggingOver(false);
+        }
+      }}
+      onDrop={(e) => {
+        if (!disabled && e.dataTransfer?.files?.length) {
+          e.preventDefault();
+          setIsDraggingOver(false);
+          for (const file of Array.from(e.dataTransfer.files)) {
+            void uploadAndInsertFileRef.current(file);
+          }
+        }
+      }}
+      className={`relative overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 ${className}`}
     >
+      {/* Drag & Drop Visual Overlay */}
+      {isDraggingOver && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-blue-50/95 dark:bg-slate-900/95 border-2 border-dashed border-blue-500 rounded-xl pointer-events-none transition-all p-4 text-center">
+          <UploadCloud className="h-10 w-10 text-blue-600 animate-bounce mb-2" />
+          <p className="text-sm font-bold text-blue-900 dark:text-blue-100">
+            Drop images or files here to attach
+          </p>
+          <p className="text-xs text-blue-600 dark:text-blue-300 mt-0.5">
+            Images render inline • Documents are linked automatically
+          </p>
+        </div>
+      )}
+
+      {/* Uploading Status Badge */}
+      {isUploading && (
+        <div className="absolute top-2 right-2 z-40 flex items-center gap-1.5 bg-blue-600 text-white text-xs font-semibold px-2.5 py-1 rounded-md shadow-md animate-pulse">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          <span>Uploading asset...</span>
+        </div>
+      )}
+
       {/* Editor Header / Toolbar */}
       <div className="flex flex-wrap items-center justify-between border-b border-slate-200 bg-slate-50 px-2 py-1.5 gap-y-1">
         {/* Left: Tab Switcher (Write vs Preview) */}
@@ -554,6 +757,30 @@ export function MarkdownEditor({
             >
               <LinkIcon className="h-3.5 w-3.5" />
             </button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              title="Attach File or Image"
+              disabled={disabled || isUploading}
+              className="p-1.5 rounded hover:bg-slate-200/70 transition text-slate-600 hover:text-slate-900 disabled:opacity-40"
+            >
+              <Paperclip className="h-3.5 w-3.5" />
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                const files = e.target.files;
+                if (files && files.length > 0) {
+                  for (const file of Array.from(files)) {
+                    void uploadAndInsertFileRef.current(file);
+                  }
+                  e.target.value = "";
+                }
+              }}
+            />
 
             <div className="h-4 w-[1px] bg-slate-300 mx-1" />
 

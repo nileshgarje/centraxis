@@ -287,4 +287,72 @@ export const workItemRouter = createTRPCRouter({
         where: { id: input.id },
       });
     }),
+
+  /**
+   * Get all attachments for a work item
+   */
+  getAttachments: protectedProcedure
+    .input(z.object({ workItemId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.db.attachment.findMany({
+        where: { workItemId: input.workItemId },
+        include: {
+          uploader: {
+            select: { id: true, name: true, email: true, image: true },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    }),
+
+  /**
+   * Delete an attachment
+   */
+  deleteAttachment: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const attachment = await ctx.db.attachment.findUnique({
+        where: { id: input.id },
+        select: {
+          id: true,
+          uploaderId: true,
+          fileUrl: true,
+          workItem: { select: { projectId: true } },
+        },
+      });
+
+      if (!attachment) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Attachment not found.",
+        });
+      }
+
+      const isUploader = attachment.uploaderId === ctx.session.user.id;
+      const isAdmin =
+        ctx.session.user.globalRole === "SYSTEM_ADMIN" ||
+        ctx.session.user.role === "ORG_ADMIN";
+
+      let isProjectMember = false;
+      if (!isUploader && !isAdmin && attachment.workItem?.projectId) {
+        const pm = await ctx.db.projectMember.findFirst({
+          where: {
+            projectId: attachment.workItem.projectId,
+            userId: ctx.session.user.id,
+          },
+        });
+        isProjectMember = !!pm;
+      }
+
+      if (!isUploader && !isAdmin && !isProjectMember) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have permission to delete this attachment.",
+        });
+      }
+
+      return ctx.db.attachment.delete({
+        where: { id: input.id },
+      });
+    }),
 });
