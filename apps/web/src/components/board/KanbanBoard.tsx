@@ -23,6 +23,12 @@ import { CompleteSprintDialog } from "../sprints/complete-sprint-dialog";
 import { DueDateBadge } from "../work-items/due-date-badge";
 import { Button, Badge, toast } from "@centraxis/ui";
 import { useProject } from "~/context/project-context";
+import {
+  BoardFilterBar,
+  type BoardFilterState,
+  matchesBoardFilter,
+  DEFAULT_BOARD_STATUSES,
+} from "./board-filter-bar";
 
 interface WorkItemCard {
   id: string;
@@ -127,6 +133,11 @@ export function KanbanBoard({
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [filterState, setFilterState] = useState<BoardFilterState>({
+    search: "",
+    assigneeIds: [],
+    statuses: [],
+  });
 
   // Synchronize query data into local state for optimistic drag & drop
   useEffect(() => {
@@ -318,11 +329,21 @@ export function KanbanBoard({
         </div>
       )}
 
+      {/* Interactive Board Filter Bar */}
+      <BoardFilterBar
+        projectId={projectId}
+        availableStatuses={DEFAULT_BOARD_STATUSES}
+        onFilterChange={setFilterState}
+      />
+
       {/* Kanban Board Columns */}
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
           {COLUMNS.map((col) => {
-            const cards = columns[col.id] ?? [];
+            const rawCards = columns[col.id] ?? [];
+            const cards = rawCards.filter((card) =>
+              matchesBoardFilter(card, filterState),
+            );
             const colPoints = cards.reduce(
               (acc, c) => acc + (c.storyPoints ?? 0),
               0,

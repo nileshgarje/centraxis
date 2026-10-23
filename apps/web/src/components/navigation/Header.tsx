@@ -25,6 +25,7 @@ import {
   User,
   FolderGit2,
   AlertTriangle,
+  CheckSquare,
 } from "lucide-react";
 import {
   CentvisLogo,
@@ -360,6 +361,17 @@ export function Header({
                 </div>
               )}
             </div>
+
+            {/* My Work Global Navigation Link */}
+            <Link
+              href="/my-work"
+              data-testid="nav-my-work"
+              className="flex items-center gap-1.5 rounded-md border border-border/80 bg-muted/30 hover:bg-muted/70 px-2.5 py-1 text-xs font-medium text-foreground transition focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              title="Personal Dashboard - My Work"
+            >
+              <CheckSquare className="h-3.5 w-3.5 text-primary" />
+              <span className="hidden sm:inline">My Work</span>
+            </Link>
           </div>
 
           {/* Center: Clean Text Tab Links */}
@@ -572,6 +584,16 @@ export function Header({
                 </div>
 
                 <DropdownMenuSeparator />
+
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/my-work"
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    <CheckSquare className="h-4 w-4 text-primary" />
+                    <span>My Work Dashboard</span>
+                  </Link>
+                </DropdownMenuItem>
 
                 <DropdownMenuItem asChild>
                   <Link

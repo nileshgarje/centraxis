@@ -38,6 +38,12 @@ import {
   AvatarImage,
 } from "@centraxis/ui";
 import { useProject } from "~/context/project-context";
+import {
+  BoardFilterBar,
+  type BoardFilterState,
+  matchesBoardFilter,
+  BACKLOG_STATUSES,
+} from "../board/board-filter-bar";
 
 interface BacklogViewProps {
   projectId: string;
@@ -126,6 +132,11 @@ export function BacklogView({
   const [sprintToEdit, setSprintToEdit] = useState<SprintData | null>(null);
   const [sprintToComplete, setSprintToComplete] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [filterState, setFilterState] = useState<BoardFilterState>({
+    search: "",
+    assigneeIds: [],
+    statuses: [],
+  });
 
   useEffect(() => {
     setIsMounted(true);
@@ -261,6 +272,10 @@ export function BacklogView({
     });
   }, [sprints]);
 
+  const filteredBacklogItems = useMemo(() => {
+    return backlogItems.filter((item) => matchesBoardFilter(item, filterState));
+  }, [backlogItems, filterState]);
+
   if (treeLoading || sprintsLoading) {
     return (
       <div className="flex h-72 items-center justify-center">
@@ -319,6 +334,13 @@ export function BacklogView({
         </div>
       )}
 
+      {/* Interactive Board/Backlog Filter Bar */}
+      <BoardFilterBar
+        projectId={projectId}
+        availableStatuses={BACKLOG_STATUSES}
+        onFilterChange={setFilterState}
+      />
+
       {/* Drag & Drop Context Wrapping Sprints & Backlog */}
       {isMounted && (
         <DragDropContext onDragEnd={handleDragEnd}>
@@ -327,7 +349,10 @@ export function BacklogView({
           {/* ======================================================== */}
           <div className="space-y-4">
             {sortedSprints.map((sprint) => {
-              const sprintItems = sprintItemsMap[sprint.id] ?? [];
+              const rawSprintItems = sprintItemsMap[sprint.id] ?? [];
+              const sprintItems = rawSprintItems.filter((item) =>
+                matchesBoardFilter(item, filterState),
+              );
               const committedPoints = sprintItems.reduce(
                 (sum, item) =>
                   sum +
@@ -728,7 +753,7 @@ export function BacklogView({
                 </h3>
 
                 <span className="rounded-full bg-muted border border-border px-2 py-0.2 text-[10px] font-mono font-medium text-muted-foreground">
-                  {backlogItems.length} issues
+                  {filteredBacklogItems.length} issues
                 </span>
               </div>
 
@@ -750,13 +775,14 @@ export function BacklogView({
                       snapshot.isDraggingOver ? "bg-primary/5" : "bg-card"
                     }`}
                   >
-                    {backlogItems.length === 0 ? (
+                    {filteredBacklogItems.length === 0 ? (
                       <div className="p-6 text-center text-xs text-muted-foreground">
-                        Backlog is currently empty. Use the quick-add bar below
-                        to create initial user stories.
+                        {backlogItems.length === 0
+                          ? "Backlog is currently empty. Use the quick-add bar below to create initial user stories."
+                          : "No backlog items match the current filters."}
                       </div>
                     ) : (
-                      backlogItems.map((item, index) => (
+                      filteredBacklogItems.map((item, index) => (
                         <Draggable
                           key={item.id}
                           draggableId={item.id}

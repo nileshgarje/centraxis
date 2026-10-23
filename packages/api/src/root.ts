@@ -14,6 +14,7 @@ import { commentRouter } from "./routers/comment";
 import { notificationRouter } from "./routers/notification";
 import { workflowRouter } from "./routers/workflow";
 import { authRouter } from "./routers/auth";
+import { dashboardRouter } from "./routers/dashboard";
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -30,6 +31,7 @@ export const appRouter = createTRPCRouter({
   ai: aiRouter,
   metrics: metricsRouter,
   workflow: workflowRouter,
+  dashboard: dashboardRouter,
 });
 
 export type AppRouter = typeof appRouter;

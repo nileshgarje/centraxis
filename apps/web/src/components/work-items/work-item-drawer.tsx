@@ -51,7 +51,7 @@ interface WorkItemDrawerProps {
   itemId: string | null;
   isOpen: boolean;
   onClose: () => void;
-  projectId: string;
+  projectId?: string;
 }
 
 const ITEM_TYPES = [
@@ -184,12 +184,12 @@ export function WorkItemDrawer({
     { enabled: !!currentId && isOpen },
   );
 
-  const { data: projectSprints } = api.sprint.list.useQuery(
-    { projectId },
-    { enabled: isOpen },
-  );
-
   const targetProjectId = projectId || item?.projectId;
+
+  const { data: projectSprints } = api.sprint.list.useQuery(
+    { projectId: targetProjectId! },
+    { enabled: isOpen && !!targetProjectId },
+  );
 
   const { data: assignableUsers } = api.project.getAssignableUsers.useQuery(
     { projectId: targetProjectId! },
